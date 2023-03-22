@@ -7,4 +7,6 @@ lazy val root = (project in file("."))
     name := "gemceas"
   )
 
-libraryDependencies += "jpl" % "jpl" % "7.4.0"
+// use jpl.jar downloaded with SWI Prolog. Using a different version throws an 
+// "Unsupported blob type passed from Prolog" error
+// libraryDependencies += "jpl" % "jpl" % "7.4.0"
