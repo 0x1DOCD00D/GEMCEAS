@@ -20,7 +20,7 @@ find /Users/melburne/Library/Java/JavaVirtualMachines/ -name libjsig.dylib
 find /Users/melburne/Library/Java/JavaVirtualMachines/ -name libjvm.dylib
 ```
 - Add the following VM option by editing the run configuration in IntelliJ
-`-Djava.library.path=/Applications/SWI-Prolog.app/Contents/swipl/lib/fat-darwin/`
+`-Djava.library.path=/Applications/SWI-Prolog.app/Contents/swipl/lib/fat-darwin/`  or on intel machines it is going to be at x86_64-darwin as in `-Djava.library.path=/Applications/SWI-Prolog.app/Contents/swipl/lib/x86_64-darwin/`
 - Set the SWI_HOME_DIR env var in the same run config `SWI_HOME_DIR=/Applications/SWI-Prolog.app/Contents/swipl`
 - Add the `jpl.jar` file that comes with SWI Prolog to this project by going to File -> Project Structure -> Libraries 
 -> + -> Java -> /Applications/SWI-Prolog.app/Contents/swipl/lib/jpl.jar
