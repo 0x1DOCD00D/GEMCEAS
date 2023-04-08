@@ -12,7 +12,7 @@ object Driver {
     val generateInts = new Query("generate_integers")
     if generateInts.hasSolution then
       val intExprs: List[ArithExp[Int]] =
-        ArithmeticExpressionGenerator.generateIntegerExpressions(Random.between(1, 10), List.empty)
+        ArithmeticExpressionGenerator.generateIntegerExpressions(Random.between(1, 10))
       printExpressions(intExprs)
 
     else
