@@ -1,8 +1,19 @@
-child_of(joe, ralf).
-child_of(mary, joe).
-child_of(steve, joe).
-descendent_of(X, Y) :-
-  child_of(X, Y).
-descendent_of(X, Y) :-
-  child_of(Z, Y),
-  descendent_of(X, Z).
+% add(A, B) :-
+%   integer(A),
+%   integer(B).
+
+% sub(A, B) :-
+%   integer(A),
+%   integer(B).
+
+% mul(A, B) :-
+%   integer(A),
+%   integer(B).
+
+% div(A, B) :-
+%   integer(A),
+%   integer(B).
+
+% expression(A, B) :- mul(A, B), add(A,B), sub(A,B), div(A,B).
+
+generate_integers.
