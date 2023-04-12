@@ -5,6 +5,8 @@ object ArithmeticExpressionGenerator {
 
   private val RAND: Random = new Random()
 
+  // TODO: Look into this to avoid copy/pasting code for other data types
+  // https://www.baeldung.com/scala/magnet-pattern
   def generateIntegerExpressions(max: Int): List[ArithExp[Int]] = {
     @tailrec
     def helper(max: Int, exprList: List[ArithExp[Int]]): List[ArithExp[Int]] = {
