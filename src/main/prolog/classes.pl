@@ -1,4 +1,5 @@
 :- ensure_loaded(sectionlinks).
+% :- style_check(-singleton).
 
 % section 8
 access_modifiers(A) :- 
@@ -9,7 +10,7 @@ overloaded(constructors).
 
 % section 8.1
 class_declaration :- 
-    normal_declaration(Cm, Ti, Ec, Ii, Pc, Cb, Ct);
+    normal_declaration(_, _, _);
     enum_declaration;
     record_declaration.
 
@@ -24,8 +25,7 @@ class_type(T) :-
 % NormalClassDeclaration:
 %   {ClassModifier} class TypeIdentifier [TypeParameters]
 %   [ClassExtends] [ClassImplements] [ClassPermits] ClassBody
-normal_declaration(ClassModifier, TypeIdentifier, ExtendedClasses, ImplementedInterfaces, 
-    PermittedClasses, ClassBody, ClassType) :- 
+normal_declaration(ClassModifier, TypeIdentifier, ClassType) :- 
     (class_modifier(C), member(ClassModifier, C)),
     (class_type(T), member(ClassType, T)),
     (ClassModifier == static -> ClassType == 'member'; true),
