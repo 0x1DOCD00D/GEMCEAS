@@ -2,25 +2,20 @@
 % :- style_check(-singleton).
 
 % section 8
-access_modifiers(A) :- 
-    A = ['public', 'protected', 'private'].
+access_modifiers(['public', 'protected', 'private']).
 
 overloaded(methods).
 overloaded(constructors).
 
 % section 8.1
-class_declaration :- 
-    normal_declaration(_, _, _);
-    enum_declaration;
-    record_declaration.
+class_declaration([normal_declaration, enum_declaration, record_declaration]).
 
 class_modifier(C) :- 
     access_modifiers(A),
     append(A, ['abstract', 'static', 'final', 'sealed', 'non-sealed', 'strictfp'], C).
 
 % 'member' and 'inner' are both nested classes but inner classes cannot be static
-class_type(T) :-
-    T = ['top-level', 'member', 'inner'].
+class_type(['top-level', 'member', 'inner']).
 
 % NormalClassDeclaration:
 %   {ClassModifier} class TypeIdentifier [TypeParameters]
