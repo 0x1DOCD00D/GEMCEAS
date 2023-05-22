@@ -8,7 +8,7 @@ overloaded(methods).
 overloaded(constructors).
 
 % section 8.1
-class_declaration([normal_declaration, enum_declaration, record_declaration]).
+class_declaration([normal_class_declaration, enum_declaration, record_declaration]).
 
 class_modifier(C) :- 
     access_modifiers(A),
@@ -20,7 +20,7 @@ class_type(['top-level', 'member', 'inner']).
 % NormalClassDeclaration:
 %   {ClassModifier} class TypeIdentifier [TypeParameters]
 %   [ClassExtends] [ClassImplements] [ClassPermits] ClassBody
-normal_declaration(ClassModifier, TypeIdentifier, ClassType) :- 
+normal_class_declaration(ClassModifier, TypeIdentifier, ClassType) :- 
     (class_modifier(C), member(ClassModifier, C)),
     (class_type(T), member(ClassType, T)),
     (ClassModifier == static -> ClassType == 'member'; true),
