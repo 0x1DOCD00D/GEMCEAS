@@ -32,6 +32,18 @@ normal_declaration(ClassModifier, TypeIdentifier, ExtendedClasses, ImplementedIn
     string(TypeIdentifier).
     % TODO: implement checks for 'extends', 'implements', 'permits', 'classbody'
 
+% section 8.3
+field_modifier(F) :-
+    access_modifiers(A),
+    append(A, ['static', 'final', 'transient', 'volatile'], F).
+
+% FieldDeclaration:
+%   {FieldModifier} UnannType VariableDeclaratorList
+field_declaration(FieldModifier, VariableDeclaratorList) :-
+    (field_modifier(F), member(FieldModifier, F)),
+    (is_list(VariableDeclaratorList)).
+    % TODO: validate UnannType (UnannType: UnannPrimitiveType UnannReferenceType)
+
 
 
 /* 
