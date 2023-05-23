@@ -38,6 +38,32 @@ field_declaration(FieldModifier, VariableDeclaratorList) :-
     (field_modifier(F), member(FieldModifier, F)),
     (is_list(VariableDeclaratorList)).
     % TODO: validate UnannType (UnannType: UnannPrimitiveType UnannReferenceType)
+    % TODO: final variables cannot be volatile
+
+
+% TODO: fields and classes can have multiple modifiers
+
+
+% section 8.4
+method_modifier(M) :-
+    access_modifiers(A),
+    append(A, ['abstract', 'static', 'final', 'synchronized', 'native', 'strictfp'], M).
+
+% MethodDeclaration:
+%   {MethodModifier} MethodHeader MethodBody
+method_declaration(MethodModifier) :-
+    is_list(MethodModifier),
+    (method_modifier(M), sublist(MethodModifier, M)),
+    % method cannot be both native and strictfp
+    (member('native', MethodModifier), member('strictfp', MethodModifier) -> false ; true),
+    % abstract methods cannot be private, static, final, native, strictfp, or synchronized,
+    % which leaves two possible combinations abstract/public & abstract/protected
+    (member('abstract', M), length(MethodModifier, L), L =< 2).
+
+
+
+sublist([],_).
+sublist([X|Xs],Y) :- member(X,Y) , sublist(Xs,Y).
 
 
 
