@@ -54,16 +54,43 @@ method_modifier(M) :-
 method_declaration(MethodModifier) :-
     is_list(MethodModifier),
     (method_modifier(M), sublist(MethodModifier, M)),
+    % compile-time error if the same keyword appears more than once
+    is_set(MethodModifier),
+    % cannot have more than one of the access modifiers public, protected, and private
+    check_access_modifier(MethodModifier),
     % method cannot be both native and strictfp
     (member('native', MethodModifier), member('strictfp', MethodModifier) -> false ; true),
     % abstract methods cannot be private, static, final, native, strictfp, or synchronized,
-    % which leaves two possible combinations abstract/public & abstract/protected
-    (member('abstract', M), length(MethodModifier, L), L =< 2).
-
-
+    % which leaves three possible combinations abstract/public or abstract/protected or 
+    % just abstract
+    (member('abstract', MethodModifier) -> 
+        (((member('public', MethodModifier); member('protected', MethodModifier));
+            (length(MethodModifier, L), L == 1))) ; 
+        true
+    ).
+    
 
 sublist([],_).
 sublist([X|Xs],Y) :- member(X,Y) , sublist(Xs,Y).
+
+
+% ensures that the modifier list has only one of the modifiers public, protected, or private
+check_access_modifier(ModifierList) :-
+    (member('public', ModifierList) -> 
+        ((member('protected', ModifierList); member('private', ModifierList)) -> 
+            false ; true) ;
+        true
+    ),
+    (member('protected', ModifierList) -> 
+        ((member('public', ModifierList); member('private', ModifierList)) -> 
+            false ; true) ;
+        true
+    ),
+    (member('private', ModifierList) -> 
+        ((member('protected', ModifierList); member('public', ModifierList)) -> 
+            false ; true) ;
+        true
+    ).
 
 
 
