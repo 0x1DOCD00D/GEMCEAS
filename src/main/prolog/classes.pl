@@ -49,9 +49,11 @@ method_modifier(M) :-
     access_modifiers(A),
     append(A, ['abstract', 'static', 'final', 'synchronized', 'native', 'strictfp'], M).
 
+method_body(['block', 'semicolon']).
+
 % MethodDeclaration:
 %   {MethodModifier} MethodHeader MethodBody
-method_declaration(MethodModifier) :-
+method_declaration(MethodModifier, MethodBody) :-
     is_list(MethodModifier),
     (method_modifier(M), sublist(MethodModifier, M)),
     % compile-time error if the same keyword appears more than once
@@ -65,9 +67,23 @@ method_declaration(MethodModifier) :-
     % just abstract
     (member('abstract', MethodModifier) -> 
         (((member('public', MethodModifier); member('protected', MethodModifier));
-            (length(MethodModifier, L), L == 1))) ; 
+         (length(MethodModifier, L), L == 1))) ; 
         true
-    ).
+    ),
+
+    (method_body(B), member(MethodBody, B)),
+    % compile-time error if a method declaration is either abstract or native 
+    % and has a block for its body
+    (MethodBody == 'block' -> 
+        (((member('abstract', MethodModifier); member('native', MethodModifier)) -> 
+            false ; 
+            true)) ; 
+        true),
+    % compile-time error if a method declaration is neither abstract nor native and 
+    % has a semicolon for its body
+    (MethodBody == 'semicolon' ->
+        (member('abstract', MethodModifier); member('native', MethodModifier)) ;
+        true).
     
 
 sublist([],_).
@@ -95,11 +111,12 @@ check_access_modifier(ModifierList) :-
 
 
 /* 
-Sections to come back to:
+TODO: sections to come back to:
 8.1.1.1 abstract Classes
 8.1.1.2 sealed, non-sealed, and final Classes
-8.1.2 Generic Classes and Type Parameters
 8.1.4 Superclasses and Subclasses
 8.1.5 Superinterfaces
 8.1.6 Permitted Direct Subclasses
+8.4.5 Method Result
+8.4.7 Method Body (return statements)
 */
