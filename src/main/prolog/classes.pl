@@ -7,6 +7,8 @@ access_modifiers(['public', 'protected', 'private']).
 overloaded(methods).
 overloaded(constructors).
 
+
+
 % section 8.1
 class_declaration([normal_class_declaration, enum_declaration, record_declaration]).
 
@@ -29,6 +31,8 @@ normal_class_declaration(ClassModifier, TypeIdentifier, ClassType) :-
     (ClassModifier == static -> ClassType == 'member'; true),
     string(TypeIdentifier).
 
+
+
 % section 8.3
 field_modifier(F) :-
     access_modifiers(A),
@@ -37,13 +41,14 @@ field_modifier(F) :-
 % FieldDeclaration:
 %   {FieldModifier} UnannType VariableDeclaratorList
 field_declaration(FieldModifier, VariableDeclaratorList) :-
-    (field_modifier(F), member(FieldModifier, F)),
+    is_list(FieldModifier),
+    (field_modifier(F), sublist(FieldModifier, F)),
+    % compile-time error if the same keyword appears more than once
+    is_set(FieldModifier),
     (is_list(VariableDeclaratorList)).
-    % TODO: validate UnannType (UnannType: UnannPrimitiveType UnannReferenceType)
+    % TODO: validate VariableDeclaratorList
     % TODO: final variables cannot be volatile
 
-
-% TODO: fields and classes can have multiple modifiers
 
 
 % section 8.4
