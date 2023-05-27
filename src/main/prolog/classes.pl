@@ -19,6 +19,9 @@ class_modifier(C) :-
 % 'member' and 'inner' are both nested classes but inner classes cannot be static
 class_type(['top-level', 'member', 'inner']).
 
+% NormalClassDeclaration => {ClassModifier} class TypeIdentifier [TypeParameters] ::=> normal_class_declaration(ClassModifier, TypeIdentifier)
+normal_class_declaration(private, "acccdff")
+
 % NormalClassDeclaration:
 %   {ClassModifier} class TypeIdentifier [TypeParameters]
 %   [ClassExtends] [ClassImplements] [ClassPermits] ClassBody
