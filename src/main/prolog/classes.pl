@@ -21,11 +21,13 @@ class_type(['top-level', 'member', 'inner']).
 %   {ClassModifier} class TypeIdentifier [TypeParameters]
 %   [ClassExtends] [ClassImplements] [ClassPermits] ClassBody
 normal_class_declaration(ClassModifier, TypeIdentifier, ClassType) :- 
-    (class_modifier(C), member(ClassModifier, C)),
+    is_list(ClassModifier),
+    (class_modifier(C), sublist(ClassModifier, C)),
+    % compile-time error if the same keyword appears more than once
+    is_set(ClassModifier),
     (class_type(T), member(ClassType, T)),
     (ClassModifier == static -> ClassType == 'member'; true),
     string(TypeIdentifier).
-    % TODO: implement checks for 'extends', 'implements', 'permits', 'classbody'
 
 % section 8.3
 field_modifier(F) :-
@@ -109,6 +111,23 @@ check_access_modifier(ModifierList) :-
     ).
 
 
+% overloaded_method(MethodNames, ParamTypes) :-
+%     is_list(MethodNames),
+%     % check if all names are the same by converting to a set. If the result 
+%     % has only one item then all names are the same
+%     list_to_set(MethodNames, [_]),
+%     checkParamTypes(ParamTypes).
+
+% checkParamTypes([]).
+% checkParamTypes([H|T]) :-
+%     do_something,
+%     checkParamTypes(T).
+
+    
+% same_list([ ], [ ]).   
+% same_list([H1|R1], [H2|R2]):-
+%     H1 =\= H2,
+%     same_list(R1, R2).
 
 /* 
 TODO: sections to come back to:
@@ -119,4 +138,5 @@ TODO: sections to come back to:
 8.1.6 Permitted Direct Subclasses
 8.4.5 Method Result
 8.4.7 Method Body (return statements)
+8.4.8 Inheritance, Overriding, and Hiding
 */
