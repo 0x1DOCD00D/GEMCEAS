@@ -16,11 +16,12 @@ ImportDeclaration:
     import [static] Identifier { . Identifier } [. *] ;
 
 TypeDeclaration:
-    ClassOrInterfaceDeclaration
+    ClassOrInterfaceDeclaration ::=> class_or_interface_decl(ClassOrInterfaceDeclaration)
     ;
 
 ClassOrInterfaceDeclaration:
-    {Modifier} (ClassDeclaration | InterfaceDeclaration)
+    {Modifier} (ClassDeclaration | InterfaceDeclaration) ::=> coid_fact(Modifier)
+    //class_or_interface_decl(coid_fact(Modifier))
 
 ClassDeclaration:
     NormalClassDeclaration
@@ -33,8 +34,11 @@ InterfaceDeclaration:
 
 
 NormalClassDeclaration:
-    class Identifier [TypeParameters]
-                                [extends Type] [implements TypeList] ClassBody
+    class Identifier [TypeParameters] [extends Type] [implements TypeList] ClassBody ::=> extends_implements(Identifier, Type, _, empty_body)
+    // class X extends Y {}
+    //Identifier => X, Type => Y
+    //extends_fact(Identifier, Type) => extends_fact(X, Y)
+
 
 EnumDeclaration:
     enum Identifier [implements TypeList] EnumBody
@@ -145,9 +149,9 @@ ClassBody:
     { { ClassBodyDeclaration } }
 
 ClassBodyDeclaration:
-    ;
+    ; ::=> class_empty_body
     {Modifier} MemberDecl
-    [static] Block
+    [static] Block ::=> static_class_body(Block)
 
 MemberDecl:
     MethodOrFieldDecl
@@ -281,7 +285,7 @@ Statement:
     ;
     Identifier : Statement
     StatementExpression ;
-    if ParExpression Statement [else Statement]
+    if ParExpression Statement [else Statement] ::=> if_fact(...)
     assert Expression [: Expression] ;
     switch ParExpression { SwitchBlockStatementGroups }
     while ParExpression Statement
@@ -451,7 +455,7 @@ Literal:
     NullLiteral
 
 ParExpression:
-    ( Expression )
+    ( Expression ) ::=> paren_exp(...)
 
 Arguments:
     ( [ Expression { , Expression } ] )
