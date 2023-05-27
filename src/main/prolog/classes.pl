@@ -45,9 +45,11 @@ field_declaration(FieldModifier, VariableDeclaratorList) :-
     (field_modifier(F), sublist(FieldModifier, F)),
     % compile-time error if the same keyword appears more than once
     is_set(FieldModifier),
-    (is_list(VariableDeclaratorList)).
+    % final variables cannot be volatile
+    (member('final', FieldModifier) -> 
+        (member('volatile', FieldModifier) -> false ; true) ;
+        true).
     % TODO: validate VariableDeclaratorList
-    % TODO: final variables cannot be volatile
 
 
 
