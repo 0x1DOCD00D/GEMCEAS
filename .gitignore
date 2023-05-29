@@ -6,3 +6,4 @@ target/
 .vscode
 project/project
 project/metals.sbt
+.DS_Store
