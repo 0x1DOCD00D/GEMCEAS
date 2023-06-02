@@ -59,7 +59,6 @@ method_modifier(M) :-
     access_modifiers(A),
     append(A, ['abstract', 'static', 'final', 'synchronized', 'native', 'strictfp'], M).
 
-method_body(['block', 'semicolon']).
 
 % MethodDeclaration:
 %   {MethodModifier} MethodHeader MethodBody
@@ -81,17 +80,17 @@ method_declaration(MethodModifier, MethodBody) :-
         true
     ),
 
-    (method_body(B), member(MethodBody, B)),
+    string_length(MethodBody, ML),
     % compile-time error if a method declaration is either abstract or native 
     % and has a block for its body
-    (MethodBody == 'block' -> 
+    (ML > 1 -> 
         (((member('abstract', MethodModifier); member('native', MethodModifier)) -> 
             false ; 
             true)) ; 
         true),
     % compile-time error if a method declaration is neither abstract nor native and 
     % has a semicolon for its body
-    (MethodBody == 'semicolon' ->
+    (ML == 1 ->
         (member('abstract', MethodModifier); member('native', MethodModifier)) ;
         true).
     
