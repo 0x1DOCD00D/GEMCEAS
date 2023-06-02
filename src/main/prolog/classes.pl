@@ -19,8 +19,6 @@ class_modifier(C) :-
 % 'member' and 'inner' are both nested classes but inner classes cannot be static
 class_type(['top-level', 'member', 'inner']).
 
-% NormalClassDeclaration => {ClassModifier} class TypeIdentifier [TypeParameters] ::=> normal_class_declaration(ClassModifier, TypeIdentifier)
-normal_class_declaration(private, "acccdff")
 
 % NormalClassDeclaration:
 %   {ClassModifier} class TypeIdentifier [TypeParameters]
@@ -51,8 +49,8 @@ field_declaration(FieldModifier, VariableDeclaratorList) :-
     % final variables cannot be volatile
     (member('final', FieldModifier) -> 
         (member('volatile', FieldModifier) -> false ; true) ;
-        true).
-    % TODO: validate VariableDeclaratorList
+        true),
+    is_set(VariableDeclaratorList).
 
 
 
