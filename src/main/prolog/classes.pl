@@ -118,6 +118,18 @@ check_access_modifier(ModifierList) :-
     ).
 
 
+
+% section 8.8
+% ConstructorDeclaration:
+%   {ConstructorModifier} ConstructorDeclarator [Throws] ConstructorBody
+constructor_declaration(ConstructorModifier) :-
+    % TODO:
+    % compile-time error to declare two constructors with override-equivalent signatures (§8.4.2) in a class.
+    % compile-time error to declare two constructors whose signatures have the same erasure (§4.6) in a class.
+    (access_modifiers(C), member(ConstructorModifier, C)).
+
+
+
 % overloaded_method(MethodNames, ParamTypes) :-
 %     is_list(MethodNames),
 %     % check if all names are the same by converting to a set. If the result 
@@ -136,8 +148,17 @@ check_access_modifier(ModifierList) :-
 %     H1 =\= H2,
 %     same_list(R1, R2).
 
+/*
+Covered sections:
+8.1 Class Declarations
+8.2 Class Members
+8.3 Field Declarations
+8.4 Method Declarations
+8.8 Constructor Declarations
+*/
+
 /* 
-TODO: sections to come back to:
+TODO: sub sections to come back to:
 8.1.1.1 abstract Classes
 8.1.1.2 sealed, non-sealed, and final Classes
 8.1.4 Superclasses and Subclasses
