@@ -24,6 +24,10 @@ class_type(['top-level', 'member', 'inner']).
 %   {ClassModifier} class TypeIdentifier [TypeParameters]
 %   [ClassExtends] [ClassImplements] [ClassPermits] ClassBody
 normal_class_declaration(ClassModifier, TypeIdentifier, ClassType) :- 
+    % fail if the TypeIdentifier already exists
+    (recorded(class_name, TypeIdentifier) ->
+        false ; 
+        recordz(class_name, TypeIdentifier)),
     is_list(ClassModifier),
     (class_modifier(C), sublist(ClassModifier, C)),
     % compile-time error if the same keyword appears more than once
@@ -129,6 +133,14 @@ constructor_declaration(ConstructorModifier) :-
     (access_modifiers(C), member(ConstructorModifier, C)).
 
 
+/*
+TODO:
+Chapter 15:
+- It is a compile-time error if a this expression occurs in a static context (§8.1.3).
+- It is a compile-time error if a qualified this expression occurs in a static context (§8.1.3).
+- It is a compile-time error if the class or interface whose declaration immediately encloses a qualified this
+  expression is not an inner class of TypeName or TypeName itself.
+*/
 
 % overloaded_method(MethodNames, ParamTypes) :-
 %     is_list(MethodNames),
