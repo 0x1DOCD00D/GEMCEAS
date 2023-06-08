@@ -1,4 +1,3 @@
-:- ensure_loaded(sectionlinks).
 % :- style_check(-singleton).
 
 % section 8
@@ -133,32 +132,6 @@ constructor_declaration(ConstructorModifier) :-
     (access_modifiers(C), member(ConstructorModifier, C)).
 
 
-/*
-TODO:
-Chapter 15:
-- It is a compile-time error if a this expression occurs in a static context (§8.1.3).
-- It is a compile-time error if a qualified this expression occurs in a static context (§8.1.3).
-- It is a compile-time error if the class or interface whose declaration immediately encloses a qualified this
-  expression is not an inner class of TypeName or TypeName itself.
-*/
-
-% overloaded_method(MethodNames, ParamTypes) :-
-%     is_list(MethodNames),
-%     % check if all names are the same by converting to a set. If the result 
-%     % has only one item then all names are the same
-%     list_to_set(MethodNames, [_]),
-%     checkParamTypes(ParamTypes).
-
-% checkParamTypes([]).
-% checkParamTypes([H|T]) :-
-%     do_something,
-%     checkParamTypes(T).
-
-    
-% same_list([ ], [ ]).   
-% same_list([H1|R1], [H2|R2]):-
-%     H1 =\= H2,
-%     same_list(R1, R2).
 
 /*
 Covered sections:
