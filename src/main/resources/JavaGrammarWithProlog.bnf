@@ -457,6 +457,7 @@ ClassDeclaration::=
 
 NormalClassDeclaration::=
   {ClassModifier} "class" TypeIdentifier [TypeParameters] [ClassExtends] [ClassImplements] [ClassPermits] ClassBody
+  "==>> normal_class_declaration(ClassModifier, TypeIdentifier, ClassType)"
 
 ClassModifier::=
 //(one of)
@@ -507,6 +508,7 @@ ClassMemberDeclaration::=
 
 FieldDeclaration::=
   {FieldModifier} UnannType VariableDeclaratorList ";"
+  "==>> field_declaration(FieldModifier, VariableDeclaratorList)"
 
 FieldModifier::=
 //(one of)
@@ -567,6 +569,7 @@ UnannArrayType::=
 
 MethodDeclaration::=
   {MethodModifier} MethodHeader MethodBody
+  "==>> method_declaration(MethodModifier, MethodBody)"
 
 MethodModifier::=
 //(one of)
@@ -631,6 +634,7 @@ StaticInitializer::=
 
 ConstructorDeclaration::=
   {ConstructorModifier} ConstructorDeclarator [Throws] ConstructorBody
+  "==>> constructor_declaration(ConstructorModifier)"
 
 ConstructorModifier::=
 //(one of)
@@ -641,6 +645,7 @@ ConstructorModifier::=
 
 ConstructorDeclarator::=
   [TypeParameters] SimpleTypeName "(" [ReceiverParameter ","] [FormalParameterList] ")"
+  "SimpleTypeName =:= NormalClassDeclaration:TypeIdentifier"
 
 SimpleTypeName::=
   TypeIdentifier
@@ -1071,6 +1076,7 @@ UnqualifiedClassInstanceCreationExpression::=
 
 ClassOrInterfaceTypeToInstantiate::=
   {Annotation} Identifier {"." {Annotation} Identifier} [TypeArgumentsOrDiamond]
+  "==>> class_or_interface_type_to_instantiate(Identifier)"
 
 TypeArgumentsOrDiamond::=
   TypeArguments | 
