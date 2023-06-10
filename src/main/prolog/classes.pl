@@ -23,14 +23,18 @@ class_type(['top-level', 'member', 'inner']).
 %   {ClassModifier} class TypeIdentifier [TypeParameters]
 %   [ClassExtends] [ClassImplements] [ClassPermits] ClassBody
 normal_class_declaration(ClassModifier, TypeIdentifier, ClassType) :- 
-    % fail if the TypeIdentifier already exists
-    (recorded(class_name, TypeIdentifier) ->
-        false ; 
-        recordz(class_name, TypeIdentifier)),
     is_list(ClassModifier),
     (class_modifier(C), sublist(ClassModifier, C)),
     % compile-time error if the same keyword appears more than once
     is_set(ClassModifier),
+    % fail if the class already exists
+    (recorded(_, TypeIdentifier) ->
+        false ; 
+        (member('abstract', ClassModifier) ->
+            recordz(abstract_class, TypeIdentifier) ;
+            recordz(normal_class, TypeIdentifier)
+        )
+    ),
     (class_type(T), member(ClassType, T)),
     (ClassModifier == static -> ClassType == 'member'; true),
     string(TypeIdentifier).

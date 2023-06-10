@@ -1,7 +1,9 @@
 % section 15.9
 class_or_interface_type_to_instantiate(Identifier) :-
     % check whether the Identifier was recorded by normal_class_declaration/3
-    recorded(class_name, Identifier).
+    recorded(X, Identifier),
+    % fail if the class is abstract
+    (X == 'abstract_class' -> fail ; true).
 
 
 /*
