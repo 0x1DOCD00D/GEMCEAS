@@ -36,7 +36,7 @@ normal_class_declaration(ClassModifier, TypeIdentifier, ClassType) :-
         )
     ),
     (class_type(T), member(ClassType, T)),
-    (ClassModifier == static -> ClassType == 'member'; true),
+    (member('static', ClassModifier) -> ClassType == 'member'; true),
     string(TypeIdentifier).
 
 
