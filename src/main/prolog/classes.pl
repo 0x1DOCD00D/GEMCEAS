@@ -30,8 +30,8 @@ normal_class_declaration(ClassModifier, TypeIdentifier, ClassType) :-
     % fail if the class already exists
     (recorded(_, TypeIdentifier) ->
         false ; 
-        (member('abstract', ClassModifier) ->
-            recordz(abstract_class, TypeIdentifier) ;
+        ((member('abstract', ClassModifier); member('static', ClassModifier)) ->
+            recordz(abstract_or_static_class, TypeIdentifier) ;
             recordz(normal_class, TypeIdentifier)
         )
     ),

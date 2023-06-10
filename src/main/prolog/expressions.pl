@@ -2,8 +2,8 @@
 class_or_interface_type_to_instantiate(Identifier) :-
     % check whether the Identifier was recorded by normal_class_declaration/3
     recorded(X, Identifier),
-    % fail if the class is abstract
-    (X == 'abstract_class' -> fail ; true).
+    % fail if the class is abstract or static
+    (X == 'abstract_or_static_class' -> fail ; true).
 
 
 /*
