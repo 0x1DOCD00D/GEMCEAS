@@ -1121,7 +1121,7 @@ DimExprs::=
   DimExpr {DimExpr}
 
 DimExpr::=
-  {Annotation} [ Expression ]
+  {Annotation} "[" Expression "]"
 
 Expression::=
   LambdaExpression |
