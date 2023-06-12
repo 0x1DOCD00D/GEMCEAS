@@ -6,6 +6,15 @@ class_or_interface_type_to_instantiate(Identifier) :-
     (X == 'abstract_or_static_class' -> fail ; true).
 
 
+dim_expr(Expression) :-
+  evaluate(Expression, _).
+
+
+evaluate(Expression, Result) :- 
+  Result is Expression.
+
+
+
 /*
 TODO:
 Chapter 15:
