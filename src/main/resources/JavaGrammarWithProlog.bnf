@@ -508,7 +508,8 @@ ClassMemberDeclaration::=
 
 FieldDeclaration::=
   {FieldModifier} UnannType VariableDeclaratorList ";"
-  "==>> field_declaration(FieldModifier, VariableDeclaratorList)"
+  "CurrentClass =:= NormalClassDeclaration:TypeIdentifier"
+  "==>> field_declaration(FieldModifier, VariableDeclaratorList, CurrentClass)"
 
 FieldModifier::=
 //(one of)

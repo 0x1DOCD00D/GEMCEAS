@@ -1,5 +1,7 @@
 % :- style_check(-singleton).
 
+:- dynamic field/3.
+
 % section 8
 access_modifiers(['public', 'protected', 'private']).
 
@@ -48,7 +50,7 @@ field_modifier(F) :-
 
 % FieldDeclaration:
 %   {FieldModifier} UnannType VariableDeclaratorList
-field_declaration(FieldModifier, VariableDeclaratorList) :-
+field_declaration(FieldModifier, VariableDeclaratorList, CurrentClass) :-
     is_list(FieldModifier),
     (field_modifier(F), sublist(FieldModifier, F)),
     % compile-time error if the same keyword appears more than once
@@ -57,8 +59,30 @@ field_declaration(FieldModifier, VariableDeclaratorList) :-
     (member('final', FieldModifier) -> 
         (member('volatile', FieldModifier) -> false ; true) ;
         true),
-    is_set(VariableDeclaratorList).
+    split_string(VariableDeclaratorList, ",", " ", VarList),
+    assert_var_list(VarList, CurrentClass).
+    
 
+assert_var_list([], _).
+assert_var_list([H|T], CurrentClass) :-
+    (sub_string(H, _, _, _, "=") ->
+        % split the var into name and value if the var has a value assigned
+        (name_value(H, Name, Value), 
+        (field(Name, _, CurrentClass) ->
+            fail ;  % fail if the field already exists in the KB
+            assertz(field(Name, Value, CurrentClass)))) ;
+        % save the value as undefined otherwise
+        (field(H, _, CurrentClass) ->
+            fail ;
+            assertz(field(H, undefined, CurrentClass)))),
+    assert_var_list(T, CurrentClass).
+
+
+name_value(String, Name, Value) :-
+    sub_string(String, Before, _, After, "="),
+    !,
+    sub_string(String, 0, Before, _, Name),
+    sub_string(String, _, After, 0, Value).
 
 
 % section 8.4
