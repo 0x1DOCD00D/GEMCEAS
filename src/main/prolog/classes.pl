@@ -17,18 +17,17 @@ class_modifier(C) :-
     access_modifiers(A),
     append(A, ['abstract', 'static', 'final', 'sealed', 'non-sealed', 'strictfp'], C).
 
-% 'member' and 'inner' are both nested classes but inner classes cannot be static
-class_type(['top-level', 'member', 'inner']).
-
 
 % NormalClassDeclaration:
 %   {ClassModifier} class TypeIdentifier [TypeParameters]
 %   [ClassExtends] [ClassImplements] [ClassPermits] ClassBody
-normal_class_declaration(ClassModifier, TypeIdentifier, ClassType) :- 
+normal_class_declaration(ClassModifier, TypeIdentifier, EnclosingClassIdentifier) :- 
     is_list(ClassModifier),
     (class_modifier(C), sublist(ClassModifier, C)),
     % compile-time error if the same keyword appears more than once
     is_set(ClassModifier),
+    % fail if class is static but doesn't have an immediate enclosing class
+    ((member('static', ClassModifier), var(EnclosingClassIdentifier)) -> fail ; true),
     % fail if the class already exists
     (recorded(_, TypeIdentifier) ->
         false ; 
@@ -36,10 +35,7 @@ normal_class_declaration(ClassModifier, TypeIdentifier, ClassType) :-
             recordz(abstract_or_static_class, TypeIdentifier) ;
             recordz(normal_class, TypeIdentifier)
         )
-    ),
-    (class_type(T), member(ClassType, T)),
-    (member('static', ClassModifier) -> ClassType == 'member'; true),
-    string(TypeIdentifier).
+    ).
 
 
 

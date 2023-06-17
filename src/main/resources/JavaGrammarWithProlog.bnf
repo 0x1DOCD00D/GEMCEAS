@@ -457,7 +457,8 @@ ClassDeclaration::=
 
 NormalClassDeclaration::=
   {ClassModifier} "class" TypeIdentifier [TypeParameters] [ClassExtends] [ClassImplements] [ClassPermits] ClassBody
-  "==>> normal_class_declaration(ClassModifier, TypeIdentifier, ClassType)"
+  "EnclosingClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
+  "==>> normal_class_declaration(ClassModifier, TypeIdentifier, EnclosingClassIdentifier)"
 
 ClassModifier::=
 //(one of)
