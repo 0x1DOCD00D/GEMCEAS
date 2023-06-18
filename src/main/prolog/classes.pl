@@ -1,5 +1,6 @@
 % :- style_check(-singleton).
 
+:- dynamic class/3.
 :- dynamic field/3.
 
 % section 8
@@ -28,14 +29,10 @@ normal_class_declaration(ClassModifier, TypeIdentifier, EnclosingClassIdentifier
     is_set(ClassModifier),
     % fail if class is static but doesn't have an immediate enclosing class
     ((member('static', ClassModifier), var(EnclosingClassIdentifier)) -> fail ; true),
-    % fail if the class already exists
-    (recorded(_, TypeIdentifier) ->
-        false ; 
-        ((member('abstract', ClassModifier); member('static', ClassModifier)) ->
-            recordz(abstract_or_static_class, TypeIdentifier) ;
-            recordz(normal_class, TypeIdentifier)
-        )
-    ).
+    % fail if the class already exists, else add class details to the KB
+    (class(_, TypeIdentifier, EnclosingClassIdentifier) -> 
+        fail ;
+        assertz(class(ClassModifier, TypeIdentifier, EnclosingClassIdentifier))).
 
 
 
