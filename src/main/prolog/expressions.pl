@@ -24,20 +24,6 @@ check_nested_class_order([Outer]) :-
   class(_, Outer, _).
 
 
-link(outer, [inner1, inner2, inner3]).
-
-class(_, outer, _).
-class(_, inner1, outer).
-class(_, inner2, inner1).
-class(['static'], inner3, inner2).
-class(_, inner4, inner3).
-
-related(Inner, Outer) :-
-  class(_, Inner, Outer).
-
-related(Inner, Outer) :-
-  class(_, X, Outer),
-  related(Inner, X).
 
 dim_expr(Expression) :-
   evaluate(Expression, _).
