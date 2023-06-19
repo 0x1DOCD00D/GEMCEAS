@@ -29,6 +29,10 @@ normal_class_declaration(ClassModifier, TypeIdentifier, EnclosingClassIdentifier
     is_set(ClassModifier),
     % fail if class is static but doesn't have an immediate enclosing class
     ((member('static', ClassModifier), var(EnclosingClassIdentifier)) -> fail ; true),
+    % ensure inner class doesn't have the same name as the enclosing class
+    (nonvar(EnclosingClassIdentifier) ->
+      (\+ TypeIdentifier == EnclosingClassIdentifier) ;
+      true),
     % fail if the class already exists, else add class details to the KB
     (class(_, TypeIdentifier, EnclosingClassIdentifier) -> 
         fail ;
