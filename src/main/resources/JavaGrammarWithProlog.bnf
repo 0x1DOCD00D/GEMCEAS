@@ -1078,7 +1078,7 @@ UnqualifiedClassInstanceCreationExpression::=
 
 ClassOrInterfaceTypeToInstantiate::=
   {Annotation} Identifier {"." {Annotation} Identifier} [TypeArgumentsOrDiamond]
-  "==>> class_or_interface_type_to_instantiate(Identifier, Identifier)"
+  "==>> class_or_interface_type_to_instantiate(Identifier._1, Identifier._2)"
 
 TypeArgumentsOrDiamond::=
   TypeArguments | 
