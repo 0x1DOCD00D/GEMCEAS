@@ -2,6 +2,7 @@
 
 :- dynamic class/3.
 :- dynamic field/3.
+:- dynamic method/4.
 
 % section 8
 access_modifiers(['public', 'protected', 'private']).
@@ -144,6 +145,15 @@ check_access_modifier(ModifierList) :-
             false ; true) ;
         true
     ).
+
+
+formal_parameter(ClassIdentifier, MethodIdentifier, UnannType, VariableDeclaratorId) :-
+    % "this" is reserved for the receiver param
+    (\+ VariableDeclaratorId == "this"),
+    % fail if the param exists in the KB
+    (\+ method(ClassIdentifier, MethodIdentifier, _, VariableDeclaratorId)),
+    % add the param to the KB
+    assertz(method(ClassIdentifier, MethodIdentifier, UnannType, VariableDeclaratorId)).
 
 
 

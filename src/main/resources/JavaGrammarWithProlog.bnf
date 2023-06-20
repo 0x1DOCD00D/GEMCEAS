@@ -604,7 +604,10 @@ FormalParameterList::=
   FormalParameter {"," FormalParameter}
 
 FormalParameter::=
-  {VariableModifier} UnannType VariableDeclaratorId |
+  {VariableModifier} UnannType VariableDeclaratorId
+  "ClassIdentifier =:= NormalClassDeclaration:TypeIdentifier"
+  "MethodIdentifier =:= MethodDeclarator.Identifier"
+  "==>> formal_parameter(ClassIdentifier, MethodIdentifier, UnannType, VariableDeclaratorId)" |
   VariableArityParameter
 
 VariableArityParameter::=
