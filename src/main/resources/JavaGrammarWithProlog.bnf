@@ -596,6 +596,8 @@ Result::=
 
 MethodDeclarator::=
   Identifier ( [ReceiverParameter ","] [FormalParameterList] ) [Dims]
+  "ClassIdentifier =:= NormalClassDeclaration:TypeIdentifier"
+  "==>> method_declarator(ClassIdentifier, Identifier, FormalParameterList)"
 
 ReceiverParameter::=
   {Annotation} UnannType [Identifier "."] "this"

@@ -2,7 +2,8 @@
 
 :- dynamic class/3.
 :- dynamic field/3.
-:- dynamic method/4.
+:- dynamic method/3.
+:- dynamic formal_param/4.
 
 % section 8
 access_modifiers(['public', 'protected', 'private']).
@@ -147,13 +148,47 @@ check_access_modifier(ModifierList) :-
     ).
 
 
+method_declarator(ClassIdentifier, Identifier, FormalParameterList) :-
+    split_string(FormalParameterList, ",", " ", CurrParamList),
+    % check if any methods exist with the same name
+    findall(X, method(ClassIdentifier, Identifier, X), PrevParamList),
+    length(PrevParamList, PrevParamListLength),
+    (PrevParamListLength =\= 0 -> 
+        check_overloaded_methods(CurrParamList, PrevParamList) ;
+        true),
+    % add method to KB
+    assertz(method(ClassIdentifier, Identifier, CurrParamList)).
+
+check_overloaded_methods(CurrParamList, [PrevParamList | PrevParamListTail]) :-
+    length(CurrParamList, CurrParamListLength),
+    length(PrevParamList, PrevParamListLength),
+    ((PrevParamListLength == CurrParamListLength) ->
+        check_param_types(PrevParamList, CurrParamList) ;
+        true),
+    (length(PrevParamListTail, PrevParamListTailLength)),
+    (PrevParamListTailLength == 0 ->
+        % no more params left
+        true ;
+        % check remaining method params
+        check_overloaded_methods(CurrParamList, PrevParamListTail)).
+
+check_param_types([PrevParam|PrevParamListTail], [CurrParam|CurrParamListTail]) :-
+    split_string(PrevParam, " ", " ", [PrevType | _]),
+    split_string(CurrParam, " ", " ", [CurrType | _]),
+    ((\+ PrevType == CurrType) ->
+        % param types are different. End check
+        true ;
+        % keep checking remaining params
+        check_param_types(PrevParamListTail, CurrParamListTail)).
+
+
 formal_parameter(ClassIdentifier, MethodIdentifier, UnannType, VariableDeclaratorId) :-
     % "this" is reserved for the receiver param
     (\+ VariableDeclaratorId == "this"),
     % fail if the param exists in the KB
-    (\+ method(ClassIdentifier, MethodIdentifier, _, VariableDeclaratorId)),
+    (\+ formal_param(ClassIdentifier, MethodIdentifier, _, VariableDeclaratorId)),
     % add the param to the KB
-    assertz(method(ClassIdentifier, MethodIdentifier, UnannType, VariableDeclaratorId)).
+    assertz(formal_param(ClassIdentifier, MethodIdentifier, UnannType, VariableDeclaratorId)).
 
 
 
