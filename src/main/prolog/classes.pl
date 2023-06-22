@@ -152,25 +152,18 @@ method_declarator(ClassIdentifier, Identifier, FormalParameterList) :-
     split_string(FormalParameterList, ",", " ", CurrParamList),
     % check if any methods exist with the same name
     findall(X, method(ClassIdentifier, Identifier, X), PrevParamList),
-    length(PrevParamList, PrevParamListLength),
-    (PrevParamListLength =\= 0 -> 
-        check_overloaded_methods(CurrParamList, PrevParamList) ;
-        true),
+    check_overloaded_methods(CurrParamList, PrevParamList),
     % add method to KB
     assertz(method(ClassIdentifier, Identifier, CurrParamList)).
 
+check_overloaded_methods(_, []).
 check_overloaded_methods(CurrParamList, [PrevParamList | PrevParamListTail]) :-
     length(CurrParamList, CurrParamListLength),
     length(PrevParamList, PrevParamListLength),
     ((PrevParamListLength == CurrParamListLength) ->
         check_param_types(PrevParamList, CurrParamList) ;
         true),
-    (length(PrevParamListTail, PrevParamListTailLength)),
-    (PrevParamListTailLength == 0 ->
-        % no more params left
-        true ;
-        % check remaining method params
-        check_overloaded_methods(CurrParamList, PrevParamListTail)).
+    check_overloaded_methods(CurrParamList, PrevParamListTail).
 
 check_param_types([PrevParam|PrevParamListTail], [CurrParam|CurrParamListTail]) :-
     split_string(PrevParam, " ", " ", [PrevType | _]),
@@ -178,7 +171,8 @@ check_param_types([PrevParam|PrevParamListTail], [CurrParam|CurrParamListTail]) 
     ((\+ PrevType == CurrType) ->
         % param types are different. End check
         true ;
-        % keep checking remaining params
+        % keep checking remaining params. Lack of a base case (empty param lists) will cause
+        % the rule to fail eventually if all params match
         check_param_types(PrevParamListTail, CurrParamListTail)).
 
 
