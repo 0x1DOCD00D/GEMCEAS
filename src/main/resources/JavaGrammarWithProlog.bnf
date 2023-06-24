@@ -1099,7 +1099,9 @@ ArrayAccess::=
   PrimaryNoNewArray [ Expression ]
 
 MethodInvocation::=
-  MethodName "(" [ArgumentList] ")" |
+  MethodName "(" [ArgumentList] ")"
+  "ClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
+  "method_invocation_simple(ClassIdentifier, MethodName, ArgumentList)" |
   TypeName "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
   ExpressionName "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
   Primary "." [TypeArguments] Identifier "(" [ArgumentList] ")" |

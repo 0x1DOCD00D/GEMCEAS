@@ -1,35 +1,47 @@
 % section 15.9
 class_or_interface_type_to_instantiate(Identifier, IdentifierList) :-
-    % check whether the Identifier added to the KB by normal_class_declaration/3
+    % check whether the class was added to the KB by normal_class_declaration/3
     class(ClassModifier, Identifier, _),
     % recorded(X, Identifier),
     length(IdentifierList, IdentifierListLength),
     ((IdentifierListLength == 0) ->
-      (\+ member('abstract', ClassModifier)) ;
-      (nth1(IdentifierListLength, IdentifierList, LastIdentifier),
-      class(LastIdentifierModifier, LastIdentifier, _),
-      % ensure last identifier is not abstract
-      \+ member('abstract', LastIdentifierModifier),
-      % ensure last identifier is static
-      member('static', LastIdentifierModifier),
-      check_nested_class_order(IdentifierList)
-      )
+        (\+ member('abstract', ClassModifier)) ;
+        (nth1(IdentifierListLength, IdentifierList, LastIdentifier),
+        class(LastIdentifierModifier, LastIdentifier, _),
+        % ensure last identifier is not abstract
+        \+ member('abstract', LastIdentifierModifier),
+        % ensure last identifier is static
+        member('static', LastIdentifierModifier),
+        check_nested_class_order(IdentifierList)
+        )
     ).
 
 check_nested_class_order([]).
 check_nested_class_order([Outer, Inner | T]) :-
-  class(_, Inner, Outer),
-  check_nested_class_order(T).
+    class(_, Inner, Outer),
+    check_nested_class_order(T).
 check_nested_class_order([Outer]) :-
-  class(_, Outer, _).
+    class(_, Outer, _).
 
 
 
 dim_expr(Expression) :-
-  evaluate(Expression, _).
+    evaluate(Expression, _).
 
 evaluate(Expression, Result) :- 
-  Result is Expression.
+    Result is Expression.
+
+
+
+method_invocation_simple(ClassIdentifier, MethodName, ArgumentList) :-
+    (var(ArgumentList) ->
+        ExpressionList=[] ;
+        split_string(ArgumentList, ",", " ", ExpressionList)),
+    length(ExpressionList, ExpressionListLength),
+    findall(X, method(ClassIdentifier, MethodName, X, ExpressionListLength), ParamList),
+    length(ParamList, ParamListLength),
+    ParamListLength =\= 0.
+    % TODO: Check arg types
 
 
 
@@ -45,4 +57,5 @@ Chapter 15:
 - It is a compile-time error if a field access expression using the keyword super appears in a static context (§8.1.3).
 - For a field access expression of the form super.Identifier: It is a compile-time error if the immediately enclosing 
   class or interface declaration of the field access expression is the class Object or an interface. (section 15.11.2)
+- Method Invocation, 15.12.3 Compile-Time Step 3: Is the Chosen Method Appropriate?
 */
