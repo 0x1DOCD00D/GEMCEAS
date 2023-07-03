@@ -62,8 +62,8 @@ field_declaration(FieldModifier, UnannType, VariableDeclaratorList, CurrentClass
     assert_var_list(VarList, UnannType, CurrentClass).
     
 
-assert_var_list([], _).
-assert_var_list([H|T], CurrentClass) :-
+assert_var_list([], _, _).
+assert_var_list([H|T], UnannType, CurrentClass) :-
     (sub_string(H, _, _, _, "=") ->
         % split the var into name and value if the var has a value assigned
         (name_value(H, Name, Value), 
@@ -74,7 +74,7 @@ assert_var_list([H|T], CurrentClass) :-
         (field(H, _, _, CurrentClass) ->
             fail ;
             assertz(field(H, UnannType, _, CurrentClass)))),
-    assert_var_list(T, CurrentClass).
+    assert_var_list(T, UnannType, CurrentClass).
 
 
 name_value(String, Name, Value) :-
