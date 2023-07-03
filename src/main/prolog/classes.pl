@@ -1,12 +1,12 @@
 % :- style_check(-singleton).
 
 :- dynamic class/3.
-:- dynamic field/3.
+:- dynamic field/4.
 :- dynamic method/5.
 :- dynamic formal_param/4.
 
 % section 8
-access_modifiers(['public', 'protected', 'private']).
+access_modifiers(["public", "protected", "private"]).
 
 overloaded(methods).
 overloaded(constructors).
@@ -18,7 +18,7 @@ class_declaration([normal_class_declaration, enum_declaration, record_declaratio
 
 class_modifier(C) :- 
     access_modifiers(A),
-    append(A, ['abstract', 'static', 'final', 'sealed', 'non-sealed', 'strictfp'], C).
+    append(A, ["abstract", "static", "final", "sealed", "non-sealed", "strictfp"], C).
 
 
 % NormalClassDeclaration:
@@ -30,7 +30,7 @@ normal_class_declaration(ClassModifier, TypeIdentifier, EnclosingClassIdentifier
     % compile-time error if the same keyword appears more than once
     is_set(ClassModifier),
     % fail if class is static but doesn't have an immediate enclosing class
-    ((member('static', ClassModifier), var(EnclosingClassIdentifier)) -> fail ; true),
+    ((member("static", ClassModifier), var(EnclosingClassIdentifier)) -> fail ; true),
     % ensure inner class doesn't have the same name as the enclosing class
     (nonvar(EnclosingClassIdentifier) ->
       (\+ TypeIdentifier == EnclosingClassIdentifier) ;
@@ -45,21 +45,21 @@ normal_class_declaration(ClassModifier, TypeIdentifier, EnclosingClassIdentifier
 % section 8.3
 field_modifier(F) :-
     access_modifiers(A),
-    append(A, ['static', 'final', 'transient', 'volatile'], F).
+    append(A, ["static", "final", "transient", "volatile"], F).
 
 % FieldDeclaration:
 %   {FieldModifier} UnannType VariableDeclaratorList
-field_declaration(FieldModifier, VariableDeclaratorList, CurrentClass) :-
+field_declaration(FieldModifier, UnannType, VariableDeclaratorList, CurrentClass) :-
     is_list(FieldModifier),
     (field_modifier(F), sublist(FieldModifier, F)),
     % compile-time error if the same keyword appears more than once
     is_set(FieldModifier),
     % final variables cannot be volatile
-    (member('final', FieldModifier) -> 
-        (member('volatile', FieldModifier) -> false ; true) ;
+    (member("final", FieldModifier) -> 
+        (member("volatile", FieldModifier) -> false ; true) ;
         true),
     split_string(VariableDeclaratorList, ",", " ", VarList),
-    assert_var_list(VarList, CurrentClass).
+    assert_var_list(VarList, UnannType, CurrentClass).
     
 
 assert_var_list([], _).
@@ -67,13 +67,13 @@ assert_var_list([H|T], CurrentClass) :-
     (sub_string(H, _, _, _, "=") ->
         % split the var into name and value if the var has a value assigned
         (name_value(H, Name, Value), 
-        (field(Name, _, CurrentClass) ->
+        (field(Name, _, _, CurrentClass) ->
             fail ;  % fail if the field already exists in the KB
-            assertz(field(Name, Value, CurrentClass)))) ;
+            assertz(field(Name, UnannType, Value, CurrentClass)))) ;
         % save the value as undefined otherwise
-        (field(H, _, CurrentClass) ->
+        (field(H, _, _, CurrentClass) ->
             fail ;
-            assertz(field(H, undefined, CurrentClass)))),
+            assertz(field(H, UnannType, _, CurrentClass)))),
     assert_var_list(T, CurrentClass).
 
 
@@ -87,7 +87,7 @@ name_value(String, Name, Value) :-
 % section 8.4
 method_modifier(M) :-
     access_modifiers(A),
-    append(A, ['abstract', 'static', 'final', 'synchronized', 'native', 'strictfp'], M).
+    append(A, ["abstract", "static", "final", "synchronized", "native", "strictfp"], M).
 
 
 % MethodDeclaration:
@@ -100,12 +100,12 @@ method_declaration(MethodModifier, MethodBody) :-
     % cannot have more than one of the access modifiers public, protected, and private
     check_access_modifier(MethodModifier),
     % method cannot be both native and strictfp
-    (member('native', MethodModifier), member('strictfp', MethodModifier) -> false ; true),
+    (member("native", MethodModifier), member("strictfp", MethodModifier) -> false ; true),
     % abstract methods cannot be private, static, final, native, strictfp, or synchronized,
     % which leaves three possible combinations abstract/public or abstract/protected or 
     % just abstract
-    (member('abstract', MethodModifier) -> 
-        (((member('public', MethodModifier); member('protected', MethodModifier));
+    (member("abstract", MethodModifier) -> 
+        (((member("public", MethodModifier); member("protected", MethodModifier));
          (length(MethodModifier, L), L == 1))) ; 
         true
     ),
@@ -114,14 +114,14 @@ method_declaration(MethodModifier, MethodBody) :-
     % compile-time error if a method declaration is either abstract or native 
     % and has a block for its body
     (ML > 1 -> 
-        (((member('abstract', MethodModifier); member('native', MethodModifier)) -> 
+        (((member("abstract", MethodModifier); member("native", MethodModifier)) -> 
             false ; 
             true)) ; 
         true),
     % compile-time error if a method declaration is neither abstract nor native and 
     % has a semicolon for its body
     (ML == 1 ->
-        (member('abstract', MethodModifier); member('native', MethodModifier)) ;
+        (member("abstract", MethodModifier); member("native", MethodModifier)) ;
         true).
     
 
@@ -131,18 +131,18 @@ sublist([X|Xs],Y) :- member(X,Y) , sublist(Xs,Y).
 
 % ensures that the modifier list has only one of the modifiers public, protected, or private
 check_access_modifier(ModifierList) :-
-    (member('public', ModifierList) -> 
-        ((member('protected', ModifierList); member('private', ModifierList)) -> 
+    (member("public", ModifierList) -> 
+        ((member("protected", ModifierList); member("private", ModifierList)) -> 
             false ; true) ;
         true
     ),
-    (member('protected', ModifierList) -> 
-        ((member('public', ModifierList); member('private', ModifierList)) -> 
+    (member("protected", ModifierList) -> 
+        ((member("public", ModifierList); member("private", ModifierList)) -> 
             false ; true) ;
         true
     ),
-    (member('private', ModifierList) -> 
-        ((member('protected', ModifierList); member('public', ModifierList)) -> 
+    (member("private", ModifierList) -> 
+        ((member("protected", ModifierList); member("public", ModifierList)) -> 
             false ; true) ;
         true
     ).
