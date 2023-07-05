@@ -1,5 +1,7 @@
 % :- style_check(-singleton).
 
+:- ensure_loaded(common).
+
 :- dynamic class/3.
 :- dynamic field/4.
 :- dynamic method/5.
@@ -16,7 +18,7 @@ overloaded(constructors).
 % section 8.1
 class_declaration([normal_class_declaration, enum_declaration, record_declaration]).
 
-class_modifier(C) :- 
+class_modifiers(C) :- 
     access_modifiers(A),
     append(A, ["abstract", "static", "final", "sealed", "non-sealed", "strictfp"], C).
 
@@ -26,7 +28,7 @@ class_modifier(C) :-
 %   [ClassExtends] [ClassImplements] [ClassPermits] ClassBody
 normal_class_declaration(ClassModifier, TypeIdentifier, EnclosingClassIdentifier) :- 
     is_list(ClassModifier),
-    (class_modifier(C), sublist(ClassModifier, C)),
+    (class_modifiers(C), sublist(ClassModifier, C)),
     % compile-time error if the same keyword appears more than once
     is_set(ClassModifier),
     % fail if class is static but doesn't have an immediate enclosing class
@@ -97,7 +99,8 @@ method_declaration(MethodModifier, MethodBody) :-
     (method_modifier(M), sublist(MethodModifier, M)),
     % compile-time error if the same keyword appears more than once
     is_set(MethodModifier),
-    % cannot have more than one of the access modifiers public, protected, and private
+    % cannot have more than one of the access modifiers public, protected, private, and
+    % one of sealed, non-sealed
     check_access_modifier(MethodModifier),
     % method cannot be both native and strictfp
     (member("native", MethodModifier), member("strictfp", MethodModifier) -> false ; true),
@@ -123,29 +126,7 @@ method_declaration(MethodModifier, MethodBody) :-
     (ML == 1 ->
         (member("abstract", MethodModifier); member("native", MethodModifier)) ;
         true).
-    
 
-sublist([],_).
-sublist([X|Xs],Y) :- member(X,Y) , sublist(Xs,Y).
-
-
-% ensures that the modifier list has only one of the modifiers public, protected, or private
-check_access_modifier(ModifierList) :-
-    (member("public", ModifierList) -> 
-        ((member("protected", ModifierList); member("private", ModifierList)) -> 
-            false ; true) ;
-        true
-    ),
-    (member("protected", ModifierList) -> 
-        ((member("public", ModifierList); member("private", ModifierList)) -> 
-            false ; true) ;
-        true
-    ),
-    (member("private", ModifierList) -> 
-        ((member("protected", ModifierList); member("public", ModifierList)) -> 
-            false ; true) ;
-        true
-    ).
 
 
 method_declarator(ClassIdentifier, MethodModifier, Identifier, FormalParameterList) :-

@@ -724,6 +724,8 @@ InterfaceDeclaration::=
 
 NormalInterfaceDeclaration::=
   {InterfaceModifier} "interface" TypeIdentifier [TypeParameters] [InterfaceExtends] [InterfacePermits] InterfaceBody
+  "EnclosingInterfaceIdentifier =:= NormalInterfaceDeclaration.TypeIdentifier"
+  "==>> normal_interface_declaration(InterfaceModifier, TypeIdentifier, EnclosingInterfaceIdentifier)"
 
 InterfaceModifier::=
 //(one of)
