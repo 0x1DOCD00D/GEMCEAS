@@ -378,7 +378,9 @@ TypeName::=
   PackageOrTypeName "." TypeIdentifier
 
 ExpressionName::=
-  Identifier |
+  Identifier
+  "ClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
+  "==>> expression_name(Identifier, ClassIdentifier)" |
   AmbiguousName "." Identifier
 
 MethodName::=
@@ -510,7 +512,7 @@ ClassMemberDeclaration::=
 FieldDeclaration::=
   {FieldModifier} UnannType VariableDeclaratorList ";"
   "CurrentClass =:= NormalClassDeclaration:TypeIdentifier"
-  "==>> field_declaration(FieldModifier, VariableDeclaratorList, CurrentClass)"
+  "==>> field_declaration(FieldModifier, UnannType, VariableDeclaratorList, CurrentClass)"
 
 FieldModifier::=
 //(one of)
@@ -930,7 +932,8 @@ AssertStatement::=
 
 SwitchStatement::=
   "switch" "(" Expression ")" SwitchBlock
-  "switch_statement(Expression, SwitchBlock)"
+  "ClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
+  "switch_statement(Expression, SwitchBlock, ClassIdentifier)"
 
 SwitchBlock::=
   "{" SwitchRule {SwitchRule} "}" |
@@ -1105,7 +1108,7 @@ MethodInvocation::=
   MethodName "(" [ArgumentList] ")"
   "ClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
   "EnclosingMethodModifiers =:= MethodDeclaration.MethodModifier"
-  "method_invocation_simple(ClassIdentifier, EnclosingMethodModifiers, MethodName, ArgumentList)" |
+  "==>> method_invocation_simple(ClassIdentifier, EnclosingMethodModifiers, MethodName, ArgumentList)" |
   TypeName "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
   ExpressionName "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
   Primary "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
@@ -1170,6 +1173,7 @@ AssignmentExpression::=
 
 Assignment::=
   LeftHandSide AssignmentOperator Expression
+  "==>> assignment(LeftHandSide, Expression)"
 
 LeftHandSide::=
   ExpressionName |
@@ -1289,7 +1293,8 @@ CastExpression::=
 
 SwitchExpression::=
   "switch" "(" Expression ")" SwitchBlock
-  "==>> switch_expression(Expression, SwitchBlock)"
+  "ClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
+  "==>> switch_expression(Expression, SwitchBlock, ClassIdentifier)"
 
 ConstantExpression::=
   Expression

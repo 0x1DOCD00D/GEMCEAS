@@ -50,15 +50,15 @@ method_invocation_simple(ClassIdentifier, EnclosingMethodModifiers, MethodName, 
 % section 15.28
 switch_expression_types(['char', 'byte', 'short', 'int', 'Character', 'Byte', 'Short', 'Integer', 'String']).
 
-switch_expression(Expression, SwitchBlock) :-
-    % TODO: add variables to the KB when declared
-    variable(Type, Expression),
+switch_expression(Expression, SwitchBlock, ClassIdentifier) :-
+    field(Expression, _, Value, ClassIdentifier),
+    nonvar(Value),
     switch_expression_types(AllowedTypes),
     member(Type, AllowedTypes),
     check_default_block(SwitchBlock, 0).
 
-switch_statement(Expression, SwitchBlock) :-
-    switch_expression(Expression, SwitchBlock).
+switch_statement(Expression, SwitchBlock, ClassIdentifier) :-
+    switch_expression(Expression, SwitchBlock, ClassIdentifier).
 
 
 switch_block(SwitchLabel) :-
@@ -75,6 +75,33 @@ check_default_block([H|T], Occurrences) :-
             check_default_block(T, OccurrencesPlusOne)) ;
             check_default_block(T, Occurrences)
         ).
+
+
+assignment(LeftHandSide, Expression) :-
+    % TODO: validate more expressions
+    % assuming both LHS and RHS are expression_name/2
+    arg(1, LeftHandSide, LhsIdentifier),
+    arg(2, LeftHandSide, LhsClassIdentifier),
+    field(LhsIdentifier, LhsType, _, LhsClassIdentifier),
+    arg(1, Expression, RhsIdentifier),
+    arg(2, Expression, RhsClassIdentifier),
+    field(RhsIdentifier, RhsType, _, RhsClassIdentifier),
+    LhsType = RhsType.
+
+
+expression_name(Identifier, ClassIdentifier) :-
+    % TODO: validate ambiguous names
+    field(Identifier, _, _, ClassIdentifier) ->
+        true ;
+        check_field_in_parent_class(Identifier, ClassIdentifier).
+
+check_field_in_parent_class(ExpressionName, ClassIdentifier) :-
+    class(_, ClassIdentifier, EnclosingClassIdentifier),
+    (field(ExpressionName, _, _, EnclosingClassIdentifier) ->
+        true ;
+        (nonvar(EnclosingClassIdentifier), 
+        check_field_in_parent_class(ExpressionName, EnclosingClassIdentifier))).
+
 
 
 /*
