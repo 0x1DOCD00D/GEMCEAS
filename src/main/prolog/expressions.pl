@@ -51,7 +51,7 @@ method_invocation_simple(ClassIdentifier, EnclosingMethodModifiers, MethodName, 
 switch_expression_types(['char', 'byte', 'short', 'int', 'Character', 'Byte', 'Short', 'Integer', 'String']).
 
 switch_expression(Expression, SwitchBlock, ClassIdentifier) :-
-    field(Expression, _, Value, ClassIdentifier),
+    field(Expression, Type, Value, ClassIdentifier),
     nonvar(Value),
     switch_expression_types(AllowedTypes),
     member(Type, AllowedTypes),
