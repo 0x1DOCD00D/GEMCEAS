@@ -757,6 +757,8 @@ InterfaceMemberDeclaration::=
 
 ConstantDeclaration::=
   {ConstantModifier} UnannType VariableDeclaratorList ";"
+  "CurrentInterface =:= NormalInterfaceDeclaration.TypeIdentifier"
+  "==>> constant_declaration(ConstantModifier, UnannType, VariableDeclaratorList, CurrentInterface)"
 
 ConstantModifier::=
 //(one of)

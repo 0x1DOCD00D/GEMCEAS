@@ -79,12 +79,6 @@ assert_var_list([H|T], UnannType, CurrentClass) :-
     assert_var_list(T, UnannType, CurrentClass).
 
 
-name_value(String, Name, Value) :-
-    sub_string(String, Before, _, After, "="),
-    !,
-    sub_string(String, 0, Before, _, Name),
-    sub_string(String, _, After, 0, Value).
-
 
 % section 8.4
 method_modifier(M) :-

@@ -29,3 +29,11 @@ check_access_modifier(ModifierList) :-
         \+ member("sealed", ModifierList) ;
         true
     ).
+
+
+% splits a variable declaration into its name and value
+name_value(String, Name, Value) :-
+    sub_string(String, Before, _, After, "="),
+    !,
+    sub_string(String, 0, Before, _, Name),
+    sub_string(String, _, After, 0, Value).
