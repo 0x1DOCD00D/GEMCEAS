@@ -769,6 +769,7 @@ ConstantModifier::=
 
 InterfaceMethodDeclaration::=
   {InterfaceMethodModifier} MethodHeader MethodBody
+  "==>> interface_method_declaration(InterfaceMethodModifier, MethodBody)"
 
 InterfaceMethodModifier::=
 //(one of)

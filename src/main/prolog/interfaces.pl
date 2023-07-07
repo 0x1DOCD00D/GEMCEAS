@@ -46,3 +46,38 @@ assert_const_list([H|T], UnannType, CurrentInterface) :-
     \+ field(Name, _, _, CurrentInterface),
     assertz(field(Name, UnannType, Value, CurrentInterface)),
     assert_const_list(T, UnannType, CurrentInterface).
+
+
+% section 9.4
+interface_method_declaration(InterfaceMethodModifier, MethodBody) :-
+    % compile-time error if the same keyword appears more than once as a modifier
+    is_set(InterfaceMethodModifier),
+    % cannot have more than one of the access modifiers public and private
+    (member("public", InterfaceMethodModifier) -> 
+        \+ member("private", InterfaceMethodModifier) ;
+        true),
+    (member("private", InterfaceMethodModifier) -> 
+        \+ (member("public", InterfaceMethodModifier); 
+            member("abstract", InterfaceMethodModifier); 
+            member("default", InterfaceMethodModifier)) ;
+        true),
+    % compile-time error if an interface method declaration has more than one of the keywords 
+    % abstract, default, or static
+    (member("abstract", InterfaceMethodModifier) -> 
+        \+ (member("default", InterfaceMethodModifier); 
+            member("static", InterfaceMethodModifier);
+            % compile-time error if an interface method declaration that contains the keyword abstract 
+            % also contains the keyword strictfp
+            member("strictfp", InterfaceMethodModifier)) ;
+        true),
+    (member("default", InterfaceMethodModifier) -> 
+        \+ (member("abstract", InterfaceMethodModifier); member("static", InterfaceMethodModifier)) ;
+        true),
+    (member("static", InterfaceMethodModifier) -> 
+        \+ (member("default", InterfaceMethodModifier); member("abstract", InterfaceMethodModifier)) ;
+        true),
+    
+    % private and default methods should have a method body
+    ((member("private", InterfaceMethodModifier); member("default", InterfaceMethodModifier)) ->
+        (string_length(MethodBody, BodyLength), BodyLength > 1) ;
+        true).
