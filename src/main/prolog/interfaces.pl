@@ -1,7 +1,5 @@
 :- ensure_loaded(common).
 
-:- dynamic interface/3.
-
 % section 9.1
 interface_modifiers(["public", "protected", "private", "abstract", "static", "sealed", "non-sealed", "strictfp"]).
 

@@ -2,17 +2,8 @@
 
 :- ensure_loaded(common).
 
-:- dynamic class/3.
-:- dynamic field/4.
-:- dynamic method/5.
-:- dynamic formal_param/4.
-
 % section 8
 access_modifiers(["public", "protected", "private"]).
-
-overloaded(methods).
-overloaded(constructors).
-
 
 
 % section 8.1
@@ -41,7 +32,6 @@ normal_class_declaration(ClassModifier, TypeIdentifier, EnclosingClassIdentifier
     (class(_, TypeIdentifier, EnclosingClassIdentifier) -> 
         fail ;
         assertz(class(ClassModifier, TypeIdentifier, EnclosingClassIdentifier))).
-
 
 
 % section 8.3

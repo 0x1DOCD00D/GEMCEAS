@@ -1,3 +1,10 @@
+:- dynamic class/3.
+:- dynamic field/4.
+:- dynamic method/5.
+:- dynamic formal_param/4.
+:- dynamic interface/3.
+
+
 % sublist(X,Y) checks if X is a sublist of Y
 sublist([],_).
 sublist([X|Xs],Y) :- member(X,Y) , sublist(Xs,Y).
