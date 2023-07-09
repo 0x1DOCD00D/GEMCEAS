@@ -597,7 +597,8 @@ Result::=
 MethodDeclarator::=
   Identifier ( [ReceiverParameter ","] [FormalParameterList] ) [Dims]
   "ClassIdentifier =:= NormalClassDeclaration:TypeIdentifier"
-  "==>> method_declarator(ClassIdentifier, Identifier, FormalParameterList)"
+  "MethodModifier =:= MethodDeclaration.MethodModifier"
+  "==>> method_declarator(ClassIdentifier, MethodModifier, Identifier, FormalParameterList)"
 
 ReceiverParameter::=
   {Annotation} UnannType [Identifier "."] "this"
@@ -929,10 +930,12 @@ AssertStatement::=
 
 SwitchStatement::=
   "switch" "(" Expression ")" SwitchBlock
+  "switch_statement(Expression, SwitchBlock)"
 
 SwitchBlock::=
   "{" SwitchRule {SwitchRule} "}" |
   "{" {SwitchBlockStatementGroup} {SwitchLabel ":"} "}"
+  "switch_block(SwitchLabel)"
 
 SwitchRule::=
   SwitchLabel "->" Expression ";" |
@@ -1101,7 +1104,8 @@ ArrayAccess::=
 MethodInvocation::=
   MethodName "(" [ArgumentList] ")"
   "ClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
-  "method_invocation_simple(ClassIdentifier, MethodName, ArgumentList)" |
+  "EnclosingMethodModifiers =:= MethodDeclaration.MethodModifier"
+  "method_invocation_simple(ClassIdentifier, EnclosingMethodModifiers, MethodName, ArgumentList)" |
   TypeName "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
   ExpressionName "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
   Primary "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
@@ -1285,6 +1289,7 @@ CastExpression::=
 
 SwitchExpression::=
   "switch" "(" Expression ")" SwitchBlock
+  "==>> switch_expression(Expression, SwitchBlock)"
 
 ConstantExpression::=
   Expression

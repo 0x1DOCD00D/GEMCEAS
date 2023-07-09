@@ -2,7 +2,7 @@
 
 :- dynamic class/3.
 :- dynamic field/3.
-:- dynamic method/4.
+:- dynamic method/5.
 :- dynamic formal_param/4.
 
 % section 8
@@ -148,17 +148,17 @@ check_access_modifier(ModifierList) :-
     ).
 
 
-method_declarator(ClassIdentifier, Identifier, FormalParameterList) :-
+method_declarator(ClassIdentifier, MethodModifier, Identifier, FormalParameterList) :-
     % check if the method has params
     (var(FormalParameterList) -> 
         CurrParamList=[] ; 
         split_string(FormalParameterList, ",", " ", CurrParamList)),
     length(CurrParamList, CurrParamListLength),
     % check if any methods exist with the same name
-    findall(X, method(ClassIdentifier, Identifier, X, CurrParamListLength), PrevParamList),
+    findall(X, method(ClassIdentifier, _, Identifier, X, CurrParamListLength), PrevParamList),
     check_overloaded_methods(CurrParamList, PrevParamList),
     % add method to KB
-    assertz(method(ClassIdentifier, Identifier, CurrParamList, CurrParamListLength)).
+    assertz(method(ClassIdentifier, MethodModifier, Identifier, CurrParamList, CurrParamListLength)).
 
 check_overloaded_methods(_, []).
 check_overloaded_methods(CurrParamList, [PrevParamList | PrevParamListTail]) :-

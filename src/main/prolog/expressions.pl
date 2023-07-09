@@ -33,16 +33,48 @@ evaluate(Expression, Result) :-
 
 
 
-method_invocation_simple(ClassIdentifier, MethodName, ArgumentList) :-
-    (var(ArgumentList) ->
-        ExpressionList=[] ;
-        split_string(ArgumentList, ",", " ", ExpressionList)),
-    length(ExpressionList, ExpressionListLength),
-    findall(X, method(ClassIdentifier, MethodName, X, ExpressionListLength), ParamList),
-    length(ParamList, ParamListLength),
-    ParamListLength =\= 0.
-    % TODO: Check arg types
+method_invocation_simple(ClassIdentifier, EnclosingMethodModifiers, MethodName, ArgumentList) :-
+    % (var(ArgumentList) ->
+    %     ExpressionList=[] ;
+    %     split_string(ArgumentList, ",", " ", ExpressionList)),
+    % length(ExpressionList, ExpressionListLength),
+    % findall(X, method(ClassIdentifier, _, MethodName, X, ExpressionListLength), ParamList),
+    % length(ParamList, ParamListLength),
+    % ParamListLength =\= 0,
+    false.  % failing this rule till I figure out how to infer the type of an arg expression
+    % TODO: check arg types
+    % TODO: if enclosing method is static, invoked method should also be static
 
+
+
+% section 15.28
+switch_expression_types(['char', 'byte', 'short', 'int', 'Character', 'Byte', 'Short', 'Integer', 'String']).
+
+switch_expression(Expression, SwitchBlock) :-
+    % TODO: add variables to the KB when declared
+    variable(Type, Expression),
+    switch_expression_types(AllowedTypes),
+    member(Type, AllowedTypes),
+    check_default_block(SwitchBlock, 0).
+
+switch_statement(Expression, SwitchBlock) :-
+    switch_expression(Expression, SwitchBlock).
+
+
+switch_block(SwitchLabel) :-
+    % ensure the switch block only has one 'default' block
+    check_default_block(SwitchLabel, 0).
+
+check_default_block([], Occurrences) :-
+    Occurrences < 2.
+check_default_block([H|T], Occurrences) :-
+    Occurrences >= 2 ->
+        false ;
+        (sub_string(H, _, _, _, "default") ->
+            (OccurrencesPlusOne is Occurrences + 1,
+            check_default_block(T, OccurrencesPlusOne)) ;
+            check_default_block(T, Occurrences)
+        ).
 
 
 /*
