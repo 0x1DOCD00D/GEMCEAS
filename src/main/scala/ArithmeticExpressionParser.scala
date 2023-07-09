@@ -35,6 +35,4 @@ object ArithmeticExpressionParser extends RegexParsers:
   def TermNT: Parser[ArithmeticExpression4Parser] = NumberTerminal | "(" ~> ExpressionNT <~ ")"
 
   def NumberTerminal: Parser[Number] =
-    """(\+|\-)?[0-9]+(\.[0-9]+)?""".r ^^ {
-      case num => Number(num.toDouble)
-    }
+    """([+\-])?[0-9]+(\.[0-9]+)?""".r ^^ (num => Number(num.toDouble))
