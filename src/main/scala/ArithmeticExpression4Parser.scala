@@ -11,4 +11,4 @@
 enum ArithmeticExpression4Parser:
   case Sum(operand1: ArithmeticExpression4Parser, operands: List[ArithmeticExpression4Parser])
   case Product(operand1: ArithmeticExpression4Parser, operands: List[ArithmeticExpression4Parser])
-  case Number(value: Double)
+  case Literal(value: Double)
