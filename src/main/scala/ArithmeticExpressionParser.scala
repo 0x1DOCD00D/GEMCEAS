@@ -11,20 +11,21 @@
 import scala.util.parsing.combinator._
 
 /*
+ * Using a standard grammar for arithmetic expressions
  * expression ::= sum
  * sum ::= product ~ ("+" ~ product)*
  * product ::= term ~ ("*" ~ term)*
  * term ::= number | "(" ~ expression ~ ")"
  * number ::= """(\+|\-)?[0-9]+(\.[0-9]+)?""".r
  */
-object ArithmeticExpressionParser extends RegexParsers:
+object ArithmeticExpressionParser extends JavaTokenParsers:
   import ArithmeticExpression4Parser.*
 
   def ExpressionNT: Parser[ArithmeticExpression4Parser] = SumNT
 
   def SumNT: Parser[ArithmeticExpression4Parser] = ProductNT ~ rep("+" ~> ProductNT) ^^ {
     case p ~ Nil => p
-    case p ~ prods => Sum(p, prods)
+    case p ~ products => Sum(p, products)
   }
 
   def ProductNT: Parser[ArithmeticExpression4Parser] = TermNT ~ rep("*" ~> TermNT) ^^ {
@@ -34,5 +35,5 @@ object ArithmeticExpressionParser extends RegexParsers:
 
   def TermNT: Parser[ArithmeticExpression4Parser] = NumberTerminal | "(" ~> ExpressionNT <~ ")"
 
-  def NumberTerminal: Parser[Number] =
-    """([+\-])?[0-9]+(\.[0-9]+)?""".r ^^ (num => Number(num.toDouble))
+  def NumberTerminal: Parser[Literal] =
+    """([+\-])?[0-9]+(\.[0-9]+)?""".r ^^ {input => Literal(input.toDouble)}
