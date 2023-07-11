@@ -47,7 +47,24 @@ assert_const_list([H|T], UnannType, CurrentInterface) :-
 
 
 % section 9.4
-interface_method_declaration(InterfaceMethodModifier, MethodBody) :-
+interface_method_declaration(InterfaceIdentifier, InterfaceMethodModifier, MethodHeader, MethodBody) :-
+    validate_interface_method_modifiers(InterfaceMethodModifier, MethodBody),
+    arg(1, MethodHeader, MethodDeclarator),
+    arg(1, MethodDeclarator, MethodIdentifier),
+    arg(2, MethodDeclarator, FormalParameterList),
+    % check if the method has params
+    (var(FormalParameterList) -> 
+        CurrParamList=[] ; 
+        split_string(FormalParameterList, ",", " ", CurrParamList)),
+    length(CurrParamList, CurrParamListLength),
+    % check if any methods exist with the same name
+    findall(X, method(InterfaceIdentifier, _, MethodIdentifier, X, CurrParamListLength), PrevParamList),
+    check_overloaded_methods(CurrParamList, PrevParamList),
+    % add method to KB
+    assertz(method(InterfaceIdentifier, InterfaceMethodModifier, MethodIdentifier, CurrParamList, CurrParamListLength)).
+
+
+validate_interface_method_modifiers(InterfaceMethodModifier, MethodBody) :-
     % compile-time error if the same keyword appears more than once as a modifier
     is_set(InterfaceMethodModifier),
     % cannot have more than one of the access modifiers public and private
@@ -74,7 +91,6 @@ interface_method_declaration(InterfaceMethodModifier, MethodBody) :-
     (member("static", InterfaceMethodModifier) -> 
         \+ (member("default", InterfaceMethodModifier); member("abstract", InterfaceMethodModifier)) ;
         true),
-    
     % private and default methods should have a method body
     ((member("private", InterfaceMethodModifier); member("default", InterfaceMethodModifier)) ->
         (string_length(MethodBody, BodyLength), BodyLength > 1) ;
