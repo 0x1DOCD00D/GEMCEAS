@@ -1,7 +1,7 @@
 :- dynamic class/3.
 :- dynamic field/4.
 :- dynamic method/5.
-:- dynamic formal_param/4.
+:- dynamic formal_param/3.
 :- dynamic interface/3.
 
 

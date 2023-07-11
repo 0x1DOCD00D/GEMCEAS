@@ -511,7 +511,7 @@ ClassMemberDeclaration::=
 
 FieldDeclaration::=
   {FieldModifier} UnannType VariableDeclaratorList ";"
-  "CurrentClass =:= NormalClassDeclaration:TypeIdentifier"
+  "CurrentClass =:= NormalClassDeclaration.TypeIdentifier"
   "==>> field_declaration(FieldModifier, UnannType, VariableDeclaratorList, CurrentClass)"
 
 FieldModifier::=
@@ -573,7 +573,8 @@ UnannArrayType::=
 
 MethodDeclaration::=
   {MethodModifier} MethodHeader MethodBody
-  "==>> method_declaration(MethodModifier, MethodBody)"
+  "ClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
+  "==>> method_declaration(ClassIdentifier, MethodModifier, MethodHeader, MethodBody)"
 
 MethodModifier::=
 //(one of)
@@ -589,7 +590,8 @@ MethodModifier::=
   "strictfp"
 
 MethodHeader::=
-  Result MethodDeclarator [Throws] |
+  Result MethodDeclarator [Throws]
+  "==>> method_header(MethodDeclarator)" |
   TypeParameters {Annotation} Result MethodDeclarator [Throws]
 
 Result::=
@@ -598,9 +600,7 @@ Result::=
 
 MethodDeclarator::=
   Identifier ( [ReceiverParameter ","] [FormalParameterList] ) [Dims]
-  "ClassIdentifier =:= NormalClassDeclaration:TypeIdentifier"
-  "MethodModifier =:= MethodDeclaration.MethodModifier"
-  "==>> method_declarator(ClassIdentifier, MethodModifier, Identifier, FormalParameterList)"
+  "==>> method_declarator(Identifier, FormalParameterList)"
 
 ReceiverParameter::=
   {Annotation} UnannType [Identifier "."] "this"
@@ -610,9 +610,8 @@ FormalParameterList::=
 
 FormalParameter::=
   {VariableModifier} UnannType VariableDeclaratorId
-  "ClassIdentifier =:= NormalClassDeclaration:TypeIdentifier"
   "MethodIdentifier =:= MethodDeclarator.Identifier"
-  "==>> formal_parameter(ClassIdentifier, MethodIdentifier, UnannType, VariableDeclaratorId)" |
+  "==>> formal_parameter(MethodIdentifier, UnannType, VariableDeclaratorId)" |
   VariableArityParameter
 
 VariableArityParameter::=
@@ -655,7 +654,7 @@ ConstructorModifier::=
 
 ConstructorDeclarator::=
   [TypeParameters] SimpleTypeName "(" [ReceiverParameter ","] [FormalParameterList] ")"
-  "SimpleTypeName =:= NormalClassDeclaration:TypeIdentifier"
+  "SimpleTypeName =:= NormalClassDeclaration.TypeIdentifier"
 
 SimpleTypeName::=
   TypeIdentifier

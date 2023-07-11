@@ -78,7 +78,24 @@ method_modifier(M) :-
 
 % MethodDeclaration:
 %   {MethodModifier} MethodHeader MethodBody
-method_declaration(MethodModifier, MethodBody) :-
+method_declaration(ClassIdentifier, MethodModifier, MethodHeader, MethodBody) :-
+    validate_method_modifiers(MethodModifier, MethodBody),
+    arg(1, MethodHeader, MethodDeclarator),
+    arg(1, MethodDeclarator, MethodIdentifier),
+    arg(2, MethodDeclarator, FormalParameterList),
+    % check if the method has params
+    (var(FormalParameterList) -> 
+        CurrParamList=[] ; 
+        split_string(FormalParameterList, ",", " ", CurrParamList)),
+    length(CurrParamList, CurrParamListLength),
+    % check if any methods exist with the same name
+    findall(X, method(ClassIdentifier, _, MethodIdentifier, X, CurrParamListLength), PrevParamList),
+    check_overloaded_methods(CurrParamList, PrevParamList),
+    % add method to KB
+    assertz(method(ClassIdentifier, MethodModifier, MethodIdentifier, CurrParamList, CurrParamListLength)).
+
+
+validate_method_modifiers(MethodModifier, MethodBody) :-
     is_list(MethodModifier),
     (method_modifier(M), sublist(MethodModifier, M)),
     % compile-time error if the same keyword appears more than once
@@ -96,7 +113,6 @@ method_declaration(MethodModifier, MethodBody) :-
          (length(MethodModifier, L), L == 1))) ; 
         true
     ),
-
     string_length(MethodBody, ML),
     % compile-time error if a method declaration is either abstract or native 
     % and has a block for its body
@@ -111,19 +127,6 @@ method_declaration(MethodModifier, MethodBody) :-
         (member("abstract", MethodModifier); member("native", MethodModifier)) ;
         true).
 
-
-
-method_declarator(ClassIdentifier, MethodModifier, Identifier, FormalParameterList) :-
-    % check if the method has params
-    (var(FormalParameterList) -> 
-        CurrParamList=[] ; 
-        split_string(FormalParameterList, ",", " ", CurrParamList)),
-    length(CurrParamList, CurrParamListLength),
-    % check if any methods exist with the same name
-    findall(X, method(ClassIdentifier, _, Identifier, X, CurrParamListLength), PrevParamList),
-    check_overloaded_methods(CurrParamList, PrevParamList),
-    % add method to KB
-    assertz(method(ClassIdentifier, MethodModifier, Identifier, CurrParamList, CurrParamListLength)).
 
 check_overloaded_methods(_, []).
 check_overloaded_methods(CurrParamList, [PrevParamList | PrevParamListTail]) :-
@@ -145,13 +148,22 @@ check_param_types([PrevParam|PrevParamListTail], [CurrParam|CurrParamListTail]) 
         check_param_types(PrevParamListTail, CurrParamListTail)).
 
 
-formal_parameter(ClassIdentifier, MethodIdentifier, UnannType, VariableDeclaratorId) :-
+% empty fact set to allow the generator to pass args up the parse tree
+method_header(_).
+
+method_declarator(Identifier, _) :-
+    % remove method param details from the KB (to allow the same param name and type across overloaded methods).
+    % Always returns true
+    retractall(formal_param(Identifier, _, _)).
+
+
+formal_parameter(MethodIdentifier, UnannType, VariableDeclaratorId) :-
     % "this" is reserved for the receiver param
     (\+ VariableDeclaratorId == "this"),
-    % fail if the param exists in the KB
-    (\+ formal_param(ClassIdentifier, MethodIdentifier, _, VariableDeclaratorId)),
+    % fail if there's another param with the same name
+    \+ formal_param(MethodIdentifier, _, VariableDeclaratorId),
     % add the param to the KB
-    assertz(formal_param(ClassIdentifier, MethodIdentifier, UnannType, VariableDeclaratorId)).
+    assertz(formal_param(MethodIdentifier, UnannType, VariableDeclaratorId)).
 
 
 
