@@ -1,5 +1,6 @@
 /*******************************************************************************
- *  Copyright (c) 2023 Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ *
+ *  Copyright (c) 7/11/23, 12:59 PM by Mark Grechanik (drmark) and Lone Star Consulting, Inc. All rights reserved.
  *  
  *  Licensed under the Apache License, Version 2.0 (the “License”); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
  *  
@@ -7,6 +8,17 @@
  *  
  ******************************************************************************/
 
-object BnfParser {
+package BnFGrammar
 
-}
+/*
+ mainRule           ::= rule | rule mainRule
+ rule               ::= <rule-name> "::=" expression
+ <rule-name>        ::= "[<a-zA-Z][-#>$\.:_a-zA-Z0-9]*"
+ expression         ::= list | list "|" expression | "[" expression "]" | "{" expression "}"
+ list               ::= term | term list
+ term               ::= <literal> | <rule-name>
+ <literal>          ::= "\".*\"" | "\'\.*\'"
+ */
+
+enum BnFTypes:
+  case MainRule(rule: BnFTypes)
