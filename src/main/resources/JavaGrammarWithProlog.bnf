@@ -5,7 +5,10 @@ Identifier::=
   IdentifierChars // but not a Keyword or BooleanLiteral or NullLiteral
 
 IdentifierChars::=
-  JAVA_LETTER {JAVA_LETTER_OR_DIGIT}
+  JAVA_LETTER_OR_DIGIT
+
+<JAVA_LETTER_OR_DIGIT>::=
+  "(?:\\b[_a-zA-Z]|\\B\\$)[_$a-zA-Z0-9]*+"
 
 //JavaLetter::=
 //  any Unicode character that is a "Java letter"
@@ -235,8 +238,8 @@ UnicodeEscape::=
 UnicodeMarker::=
   "u" {"u"}
 
-RawInputCharacter::=
-  ANY_UNICODE_CHAR
+<RawInputCharacter>::=
+  "[\u0000-\u007F]"
 
 EscapeSequence::=
   "\b"   | // (backspace BS, Unicode \u0008)
@@ -255,10 +258,6 @@ OctalEscape::=
   "\\" OctalDigit |
   "\\" OctalDigit OctalDigit |
   "\\" ZeroToThree OctalDigit OctalDigit
-
-//OctalDigit::=
-//// (one of)
-//  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 ZeroToThree::=
 //  (one of)
