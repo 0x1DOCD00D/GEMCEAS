@@ -91,7 +91,11 @@ validate_interface_method_modifiers(InterfaceMethodModifier, MethodBody) :-
     (member("static", InterfaceMethodModifier) -> 
         \+ (member("default", InterfaceMethodModifier); member("abstract", InterfaceMethodModifier)) ;
         true),
-    % private and default methods should have a method body
-    ((member("private", InterfaceMethodModifier); member("default", InterfaceMethodModifier)) ->
-        (string_length(MethodBody, BodyLength), BodyLength > 1) ;
-        true).
+    string_length(MethodBody, BodyLength),
+    ((member("private", InterfaceMethodModifier); 
+      member("default", InterfaceMethodModifier); 
+      member("static", InterfaceMethodModifier)) ->
+        % private and default methods should have a method body
+        BodyLength > 1 ;
+        % other methods should only have a semicolon
+        BodyLength == 1).
