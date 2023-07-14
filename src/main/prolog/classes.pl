@@ -23,11 +23,18 @@ normal_class_declaration(ClassModifier, TypeIdentifier, EnclosingClassIdentifier
     % compile-time error if the same keyword appears more than once
     is_set(ClassModifier),
     % fail if class is static but doesn't have an immediate enclosing class
-    ((member("static", ClassModifier), var(EnclosingClassIdentifier)) -> fail ; true),
-    % ensure inner class doesn't have the same name as the enclosing class
+    % ((member("static", ClassModifier), var(EnclosingClassIdentifier)) -> fail ; true),
+    (var(EnclosingClassIdentifier) ->
+        \+(member("static", ClassModifier); 
+            member("private", ClassModifier);
+            member("protected", ClassModifier)) ;
+        true),
     (nonvar(EnclosingClassIdentifier) ->
-      (\+ TypeIdentifier == EnclosingClassIdentifier) ;
-      true),
+        % ensure inner class doesn't have the same name as the enclosing class
+        ((\+ TypeIdentifier == EnclosingClassIdentifier),
+        % ensure enclosing class exists
+        class(_, EnclosingClassIdentifier, _)) ;
+        true),
     % fail if the class already exists, else add class details to the KB
     (class(_, TypeIdentifier, EnclosingClassIdentifier) -> 
         fail ;
