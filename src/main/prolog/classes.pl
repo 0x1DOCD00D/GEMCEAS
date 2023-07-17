@@ -42,7 +42,7 @@ normal_class_declaration(ClassModifier, TypeIdentifier, EnclosingClassIdentifier
 
 
 % section 8.3
-field_modifier(F) :-
+field_modifiers(F) :-
     access_modifiers(A),
     append(A, ["static", "final", "transient", "volatile"], F).
 
@@ -50,7 +50,7 @@ field_modifier(F) :-
 %   {FieldModifier} UnannType VariableDeclaratorList
 field_declaration(FieldModifier, UnannType, VariableDeclaratorList, CurrentClass) :-
     is_list(FieldModifier),
-    (field_modifier(F), sublist(FieldModifier, F)),
+    (field_modifiers(F), sublist(FieldModifier, F)),
     % compile-time error if the same keyword appears more than once
     is_set(FieldModifier),
     % final variables cannot be volatile

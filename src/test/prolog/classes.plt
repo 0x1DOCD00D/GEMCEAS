@@ -3,9 +3,15 @@
 :- begin_tests(classes).
 
 retract_class(ClassName) :-
-    retractall(classes(_, ClassName, _)).
+    class(_, ClassName, _),
+    retractall(class(_, ClassName, _)).
 
-test(class_modifiers) :-
+retract_fields_in_class(ClassName) :-
+    field(_, _, _, ClassName),
+    retractall(field(_, _, _, ClassName)).
+
+
+test("Class modifiers") :-
     class_modifiers(C),
     C == ["public", "protected", "private", "abstract", "static", "final", "sealed", "non-sealed", "strictfp"].
 
@@ -42,8 +48,45 @@ test("Public and protected top-level class", [fail]) :-
 test("Private and protected top-level class", [fail]) :-
     normal_class_declaration(["private", "protected"], "PrivateProtectedClass", _).
 
-test("Existing class", [fail]) :-
+test("Two same modifiers", [fail]) :-
+    normal_class_declaration(["public", "public"], "SameMod", _).
+
+test("Existing class", [setup(retract_class("Class1")), fail]) :-
     normal_class_declaration(["public"], "Class1", _),
     normal_class_declaration(["public"], "Class1", _).
+
+
+test("Field modifiers") :-
+    field_modifiers(F),
+    F == ["public", "protected", "private", "static", "final", "transient", "volatile"].
+
+test("Single field declaration", [cleanup(retract_fields_in_class("SomeClass"))]) :-
+    field_declaration([], "int", "x", "SomeClass").
+
+test("Multiple field declaration", [cleanup(retract_fields_in_class("SomeClass"))]) :-
+    field_declaration([], "int", "x, y, z", "SomeClass").
+
+test("Single field declaration with value", [cleanup(retract_fields_in_class("SomeClass"))]) :-
+    field_declaration([], "int", "x=1", "SomeClass").
+
+test("Multiple field declaration with value", [cleanup(retract_fields_in_class("SomeClass"))]) :-
+    field_declaration([], "int", "x=1, y=2, z", "SomeClass").
+
+test("Multiple queries for same identifier", [fail, cleanup(retract_fields_in_class("SomeClass"))]) :-
+    field_declaration([], "int", "x", "SomeClass"),
+    field_declaration([], "int", "x=1", "SomeClass").
+
+test("Single query with same identifier", [fail, cleanup(retract_fields_in_class("SomeClass"))]) :-
+    field_declaration([], "int", "x=1, x", "SomeClass").
+
+test("Same identifier, different types", [fail, cleanup(retract_fields_in_class("SomeClass"))]) :-
+    field_declaration([], "double", "x", "SomeClass"),
+    field_declaration([], "int", "x", "SomeClass").
+
+test("Two same modifiers", [fail]) :-
+    field_declaration(["private", "private"], "int", "x=1", "SomeClass").
+
+test("Final volatile field", [fail]) :-
+    field_declaration(["final", "volatile"], "int", "x=1", "SomeClass").
 
 :- end_tests(classes).
