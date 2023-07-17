@@ -10,8 +10,10 @@ val catsVersion = "2.9.0"
 val apacheCommonsVersion = "2.13.0"
 val jplVersion = "7.4.0"
 val parserCombinatorsVersion = "2.3.0"
+val scalaParCollVersion = "1.0.4"
 
 lazy val commonDependencies = Seq(
+  "org.scala-lang.modules" %% "scala-parallel-collections" % scalaParCollVersion,
   "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
   "org.scalatestplus" %% "mockito-4-2" % scalaMockitoTestVersion % Test,
   "com.typesafe" % "config" % typeSafeConfigVersion,
