@@ -1,7 +1,7 @@
 :- dynamic class/3.
 :- dynamic field/4.
 :- dynamic method/5.
-:- dynamic formal_param/3.
+:- dynamic formal_param/2.
 :- dynamic interface/3.
 
 
@@ -65,8 +65,8 @@ check_overloaded_methods(CurrParamList, [PrevParamList | PrevParamListTail]) :-
     check_overloaded_methods(CurrParamList, PrevParamListTail).
 
 check_param_types([PrevParam|PrevParamListTail], [CurrParam|CurrParamListTail]) :-
-    split_string(PrevParam, " ", " ", [PrevType | _]),
-    split_string(CurrParam, " ", " ", [CurrType | _]),
+    arg(1, PrevParam, PrevType),
+    arg(1, CurrParam, CurrType),
     ((\+ PrevType == CurrType) ->
         % param types are different. End check
         true ;
@@ -75,10 +75,12 @@ check_param_types([PrevParam|PrevParamListTail], [CurrParam|CurrParamListTail]) 
         check_param_types(PrevParamListTail, CurrParamListTail)).
 
 
-formal_parameter(MethodIdentifier, UnannType, VariableDeclaratorId) :-
+formal_parameter_list(_, _).
+
+formal_parameter(UnannType, VariableDeclaratorId) :-
     % "this" is reserved for the receiver param
     (\+ VariableDeclaratorId == "this"),
     % fail if there's another param with the same name
-    \+ formal_param(MethodIdentifier, _, VariableDeclaratorId),
-    % add the param to the KB
-    assertz(formal_param(MethodIdentifier, UnannType, VariableDeclaratorId)).
+    \+ formal_param(_, VariableDeclaratorId),
+    % add the param to the KB (facts removed later by method_declarator/2)
+    assertz(formal_param(UnannType, VariableDeclaratorId)).

@@ -78,7 +78,7 @@ assert_var_list([H|T], UnannType, CurrentClass) :-
 
 
 % section 8.4
-method_modifier(M) :-
+method_modifiers(M) :-
     access_modifiers(A),
     append(A, ["abstract", "static", "final", "synchronized", "native", "strictfp"], M).
 
@@ -93,7 +93,9 @@ method_declaration(ClassIdentifier, MethodModifier, MethodHeader, MethodBody) :-
     % check if the method has params
     (var(FormalParameterList) -> 
         CurrParamList=[] ; 
-        split_string(FormalParameterList, ",", " ", CurrParamList)),
+        (arg(1, FormalParameterList, ParamHead), arg(2, FormalParameterList, ParamTail),
+        append([ParamHead], ParamTail, CurrParamList))
+        ),
     length(CurrParamList, CurrParamListLength),
     % check if any methods exist with the same name
     findall(X, method(ClassIdentifier, _, MethodIdentifier, X, CurrParamListLength), PrevParamList),
@@ -104,7 +106,7 @@ method_declaration(ClassIdentifier, MethodModifier, MethodHeader, MethodBody) :-
 
 validate_class_method_modifiers(MethodModifier, MethodBody) :-
     is_list(MethodModifier),
-    (method_modifier(M), sublist(MethodModifier, M)),
+    (method_modifiers(M), sublist(MethodModifier, M)),
     % compile-time error if the same keyword appears more than once
     is_set(MethodModifier),
     % cannot have more than one of the access modifiers public, protected, private, and

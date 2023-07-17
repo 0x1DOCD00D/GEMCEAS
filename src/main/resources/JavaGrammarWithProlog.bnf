@@ -606,11 +606,11 @@ ReceiverParameter::=
 
 FormalParameterList::=
   FormalParameter {"," FormalParameter}
+  "==>> formal_parameter_list(FormalParameter._1, FormalParameter._2)"
 
 FormalParameter::=
   {VariableModifier} UnannType VariableDeclaratorId
-  "MethodIdentifier =:= MethodDeclarator.Identifier"
-  "==>> formal_parameter(MethodIdentifier, UnannType, VariableDeclaratorId)" |
+  "==>> formal_parameter(UnannType, VariableDeclaratorId)" |
   VariableArityParameter
 
 VariableArityParameter::=
