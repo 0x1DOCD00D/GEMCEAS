@@ -1,3 +1,11 @@
+/*******************************************************************************
+ * Copyright (c) 7/13/23, 10:55 AM by Mark Grechanik (drmark) and Lone Star Consulting, Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the “License”); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an “AS IS” BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the specific language governing permissions and limitations under the License.
+ ******************************************************************************/
+
 // JLS 17 Grammar - https://docs.oracle.com/javase/specs/jls/se17/html/jls-19.html
 
 //Productions from §3 (Lexical Structure)
@@ -457,8 +465,6 @@ ClassDeclaration::=
 
 NormalClassDeclaration::=
   {ClassModifier} "class" TypeIdentifier [TypeParameters] [ClassExtends] [ClassImplements] [ClassPermits] ClassBody
-  "EnclosingClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
-  "==>> normal_class_declaration(ClassModifier, TypeIdentifier, EnclosingClassIdentifier)"
 
 ClassModifier::=
 //(one of)
@@ -509,8 +515,6 @@ ClassMemberDeclaration::=
 
 FieldDeclaration::=
   {FieldModifier} UnannType VariableDeclaratorList ";"
-  "CurrentClass =:= NormalClassDeclaration:TypeIdentifier"
-  "==>> field_declaration(FieldModifier, VariableDeclaratorList, CurrentClass)"
 
 FieldModifier::=
 //(one of)
@@ -571,7 +575,6 @@ UnannArrayType::=
 
 MethodDeclaration::=
   {MethodModifier} MethodHeader MethodBody
-  "==>> method_declaration(MethodModifier, MethodBody)"
 
 MethodModifier::=
 //(one of)
@@ -596,9 +599,6 @@ Result::=
 
 MethodDeclarator::=
   Identifier ( [ReceiverParameter ","] [FormalParameterList] ) [Dims]
-  "ClassIdentifier =:= NormalClassDeclaration:TypeIdentifier"
-  "MethodModifier =:= MethodDeclaration.MethodModifier"
-  "==>> method_declarator(ClassIdentifier, MethodModifier, Identifier, FormalParameterList)"
 
 ReceiverParameter::=
   {Annotation} UnannType [Identifier "."] "this"
@@ -607,10 +607,7 @@ FormalParameterList::=
   FormalParameter {"," FormalParameter}
 
 FormalParameter::=
-  {VariableModifier} UnannType VariableDeclaratorId
-  "ClassIdentifier =:= NormalClassDeclaration:TypeIdentifier"
-  "MethodIdentifier =:= MethodDeclarator.Identifier"
-  "==>> formal_parameter(ClassIdentifier, MethodIdentifier, UnannType, VariableDeclaratorId)" |
+  {VariableModifier} UnannType VariableDeclaratorId |
   VariableArityParameter
 
 VariableArityParameter::=
@@ -642,7 +639,6 @@ StaticInitializer::=
 
 ConstructorDeclaration::=
   {ConstructorModifier} ConstructorDeclarator [Throws] ConstructorBody
-  "==>> constructor_declaration(ConstructorModifier)"
 
 ConstructorModifier::=
 //(one of)
@@ -653,7 +649,6 @@ ConstructorModifier::=
 
 ConstructorDeclarator::=
   [TypeParameters] SimpleTypeName "(" [ReceiverParameter ","] [FormalParameterList] ")"
-  "SimpleTypeName =:= NormalClassDeclaration:TypeIdentifier"
 
 SimpleTypeName::=
   TypeIdentifier
@@ -930,12 +925,10 @@ AssertStatement::=
 
 SwitchStatement::=
   "switch" "(" Expression ")" SwitchBlock
-  "switch_statement(Expression, SwitchBlock)"
 
 SwitchBlock::=
   "{" SwitchRule {SwitchRule} "}" |
   "{" {SwitchBlockStatementGroup} {SwitchLabel ":"} "}"
-  "switch_block(SwitchLabel)"
 
 SwitchRule::=
   SwitchLabel "->" Expression ";" |
@@ -1086,7 +1079,6 @@ UnqualifiedClassInstanceCreationExpression::=
 
 ClassOrInterfaceTypeToInstantiate::=
   {Annotation} Identifier {"." {Annotation} Identifier} [TypeArgumentsOrDiamond]
-  "==>> class_or_interface_type_to_instantiate(Identifier._1, Identifier._2)"
 
 TypeArgumentsOrDiamond::=
   TypeArguments | 
@@ -1102,10 +1094,7 @@ ArrayAccess::=
   PrimaryNoNewArray [ Expression ]
 
 MethodInvocation::=
-  MethodName "(" [ArgumentList] ")"
-  "ClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
-  "EnclosingMethodModifiers =:= MethodDeclaration.MethodModifier"
-  "method_invocation_simple(ClassIdentifier, EnclosingMethodModifiers, MethodName, ArgumentList)" |
+  MethodName "(" [ArgumentList] ")" |
   TypeName "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
   ExpressionName "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
   Primary "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
@@ -1135,7 +1124,6 @@ DimExprs::=
 
 DimExpr::=
   {Annotation} "[" Expression "]"
-  "==>> dim_expr(Expression)"
 
 Expression::=
   LambdaExpression |
@@ -1289,7 +1277,6 @@ CastExpression::=
 
 SwitchExpression::=
   "switch" "(" Expression ")" SwitchBlock
-  "==>> switch_expression(Expression, SwitchBlock)"
 
 ConstantExpression::=
   Expression

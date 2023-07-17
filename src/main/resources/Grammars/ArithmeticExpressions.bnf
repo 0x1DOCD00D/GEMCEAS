@@ -1,0 +1,5 @@
+expression ::= sum
+sum ::= product {"+" product}
+product ::= ["+"|"-"] term {"*" term}
+term ::= number | "(" expression ")"
+<number> ::= "~>(\+|\-)?[0-9]+(\.[0-9]+)?<~"
