@@ -10,6 +10,10 @@ retract_fields_in_class(ClassName) :-
     field(_, _, _, ClassName),
     retractall(field(_, _, _, ClassName)).
 
+retract_methods_in_class(ClassName) :-
+    method(ClassName, _, _, _, _),
+    retractall(method(ClassName, _, _, _, _)).
+
 
 test("Class modifiers") :-
     class_modifiers(C),
@@ -88,5 +92,76 @@ test("Two same modifiers", [fail]) :-
 
 test("Final volatile field", [fail]) :-
     field_declaration(["final", "volatile"], "int", "x=1", "SomeClass").
+
+
+test("Method modifiers") :-
+    method_modifiers(M),
+    M == ["public", "protected", "private", "abstract", "static", "final", "synchronized", "native", "strictfp"].
+
+test("Simple method declaration", [nondet, cleanup(retract_methods_in_class("Class1"))]) :-
+    method_declaration("Class1", ["public"], method_header(method_declarator("method1", _)), "{}").
+
+test("Two same modifiers", [fail]) :-
+    method_declaration("Class1", ["public", "public"], method_header(method_declarator("method1", _)), "{}").
+
+test("Sealed and non-sealed method", [fail]) :-
+    method_declaration("Class1", ["sealed", "non-sealed"], method_header(method_declarator("method1", _)), "{}").
+
+test("Native and strictfp", [fail]) :-
+    method_declaration("Class1", ["native", "strictfp"], method_header(method_declarator("method1", _)), "{}").
+
+test("Private abstract method ", [fail]) :-
+    method_declaration("Class1", ["private", "abstract"], method_header(method_declarator("method1", _)), ";").
+
+test("Static abstract method ", [fail]) :-
+    method_declaration("Class1", ["static", "abstract"], method_header(method_declarator("method1", _)), ";").
+
+test("Final abstract method ", [fail]) :-
+    method_declaration("Class1", ["final", "abstract"], method_header(method_declarator("method1", _)), ";").
+
+test("Native abstract method ", [fail]) :-
+    method_declaration("Class1", ["native", "abstract"], method_header(method_declarator("method1", _)), ";").
+
+test("Strictfp abstract method ", [fail]) :-
+    method_declaration("Class1", ["strictfp", "abstract"], method_header(method_declarator("method1", _)), ";").
+
+test("Public abstract method ", [nondet, cleanup(retract_methods_in_class("Class1"))]) :-
+    method_declaration("Class1", ["public", "abstract"], method_header(method_declarator("method1", _)), ";").
+
+test("Protected abstract method ", [nondet, cleanup(retract_methods_in_class("Class1"))]) :-
+    method_declaration("Class1", ["protected", "abstract"], method_header(method_declarator("method1", _)), ";").
+
+test("Simple Abstract method", [nondet, cleanup(retract_methods_in_class("Class1"))]) :-
+    method_declaration("Class1", ["abstract"], method_header(method_declarator("method1", _)), ";").
+
+test("Abstract method with body", [fail]) :-
+    method_declaration("Class1", ["abstract"], method_header(method_declarator("method1", _)), "{}").
+
+test("Native method with body", [fail]) :-
+    method_declaration("Class1", ["native"], method_header(method_declarator("method1", _)), "{}").
+
+test("Non abstract / native method without body", [fail]) :-
+    method_declaration("Class1", ["public"], method_header(method_declarator("method1", _)), ";").
+
+test("Method with params", [nondet, cleanup(retract_methods_in_class("Class1"))]) :-
+    method_declaration("Class1", ["public"], method_header(method_declarator("method1", 
+        formal_parameter_list(formal_parameter("int", "x"), [formal_parameter("int", "y"), 
+            formal_parameter("int", "z")]))), "{}").
+
+test("Overloaded method", [nondet, cleanup(retract_methods_in_class("Class1"))]) :-
+    method_declaration("Class1", ["public"], method_header(method_declarator("method1", 
+        formal_parameter_list(formal_parameter("int", "x"), []))), "{}"),
+    method_declaration("Class1", ["public"], method_header(method_declarator("method1", 
+        formal_parameter_list(formal_parameter("int", "x"), [formal_parameter("int", "y")]))), "{}"),
+    method_declaration("Class1", ["public"], method_header(method_declarator("method1", 
+        formal_parameter_list(formal_parameter("int", "x"), [formal_parameter("int", "y"), 
+            formal_parameter("int", "z")]))), "{}").
+
+test("Same method", [fail, cleanup(retract_methods_in_class("Class1"))]) :-
+    method_declaration("Class1", ["public"], method_header(method_declarator("method1", 
+        formal_parameter_list(formal_parameter("int", "x"), []))), "{}"),
+    method_declaration("Class1", ["public"], method_header(method_declarator("method1", 
+        formal_parameter_list(formal_parameter("int", "x"), []))), "{}").
+
 
 :- end_tests(classes).
