@@ -147,6 +147,8 @@ get_curr_param_list(FormalParameterList, CurrParamList) :-
 constructor_declaration(ConstructorModifier, ConstructorDeclarator) :-
     (access_modifiers(C), sublist(ConstructorModifier, C)),
     is_set(ConstructorModifier),
+    % cannot have more than one of the access modifiers public, protected, private
+    check_access_modifier(ConstructorModifier),
     arg(1, ConstructorDeclarator, SimpleTypeName),
     arg(2, ConstructorDeclarator, FormalParameterList),
     get_curr_param_list(FormalParameterList, CurrParamList),

@@ -14,6 +14,10 @@ retract_methods_in_class(ClassName) :-
     method(ClassName, _, _, _, _),
     retractall(method(ClassName, _, _, _, _)).
 
+retract_constructors_in_class(ClassName) :-
+    constructor(ClassName, _),
+    retractall(constructor(ClassName, _)).
+
 
 test("Class modifiers") :-
     class_modifiers(C),
@@ -162,6 +166,29 @@ test("Same method", [fail, cleanup(retract_methods_in_class("Class1"))]) :-
         formal_parameter_list(formal_parameter("int", "x"), []))), "{}"),
     method_declaration("Class1", ["public"], method_header(method_declarator("method1", 
         formal_parameter_list(formal_parameter("int", "x"), []))), "{}").
+
+
+test("Simple constructor declaration", [nondet, cleanup(retract_constructors_in_class("C1"))]) :-
+    constructor_declaration(["public"], constructor_declarator("C1", _)).
+
+test("Constructor with multiple modifiers", [fail]) :-
+    constructor_declaration(["public", "private"], constructor_declarator("C1", _)).
+
+test("Constructor with same modifiers", [fail]) :-
+    constructor_declaration(["public", "public"], constructor_declarator("C1", _)).
+
+test("Constructor with single param", [nondet, cleanup(retract_constructors_in_class("C1"))]) :-
+    constructor_declaration(["public"], constructor_declarator("C1", 
+        formal_parameter_list(formal_parameter("int", "x"), []))).
+
+test("Constructor with multiple params", [nondet, cleanup(retract_constructors_in_class("C1"))]) :-
+    constructor_declaration(["public"], constructor_declarator("C1", 
+        formal_parameter_list(formal_parameter("int", "x"), [formal_parameter("int", "y"), 
+            formal_parameter("int", "z")]))).
+
+test("Same constructor", [fail, cleanup(retract_constructors_in_class("C1"))]) :-
+    constructor_declaration(["public"], constructor_declarator("C1", _)),
+    constructor_declaration(["public"], constructor_declarator("C1", _)).
 
 
 :- end_tests(classes).
