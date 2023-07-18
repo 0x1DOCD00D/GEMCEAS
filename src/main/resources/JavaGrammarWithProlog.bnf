@@ -642,7 +642,7 @@ StaticInitializer::=
 
 ConstructorDeclaration::=
   {ConstructorModifier} ConstructorDeclarator [Throws] ConstructorBody
-  "==>> constructor_declaration(ConstructorModifier)"
+  "==>> constructor_declaration(ConstructorModifier, ConstructorDeclarator)"
 
 ConstructorModifier::=
 //(one of)
@@ -654,6 +654,7 @@ ConstructorModifier::=
 ConstructorDeclarator::=
   [TypeParameters] SimpleTypeName "(" [ReceiverParameter ","] [FormalParameterList] ")"
   "SimpleTypeName =:= NormalClassDeclaration.TypeIdentifier"
+  "==>> constructor_declarator(SimpleTypeName, FormalParameterList)"
 
 SimpleTypeName::=
   TypeIdentifier

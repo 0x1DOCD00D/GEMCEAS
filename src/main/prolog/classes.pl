@@ -90,16 +90,11 @@ method_declaration(ClassIdentifier, MethodModifier, MethodHeader, MethodBody) :-
     arg(1, MethodHeader, MethodDeclarator),
     arg(1, MethodDeclarator, MethodIdentifier),
     arg(2, MethodDeclarator, FormalParameterList),
-    % check if the method has params
-    (var(FormalParameterList) -> 
-        CurrParamList=[] ; 
-        (arg(1, FormalParameterList, ParamHead), arg(2, FormalParameterList, ParamTail),
-        append([ParamHead], ParamTail, CurrParamList))
-        ),
+    get_curr_param_list(FormalParameterList, CurrParamList),
     length(CurrParamList, CurrParamListLength),
     % check if any methods exist with the same name
-    findall(X, method(ClassIdentifier, _, MethodIdentifier, X, CurrParamListLength), PrevParamList),
-    check_overloaded_methods(CurrParamList, PrevParamList),
+    findall(X, method(ClassIdentifier, _, MethodIdentifier, X, CurrParamListLength), PrevParamLists),
+    check_overloaded_param_lists(CurrParamList, PrevParamLists),
     % add method to KB
     assertz(method(ClassIdentifier, MethodModifier, MethodIdentifier, CurrParamList, CurrParamListLength)).
 
@@ -136,16 +131,33 @@ validate_class_method_modifiers(MethodModifier, MethodBody) :-
         (member("abstract", MethodModifier); member("native", MethodModifier)) ;
         true).
 
+get_curr_param_list(FormalParameterList, CurrParamList) :-
+    % check if the method / constructor has params
+    (var(FormalParameterList) -> 
+        CurrParamList=[] ; 
+        (arg(1, FormalParameterList, ParamHead), arg(2, FormalParameterList, ParamTail),
+        append([ParamHead], ParamTail, CurrParamList))
+        ).
+
 
 
 % section 8.8
 % ConstructorDeclaration:
 %   {ConstructorModifier} ConstructorDeclarator [Throws] ConstructorBody
-constructor_declaration(ConstructorModifier) :-
-    % TODO:
-    % compile-time error to declare two constructors with override-equivalent signatures (§8.4.2) in a class.
-    % compile-time error to declare two constructors whose signatures have the same erasure (§4.6) in a class.
-    (access_modifiers(C), member(ConstructorModifier, C)).
+constructor_declaration(ConstructorModifier, ConstructorDeclarator) :-
+    (access_modifiers(C), sublist(ConstructorModifier, C)),
+    is_set(ConstructorModifier),
+    arg(1, ConstructorDeclarator, SimpleTypeName),
+    arg(2, ConstructorDeclarator, FormalParameterList),
+    get_curr_param_list(FormalParameterList, CurrParamList),
+    % check if any constructors exist with the same name
+    findall(X, constructor(SimpleTypeName, X), PrevParamLists),
+    check_overloaded_param_lists(CurrParamList, PrevParamLists),
+    % add constructor details to KB
+    assertz(constructor(SimpleTypeName, CurrParamList)).
+
+
+constructor_declarator(_, _).
 
 
 

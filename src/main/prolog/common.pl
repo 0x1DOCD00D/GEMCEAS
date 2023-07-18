@@ -2,6 +2,7 @@
 :- dynamic field/4.
 :- dynamic method/5.
 :- dynamic formal_param/2.
+:- dynamic constructor/2.
 :- dynamic interface/3.
 
 
@@ -49,20 +50,17 @@ name_value(String, Name, Value) :-
 % empty fact set to allow the generator to pass args up the parse tree
 method_header(_).
 
-method_declarator(Identifier, _) :-
-    % remove method param details from the KB (to allow the same param name and type across overloaded methods).
-    % Always returns true
-    retractall(formal_param(Identifier, _, _)).
+method_declarator(_, _).
 
 
-check_overloaded_methods(_, []).
-check_overloaded_methods(CurrParamList, [PrevParamList | PrevParamListTail]) :-
+check_overloaded_param_lists(_, []).
+check_overloaded_param_lists(CurrParamList, [PrevParamList | PrevParamListTail]) :-
     length(CurrParamList, CurrParamListLength),
     length(PrevParamList, PrevParamListLength),
     ((PrevParamListLength == CurrParamListLength) ->
         check_param_types(PrevParamList, CurrParamList) ;
         true),
-    check_overloaded_methods(CurrParamList, PrevParamListTail).
+    check_overloaded_param_lists(CurrParamList, PrevParamListTail).
 
 check_param_types([PrevParam|PrevParamListTail], [CurrParam|CurrParamListTail]) :-
     arg(1, PrevParam, PrevType),
@@ -75,7 +73,10 @@ check_param_types([PrevParam|PrevParamListTail], [CurrParam|CurrParamListTail]) 
         check_param_types(PrevParamListTail, CurrParamListTail)).
 
 
-formal_parameter_list(_, _).
+formal_parameter_list(_, _) :-
+    % remove param details from the KB (to allow the same param name across overloaded methods / constructors).
+    % Always returns true
+    retractall(formal_param(_, _, _)).
 
 formal_parameter(UnannType, VariableDeclaratorId) :-
     % "this" is reserved for the receiver param
