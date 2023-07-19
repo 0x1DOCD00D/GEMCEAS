@@ -53,13 +53,11 @@ interface_method_declaration(InterfaceIdentifier, InterfaceMethodModifier, Metho
     arg(1, MethodDeclarator, MethodIdentifier),
     arg(2, MethodDeclarator, FormalParameterList),
     % check if the method has params
-    (var(FormalParameterList) -> 
-        CurrParamList=[] ; 
-        split_string(FormalParameterList, ",", " ", CurrParamList)),
+    get_curr_param_list(FormalParameterList, CurrParamList),
     length(CurrParamList, CurrParamListLength),
     % check if any methods exist with the same name
     findall(X, method(InterfaceIdentifier, _, MethodIdentifier, X, CurrParamListLength), PrevParamList),
-    check_overloaded_methods(CurrParamList, PrevParamList),
+    check_overloaded_param_lists(CurrParamList, PrevParamList),
     % add method to KB
     assertz(method(InterfaceIdentifier, InterfaceMethodModifier, MethodIdentifier, CurrParamList, CurrParamListLength)).
 

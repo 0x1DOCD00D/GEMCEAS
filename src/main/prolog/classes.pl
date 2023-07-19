@@ -131,14 +131,6 @@ validate_class_method_modifiers(MethodModifier, MethodBody) :-
         (member("abstract", MethodModifier); member("native", MethodModifier)) ;
         true).
 
-get_curr_param_list(FormalParameterList, CurrParamList) :-
-    % check if the method / constructor has params
-    (var(FormalParameterList) -> 
-        CurrParamList=[] ; 
-        (arg(1, FormalParameterList, ParamHead), arg(2, FormalParameterList, ParamTail),
-        append([ParamHead], ParamTail, CurrParamList))
-        ).
-
 
 
 % section 8.8

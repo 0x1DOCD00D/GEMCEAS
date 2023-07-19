@@ -53,6 +53,15 @@ method_header(_).
 method_declarator(_, _).
 
 
+get_curr_param_list(FormalParameterList, CurrParamList) :-
+    % check if the method / constructor has params
+    (var(FormalParameterList) -> 
+        CurrParamList=[] ; 
+        (arg(1, FormalParameterList, ParamHead), arg(2, FormalParameterList, ParamTail),
+        append([ParamHead], ParamTail, CurrParamList))
+        ).
+
+
 check_overloaded_param_lists(_, []).
 check_overloaded_param_lists(CurrParamList, [PrevParamList | PrevParamListTail]) :-
     length(CurrParamList, CurrParamListLength),
