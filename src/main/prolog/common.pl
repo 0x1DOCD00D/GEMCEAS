@@ -85,7 +85,7 @@ check_param_types([PrevParam|PrevParamListTail], [CurrParam|CurrParamListTail]) 
 formal_parameter_list(_, _) :-
     % remove param details from the KB (to allow the same param name across overloaded methods / constructors).
     % Always returns true
-    retractall(formal_param(_, _, _)).
+    retractall(formal_param(_, _)).
 
 formal_parameter(UnannType, VariableDeclaratorId) :-
     % "this" is reserved for the receiver param
