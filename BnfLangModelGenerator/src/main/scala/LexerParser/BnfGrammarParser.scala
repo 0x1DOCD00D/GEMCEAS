@@ -86,37 +86,23 @@ object BnfGrammarParser extends Parsers with PackratParsers with DebugParserUtil
   }
 
   lazy val rhs: PackratParser[RuleContent] = positioned {
-    lazy val litRule = ruleLiterals ^^ {
-      case rule => rule
-    }
+    lazy val litRule = ruleLiterals ^^ (rule => rule)
 
-    lazy val optRule = Bra ~> topRhs <~ Ket ^^ {
-      case exp => RuleOpt(exp)
-    }
+    lazy val optRule = Bra ~> topRhs <~ Ket ^^ (exp => RuleOpt(exp))
 
-    lazy val orRule = Or ~> topRhs ^^ {
-      case exp => RuleOr(exp)
-    }
+    lazy val orRule = Or ~> topRhs ^^ (exp => RuleOr(exp))
 
-    lazy val repRule = CurlyBra ~> topRhs <~ CurlyKet ^^ {
-      case exp => RuleRep(exp)
-    }
+    lazy val repRule = CurlyBra ~> topRhs <~ CurlyKet ^^ (exp => RuleRep(exp))
     show(litRule)("literal") | show(optRule)("[...]") | show(repRule)("{...}") | show(orRule)("..|..")
   }
 
 //ruleContent               ::= term {ruleContent};
   lazy val ruleLiterals: PackratParser[RuleLiteral] = positioned {
-    lazy val aT = aTerminal ^^ {
-      case lt => RuleLiteral(lt)
-    }
+    lazy val aT = aTerminal ^^ (lt => RuleLiteral(lt))
 
-    lazy val aNt = non_terminal ^^ {
-      case lt => RuleLiteral(lt)
-    }
+    lazy val aNt = non_terminal ^^ (lt => RuleLiteral(lt))
 
-    lazy val aNtRgx = non_terminal_regex ^^ {
-      case lt => RuleLiteral(lt)
-    }
+    lazy val aNtRgx = non_terminal_regex ^^ (lt => RuleLiteral(lt))
 
     show(aT)("terminal") | show(aNt)("nonterminal") | show(aNtRgx)("nontermRegex")
   }
