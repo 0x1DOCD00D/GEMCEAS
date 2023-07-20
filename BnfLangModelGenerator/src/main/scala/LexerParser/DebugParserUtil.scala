@@ -10,10 +10,9 @@ package LexerParser
 
 import scala.util.parsing.combinator.{PackratParsers, Parsers}
 import scala.util.parsing.input.{NoPosition, Position, Reader}
-import BnfGrammarAST.*
 import Utilz.ConfigDb.debugProductionRules
 
 trait DebugParserUtil:
-  self: Parsers =>
-    def show[T](p: => Parser[T])(name: String): Parser[T] =
+  self: PackratParsers =>
+    def show[T](p: => PackratParser[T])(name: String): Parser[T] =
       if (!debugProductionRules) p else log(p)(name)

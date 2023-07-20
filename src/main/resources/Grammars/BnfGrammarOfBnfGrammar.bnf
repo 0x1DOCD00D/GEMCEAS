@@ -6,10 +6,10 @@
  * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an “AS IS” BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the License for the specific language governing permissions and limitations under the License.
  ******************************************************************************/
 // speficied in https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form#Example
- mainRule           ::= rule | rule mainRule
- rule               ::= <rule-name> "::=" expression
- <rule-name>        ::= "[<a-zA-Z][-#>$\.:_a-zA-Z0-9]*"
- expression         ::= list | list "|" expression | "[" expression "]" | "{" expression "}"
- list               ::= term | term list
- term               ::= <literal> | <rule-name>
- <literal>          ::= "\".*\"" | "\'\.*\'"
+ mainRule           ::= rule {mainRule};
+ rule               ::= <rule-name> "::=" rhs;
+ <rule-name>        ::= "[<a-zA-Z][-#>$\.:_a-zA-Z0-9]*";
+ rhs                ::= terms {"|" rhs} | "[" rhs "]" | "{" rhs "}" | {rhs};
+ terms               ::= term {terms};
+ term               ::= <literal> | <rule-name>;
+ <literal>          ::= "\".*\"" | "\'\.*\'";
