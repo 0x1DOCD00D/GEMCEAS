@@ -7,7 +7,7 @@ class UniformProbGeneratorTest extends AnyFlatSpec with Matchers {
   behavior of "random number generator"
 
   it should "create a uniform distribution of double precision values, take ten random values check the first value" in {
-    val values = UniformProbGenerator.generateRandom(10, false, repeatable = true)().asInstanceOf[Vector[Double]]
+    val values = UniformProbGenerator.generateRandom(10, false)().asInstanceOf[Vector[Double]]
     values.length shouldBe 10
     values.head should be >= 0.0
     values.head should be <= 1.0

@@ -8,10 +8,18 @@
 
 package Compiler
 
-import scala.util.Try
+import Utilz.CreateLogger
+
+import scala.util.{Failure, Success, Try}
 import scala.io.Source
 import java.io.FileNotFoundException
 
 object LoadGrammarFile:
-  def apply(grammarFilePath: String): Try[String] =
-    Try(Source.fromURL(getClass.getResource(grammarFilePath)).getLines().mkString("\n"))
+  private val logger = CreateLogger(classOf[LoadGrammarFile.type])
+  def apply(grammarFilePath: String): String =
+    Try(Source.fromURL(getClass.getResource(grammarFilePath)).getLines().mkString("\n")) match
+      case Failure(exception) =>
+        logger.error(s"Cannot obtain a grammar string from $grammarFilePath for reason $exception")
+        ""
+
+      case Success(grammar) => grammar

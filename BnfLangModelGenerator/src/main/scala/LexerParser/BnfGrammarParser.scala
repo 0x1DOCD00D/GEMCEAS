@@ -65,9 +65,7 @@ object BnfGrammarParser extends Parsers with PackratParsers with DebugParserUtil
 
 //  mainRule           ::= rule {mainRule};
   lazy val mainFuleProcessor: PackratParser[MainRule] = positioned {
-    lazy val theMainRule = repsep(rule, semiColonEndsRule) ^^ {
-      case rl => MainRule(rl)
-    }
+    lazy val theMainRule = repsep(rule, semiColonEndsRule) ^^ (rl => MainRule(rl))
 
     show(theMainRule)("the mother of all rules")
   }
