@@ -10,8 +10,6 @@
 
 package LexerParser
 
-import LexerParser.BnfGrammarAST.{MainRule, Nonterminal, NonterminalRegex, RuleContent, RHS}
-
 import scala.util.matching.Regex
 import scala.util.parsing.input.{Position, Positional}
 
@@ -25,33 +23,17 @@ import scala.util.parsing.input.{Position, Positional}
  <literal>          ::= "\"[-#$~\.:_a-zA-Z0-9]*\"" | "\'[_a-zA-Z][-#$\.:_a-zA-Z0-9]*\'" term               ::= <literal> | <rule-name>
  <literal>          ::= "\".*\"" | "\'\.*\'"
  */
-enum BnfAttributeFlag:
-  case REPETITIVE, OPTIONAL, NOATTR
-end BnfAttributeFlag
 
-enum BnfGrammarAST extends Positional:
-  import BnfAttributeFlag.NOATTR
-  case MainRule(aRule: Rule, otherRules: Option[MainRule])
-  case Rule(id: Nonterminal | NonterminalRegex, rhs: RHS)
-  case Nonterminal(id: String)
-  case NonterminalRegex(id: String)
-  case RHS(rc: Option[RuleContent], rhs: Option[RHS], flag: BnfAttributeFlag = BnfAttributeFlag.NOATTR)
-  case RuleContent(term: Terminal, otherTerms: Option[RuleContent])
-  case Terminal(id: String)
-  case RegexString(id: String)
-  case ISDEFINEDAS()
-  case LESS()
-  case GREATER()
-  case VERTICALBAR()
-  case BRA()
-  case KET()
-  case CURLYBRA()
-  case CURLYKET()
-  case DOUBLESLASH, SLASHSTAROPEN, COMMENT, NOTOKEN, PARSEFAILURE
+sealed trait BnfGrammarAST extends Positional
 
-case object NoToken extends Position:
-  override def line: Int = -1
+case class MainRule(rules: List[Rule]) extends BnfGrammarAST
 
-  override def column: Int = -1
+case class Rule(id: Literal, rhs: RuleContent) extends BnfGrammarAST
 
-  override protected def lineContents: String = "NO CONTENT AVAILABLE"
+sealed trait RuleContent extends BnfGrammarAST
+case class RuleLiteral(lit: Literal) extends RuleContent
+case class RuleOpt(rc: RuleContent) extends RuleContent
+case class RuleRep(rc: RuleContent) extends RuleContent
+case class RuleOr(rc: RuleContent) extends RuleContent
+case class RuleCollection(rcc: List[RuleContent]) extends RuleContent
+case class PARSEFAILURE(err: String) extends BnfGrammarAST

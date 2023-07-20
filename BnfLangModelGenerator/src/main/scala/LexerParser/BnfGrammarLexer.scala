@@ -9,23 +9,22 @@
 package LexerParser
 
 import java.util.regex.Pattern
-import scala.util.parsing.combinator.JavaTokenParsers
+import scala.util.parsing.combinator.{JavaTokenParsers, PackratParsers}
 import GrammarCompilationError.*
-import BnfGrammarAST.*
 import Utilz.ConfigDb.debugLexerTokens
 import Utilz.CreateLogger
 
 object BnfGrammarLexer extends JavaTokenParsers:
   private lazy val logger = CreateLogger(classOf[BnfGrammarLexer.type])
-  def apply(srcGrammar: String): GrammarCompilationError | Seq[BnfGrammarAST] = parse(BnfTokens, srcGrammar) match {
-    case Failure(msg, next) => BnfLexerError(Location(next.pos.line, next.pos.column), msg)
-    case Error(msg, next) => BnfLexerError(Location(next.pos.line, next.pos.column), msg)
-    case Success(result, next) => result.toSeq
+  def apply(srcGrammar: String): Either[GrammarCompilationError,Seq[LexerToken]] = parse(BnfTokens, srcGrammar) match {
+    case Failure(msg, next) => Left(BnfLexerError(Location(next.pos.line, next.pos.column), msg))
+    case Error(msg, next) => Left(BnfLexerError(Location(next.pos.line, next.pos.column), msg))
+    case Success(extractedTokens, _) => Right(extractedTokens)
   }
 
-  def BnfTokens: Parser[List[BnfGrammarAST]] = phrase(rep1(isDefinedAs | verticalBar | bra | ket |
-        curlybra | curlyket | less | greater | nonterminal | terminal | regex_string | singleLineComment | multiLineComment))
-    ^^ { allCapturedTokens => allCapturedTokens.filterNot(_ == COMMENT) }
+  def BnfTokens: Parser[List[LexerToken]] = phrase(rep1(isDefinedAs | verticalBar | bra | ket |
+        curlybra | curlyket | nonterminal | nonterminalRegex | terminal | regex_string | endOfRule | singleLineComment | multiLineComment))
+    ^^ { allCapturedTokens => allCapturedTokens.filterNot(_ == COMMENT()) }
 
   def isDefinedAs:Parser[ISDEFINEDAS] = positioned {
     "::=" ^^ (_ =>
@@ -33,68 +32,76 @@ object BnfGrammarLexer extends JavaTokenParsers:
       ISDEFINEDAS())
   }
 
+  def endOfRule: Parser[SEMICOLON] = positioned {
+    ";" ^^ (_ =>
+      if debugLexerTokens then logger.info("Lexed ;")
+      SEMICOLON())
+  }
+
   def verticalBar: Parser[VERTICALBAR] = positioned {
-    "|" ^^ (_ => VERTICALBAR())
+    "|" ^^ (_ =>
+      if debugLexerTokens then logger.info("Lexed |")
+      VERTICALBAR())
   }
 
   def bra: Parser[BRA] = positioned {
-    "[" ^^ (_ => BRA())
+    "[" ^^ (_ =>
+      if debugLexerTokens then logger.info("Lexed [")
+      BRA())
   }
 
   def ket: Parser[KET] = positioned {
-    "]" ^^ (_ => KET())
+    "]" ^^ (_ =>
+      if debugLexerTokens then logger.info("Lexed ]")
+      KET())
   }
 
-  def curlybra = positioned {
-    "{" ^^ (_ => CURLYBRA())
+  def curlybra: Parser[CURLYBRA] = positioned {
+    "{" ^^ (_ =>
+      if debugLexerTokens then logger.info("Lexed {")
+      CURLYBRA())
   }
 
-  def curlyket = positioned {
-    "}" ^^ (_ => CURLYKET())
-  }
-
-  def less = positioned {
-    "<" ^^ (_ => LESS())
-  }
-
-  def greater = positioned {
-    ">" ^^ (_ => GREATER())
+  def curlyket: Parser[CURLYKET] = positioned {
+    "}" ^^ (_ =>
+      if debugLexerTokens then logger.info("Lexed }")
+      CURLYKET())
   }
 
   def nonterminal: Parser[Nonterminal] = positioned {
-    "[a-zA-Z][-#$\\.:_a-zA-Z0-9]*".r ^^ { id =>
+    "[_a-zA-Z][-#$\\.:_a-zA-Z0-9]*".r ^^ { id =>
       if debugLexerTokens then logger.info(s"Lexed nt: $id")
       Nonterminal(id) }
   }
 
   def nonterminalRegex: Parser[NonterminalRegex] = positioned {
-    less ~> nonterminal <~ greater ^^ { nt =>
+    "<[_a-zA-Z][-#$\\.:_a-zA-Z0-9]*>".r ^^ { nt =>
       if debugLexerTokens then logger.info(s"Lexed nt regex: $nt")
-      NonterminalRegex(nt.id) }
+      NonterminalRegex(removeFirstAndLastDoubleQuotes(nt)) }
   }
 
-  val removeDoubleQuotes = (s: String) => s.substring(1, s.length - 1)
-  val removeWigglyArrows = (s: String) => s.substring(2, s.length - 2)
+  val removeFirstAndLastDoubleQuotes: String => String = (s: String) => if s.charAt(0) == '\"' && s.charAt(s.length-1) == '\"' then s.substring(1, s.length - 1) else s
+  val removeWigglyArrows: String => String = (s: String) => s.substring(2, s.length - 2)
 
   def terminal: Parser[Terminal] =
     positioned{
       stringLiteral ^^ { strContent =>
         if debugLexerTokens then logger.info(s"Lexed terminal: $strContent")
-        Terminal(removeDoubleQuotes(strContent))
+        Terminal(strContent)
       }
     }
 
   def regex_string: Parser[RegexString] =
     positioned {
       "\"~>[^\n]+<~\"".r ^^ { strContent =>
-        if debugLexerTokens then logger.info(s"Lexed regex: ${removeWigglyArrows(removeDoubleQuotes(strContent))}")
-        RegexString(removeWigglyArrows(removeDoubleQuotes(strContent)))
+        if debugLexerTokens then logger.info(s"Lexed regex: ${removeWigglyArrows(removeFirstAndLastDoubleQuotes(strContent))}")
+        RegexString(removeWigglyArrows(removeFirstAndLastDoubleQuotes(strContent)))
       }
     }
 
-  def doubleSlash = positioned("//" ^^^ DOUBLESLASH)
+  def doubleSlash: Parser[DOUBLESLASH] = positioned("//" ^^^ DOUBLESLASH())
 
-  def openComment = positioned("/*" ^^^ SLASHSTAROPEN)
+  def openComment: Parser[SLASHSTAROPEN] = positioned("/*" ^^^ SLASHSTAROPEN())
 
-  def singleLineComment = doubleSlash ~ rep(not("\n") ~ ".".r) ^^^ COMMENT
-  def multiLineComment = openComment ~ rep(not("*/") ~ "(?s).".r) ~ "*/" ^^^ COMMENT
+  def singleLineComment: Parser[COMMENT] = doubleSlash ~ rep(not("\n") ~ ".".r) ^^^ COMMENT()
+  def multiLineComment: Parser[COMMENT] = openComment ~ rep(not("*/") ~ "(?s).".r) ~ "*/" ^^^ COMMENT()

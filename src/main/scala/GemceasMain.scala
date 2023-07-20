@@ -1,4 +1,5 @@
 import Compiler.{BnfGrammarCompiler, LoadGrammarFile}
+import LexerParser.*
 import Utilz.CreateLogger
 
 import java.io.{File, FileNotFoundException}
@@ -17,6 +18,53 @@ import scala.util.{Failure, Success, Try}
 
 object GemceasMain:
   private lazy val logger = CreateLogger(classOf[GemceasMain.type])
+  /*
+  expression ::= sum;
+
+  sum ::= product {"+" product};
+
+  product ::= ["+"|"-"] term {"*" term};
+
+  term ::= number | "(" expression ")";
+
+  <number> ::= "~>(\+|\-)?[0-9]+(\.[0-9]+)?<~";
+  * */
+
+  val result =
+    MainRule(List(
+//      expression ::= sum;
+      Rule(Nonterminal("expression"),RuleCollection(List(RuleLiteral(Nonterminal("sum"))))),
+//      sum ::= product {"+" product};
+      Rule(Nonterminal("sum"),
+        RuleCollection(List(RuleLiteral(Nonterminal("product")),
+          RuleCollection(List(
+            RuleRep(
+              RuleCollection(
+                List(RuleLiteral(Terminal("+")), RuleCollection(List(RuleLiteral(Nonterminal("product")))))
+              )
+            )
+          ))))
+      ),
+//      product ::= ["+"|"-"] term {"*" term};
+      Rule(Nonterminal("product"),
+        RuleCollection(List(
+          RuleOpt(
+            RuleCollection(List(RuleLiteral(Terminal("+")),
+            RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))
+          ),
+          RuleCollection(List(RuleLiteral(Nonterminal("term")),
+            RuleCollection(List(
+              RuleRep(RuleCollection(List(RuleLiteral(Terminal("*")), RuleCollection(List(RuleLiteral(Nonterminal("term")))))))
+            ))
+          ))
+        ))),
+      Rule(Nonterminal("term"),RuleCollection(List(RuleLiteral(Nonterminal("number")),
+        RuleCollection(List(
+          RuleOr(
+            RuleCollection(List(RuleLiteral(Terminal("(")),
+            RuleCollection(List(RuleLiteral(Nonterminal("expression")), RuleCollection(List(RuleLiteral(Terminal(")")))))))))
+        )))))
+    ))
 
   @main def runMain_GemceasMain(): Unit =
     val grammarFilePath = "/Grammars/ArithmeticExpressions.bnf"
