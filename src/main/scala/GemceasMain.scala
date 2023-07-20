@@ -30,7 +30,7 @@ object GemceasMain:
   <number> ::= "~>(\+|\-)?[0-9]+(\.[0-9]+)?<~";
   * */
 
-  val result =
+  val result: MainRule =
     MainRule(List(
 //      expression ::= sum;
       Rule(Nonterminal("expression"),RuleCollection(List(RuleLiteral(Nonterminal("sum"))))),
@@ -68,11 +68,8 @@ object GemceasMain:
 
   @main def runMain_GemceasMain(): Unit =
     val grammarFilePath = "/Grammars/ArithmeticExpressions.bnf"
-    val srcGrammar:String = LoadGrammarFile(grammarFilePath) match
-      case Failure(exception) =>
-        logger.error(s"Failed to load a grammar because of $exception")
-        "ERROR"
-      case Success(code) => code
-    logger.info(srcGrammar)
+    val srcGrammar:String = LoadGrammarFile(grammarFilePath)
+    if srcGrammar.isEmpty then logger.error("Failed to load a grammar, terminating Gemceas.")
+    else logger.info(srcGrammar)
     val ast = BnfGrammarCompiler(srcGrammar)
     logger.info(ast.toString)
