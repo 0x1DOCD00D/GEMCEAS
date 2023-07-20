@@ -17,12 +17,14 @@ import Utilz.CreateLogger
 import org.slf4j.Logger
 
 /*
- mainRule           ::= rule {mainRule};
- rule               ::= <rule-name> "::=" rhs;
+ mainRule           ::= {rule ";"}
+ rule               ::=  (non_terminal | non_terminal_regex) "::=" topRhs
+ topRhs             ::= rhs {topRhs}
  <rule-name>        ::= "[<a-zA-Z][-#>$\.:_a-zA-Z0-9]*";
  rhs                ::= terms {"|" rhs} | "[" rhs "]" | "{" rhs "}" | {rhs};
  ruleContent        ::= term {ruleContent};
  term               ::= <literal> | <rule-name>;
+ non_terminal       ::=
  <literal>          ::= "\".*\"" | "\'\.*\'";
  */
 
