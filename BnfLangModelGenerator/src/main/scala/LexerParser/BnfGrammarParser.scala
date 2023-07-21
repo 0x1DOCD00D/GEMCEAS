@@ -10,22 +10,22 @@ package LexerParser
 
 import scala.util.parsing.combinator.{PackratParsers, Parsers}
 import scala.util.parsing.input.{NoPosition, Position, Reader}
-import LexerParser.BnfGrammarLexer.{bra, curlyket, endOfRule, isDefinedAs, nonterminal, singleLineComment, terminal}
+import LexerParser.BnfGrammarLexer.*
 import LexerParser.GrammarCompilationError.BnfLexerError
 import Utilz.ConfigDb.{debugLexerTokens, debugProductionRules}
 import Utilz.CreateLogger
 import org.slf4j.Logger
 
 /*
- mainRule           ::= {rule ";"}
- rule               ::=  (non_terminal | non_terminal_regex) "::=" topRhs
- topRhs             ::= rhs {topRhs}
- <rule-name>        ::= "[<a-zA-Z][-#>$\.:_a-zA-Z0-9]*";
- rhs                ::= terms {"|" rhs} | "[" rhs "]" | "{" rhs "}" | {rhs};
- ruleContent        ::= term {ruleContent};
+ mainRule             ::= {rule ";"}
+ rule                 ::=  (non_terminal | non_terminal_regex) "::=" topRhs
+ topRhs               ::= rhs {topRhs}
+ rhs                  ::= (literal | non_terminal | non_terminal_regex) | "|" topRhs | "[" topRhs "]" | "{" topRhs "}" | "(" topRhs ")"
+ ruleContent        ::= termlie {ruleContent};
  term               ::= <literal> | <rule-name>;
- non_terminal       ::=
- <literal>          ::= "\".*\"" | "\'\.*\'";
+ non_terminal       ::= stringLiteral
+ <non_terminal_regex> ::= stringLiteral
+ literal              ::= doubleQuotedString
  */
 
 object BnfGrammarParser extends Parsers with PackratParsers with DebugParserUtil:
@@ -95,7 +95,10 @@ object BnfGrammarParser extends Parsers with PackratParsers with DebugParserUtil
     lazy val orRule = Or ~> topRhs ^^ (exp => RuleOr(exp))
 
     lazy val repRule = CurlyBra ~> topRhs <~ CurlyKet ^^ (exp => RuleRep(exp))
-    show(litRule)("literal") | show(optRule)("[...]") | show(repRule)("{...}") | show(orRule)("..|..")
+
+    lazy val groupRule = lPar ~> topRhs <~ rPar ^^ (exp => RuleGroup(exp))
+
+    show(litRule)("literal") | show(optRule)("[...]") | show(repRule)("{...}") | show(orRule)("...|...") | show(groupRule)("(...)")
   }
 
 //ruleContent               ::= term {ruleContent};
@@ -144,6 +147,14 @@ object BnfGrammarParser extends Parsers with PackratParsers with DebugParserUtil
 
   private def CurlyKet: PackratParser[CURLYKET] = positioned {
     accept("closing }", { case kt@CURLYKET() => kt })
+  }
+
+  private def lPar: PackratParser[LEFTPAREN] = positioned {
+    accept("opening (", { case lp@LEFTPAREN() => lp })
+  }
+
+  private def rPar: PackratParser[RIGHTPAREN] = positioned {
+    accept("closing )", { case rp@RIGHTPAREN() => rp })
   }
 
   private def semiColonEndsRule: PackratParser[SEMICOLON] = positioned {

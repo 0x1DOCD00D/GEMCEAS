@@ -68,6 +68,18 @@ object BnfGrammarLexer extends JavaTokenParsers:
       CURLYKET())
   }
 
+  def leftParen: Parser[LEFTPAREN] = positioned {
+    "(" ^^ (_ =>
+      if debugLexerTokens then logger.info("Lexed (")
+      LEFTPAREN())
+  }
+
+  def rightParen: Parser[RIGHTPAREN] = positioned {
+    ")" ^^ (_ =>
+      if debugLexerTokens then logger.info("Lexed )")
+      RIGHTPAREN())
+  }
+
   def nonterminal: Parser[Nonterminal] = positioned {
     "[_a-zA-Z][-#$\\.:_a-zA-Z0-9]*".r ^^ { id =>
       if debugLexerTokens then logger.info(s"Lexed nt: $id")
