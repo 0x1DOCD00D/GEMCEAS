@@ -1,14 +1,14 @@
-// JLS 17 Grammar - https://docs.oracle.com/javase/specs/jls/se17/html/jls-19.html
+// JLS 17 Grammar - https://docs.oracle.com/javase/specs/jls/se17/html/jls-19.html;
 
 //Productions from §3 (Lexical Structure)
 Identifier::=
-  IdentifierChars // but not a Keyword or BooleanLiteral or NullLiteral
+  IdentifierChars; // but not a Keyword or BooleanLiteral or NullLiteral
 
 IdentifierChars::=
-  JAVA_LETTER_OR_DIGIT
+  JAVA_LETTER_OR_DIGIT;
 
 <JAVA_LETTER_OR_DIGIT>::=
-  "(?:\\b[_a-zA-Z]|\\B\\$)[_$a-zA-Z0-9]*+"
+  "(?:\\b[_a-zA-Z]|\\B\\$)[_$a-zA-Z0-9]*+";
 
 //JavaLetter::=
 //  any Unicode character that is a "Java letter"
@@ -17,10 +17,10 @@ IdentifierChars::=
 //  any Unicode character that is a "Java letter-or-digit"
 
 TypeIdentifier::=
-  Identifier // but not permits, record, sealed, var, or yield
+  Identifier; // but not permits, record, sealed, var, or yield
 
 UnqualifiedMethodIdentifier::=
-  Identifier // but not yield
+  Identifier; // but not yield
 
 Literal::=
   IntegerLiteral |
@@ -29,193 +29,193 @@ Literal::=
   CharacterLiteral |
   StringLiteral |
   TextBlock |
-  NullLiteral
+  NullLiteral;
 
 IntegerLiteral::=
   DecimalIntegerLiteral |
   HexIntegerLiteral |
   OctalIntegerLiteral |
-  BinaryIntegerLiteral
+  BinaryIntegerLiteral;
 
 DecimalIntegerLiteral::=
-  DecimalNumeral [IntegerTypeSuffix]
+  DecimalNumeral [IntegerTypeSuffix];
 
 HexIntegerLiteral::=
-  HexNumeral [IntegerTypeSuffix]
+  HexNumeral [IntegerTypeSuffix];
 
 OctalIntegerLiteral::=
-  OctalNumeral [IntegerTypeSuffix]
+  OctalNumeral [IntegerTypeSuffix];
 
 BinaryIntegerLiteral::=
-  BinaryNumeral [IntegerTypeSuffix]
+  BinaryNumeral [IntegerTypeSuffix];
 
 IntegerTypeSuffix::=
 //(one of)
   "l" |
-  "L"
+  "L";
 
 DecimalNumeral::=
   "0" |
   NonZeroDigit [Digits] |
-  NonZeroDigit Underscores Digits
+  NonZeroDigit Underscores Digits;
 
 NonZeroDigit::=
 //(one of)
-  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+  1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 Digits::=
   Digit |
-  Digit [DigitsAndUnderscores] Digit
+  Digit [DigitsAndUnderscores] Digit;
 
 Digit::=
   0 |
-  NonZeroDigit
+  NonZeroDigit;
 
 DigitsAndUnderscores::=
-  DigitOrUnderscore {DigitOrUnderscore}
+  DigitOrUnderscore {DigitOrUnderscore};
 
 DigitOrUnderscore::=
   Digit |
-  "_"
+  "_";
 
 Underscores::=
-  "_" {"_"}
+  "_" {"_"};
 
 HexNumeral::=
   "0x" HexDigits |
-  "0X" HexDigits
+  "0X" HexDigits;
 
 HexDigits::=
   HexDigit |
-  HexDigit [HexDigitsAndUnderscores] HexDigit
+  HexDigit [HexDigitsAndUnderscores] HexDigit;
 
 HexDigit::=
 //(one of)
-  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | a | b | c | d | e | f | A | B | C | D | E | F
+  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | a | b | c | d | e | f | A | B | C | D | E | F;
 
 HexDigitsAndUnderscores::=
-  HexDigitOrUnderscore {HexDigitOrUnderscore}
+  HexDigitOrUnderscore {HexDigitOrUnderscore};
 
 HexDigitOrUnderscore::=
   HexDigit |
-  "_"
+  "_";
 
 OctalNumeral::=
   0 OctalDigits |
-  0 Underscores OctalDigits
+  0 Underscores OctalDigits;
 
 OctalDigits::=
   OctalDigit |
-  OctalDigit [OctalDigitsAndUnderscores] OctalDigit
+  OctalDigit [OctalDigitsAndUnderscores] OctalDigit;
 
 OctalDigit::=
 //(one of)
-  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
+  0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 OctalDigitsAndUnderscores::=
-  OctalDigitOrUnderscore {OctalDigitOrUnderscore}
+  OctalDigitOrUnderscore {OctalDigitOrUnderscore};
 
 OctalDigitOrUnderscore::=
   OctalDigit |
-  "_"
+  "_";
 
 BinaryNumeral::=
   "0b" BinaryDigits |
-  "0B" BinaryDigits
+  "0B" BinaryDigits;
 
 BinaryDigits::=
   BinaryDigit |
-  BinaryDigit [BinaryDigitsAndUnderscores] BinaryDigit
+  BinaryDigit [BinaryDigitsAndUnderscores] BinaryDigit;
 
 BinaryDigit::=
 //(one of)
-  0 | 1
+  0 | 1;
 
 BinaryDigitsAndUnderscores::=
-  BinaryDigitOrUnderscore {BinaryDigitOrUnderscore}
+  BinaryDigitOrUnderscore {BinaryDigitOrUnderscore};
 
 BinaryDigitOrUnderscore::=
   BinaryDigit |
-  "_"
+  "_";
 
 FloatingPointLiteral::=
   DecimalFloatingPointLiteral |
-  HexadecimalFloatingPointLiteral
+  HexadecimalFloatingPointLiteral;
 
 DecimalFloatingPointLiteral::=
   Digits "." [Digits] [ExponentPart] [FloatTypeSuffix] |
   "." Digits [ExponentPart] [FloatTypeSuffix] |
   Digits ExponentPart [FloatTypeSuffix] |
-  Digits [ExponentPart] FloatTypeSuffix
+  Digits [ExponentPart] FloatTypeSuffix;
 
 ExponentPart::=
-  ExponentIndicator SignedInteger
+  ExponentIndicator SignedInteger;
 
 ExponentIndicator::=
 //(one of)
-  "e" | "E"
+  "e" | "E";
 
 SignedInteger::=
-  [Sign] Digits
+  [Sign] Digits;
 
 Sign::=
 //(one of)
-  "+" | "-"
+  "+" | "-";
 
 FloatTypeSuffix::=
 //(one of)
-  "f" | "F" | "d" | "D"
+  "f" | "F" | "d" | "D";
 
 HexadecimalFloatingPointLiteral::=
-  HexSignificand BinaryExponent [FloatTypeSuffix]
+  HexSignificand BinaryExponent [FloatTypeSuffix];
 
 HexSignificand::=
   HexNumeral ["."] |
   "0x" [HexDigits] "." HexDigits |
-  "0X" [HexDigits] "." HexDigits
+  "0X" [HexDigits] "." HexDigits;
 
 BinaryExponent::=
-  BinaryExponentIndicator SignedInteger
+  BinaryExponentIndicator SignedInteger;
 
 BinaryExponentIndicator::=
 //(one of)
-  "p" | "P"
+  "p" | "P";
 
 BooleanLiteral::=
 //(one of)
-  "true" | "false"
+  "true" | "false";
 
 CharacterLiteral::=
   "'" SingleCharacter "'" |
-  "'" EscapeSequence "'"
+  "'" EscapeSequence "'";
 
 SingleCharacter::=
-  InputCharacter // but not ' or \
+  InputCharacter; // but not ' or \
 
 StringLiteral::=
-  '"' {StringCharacter} '"'
+  '"' {StringCharacter} '"';
 
 StringCharacter::=
   InputCharacter | // but not " or \
-  EscapeSequence
+  EscapeSequence;
 
 TextBlock::=
-  '"""' {TextBlockWhiteSpace} LineTerminator {TextBlockCharacter} '"""'
+  '"""' {TextBlockWhiteSpace} LineTerminator {TextBlockCharacter} '"""';
 
 TextBlockWhiteSpace::=
-  WhiteSpace // but not LineTerminator
+  WhiteSpace; // but not LineTerminator
 
 TextBlockCharacter::=
   InputCharacter | // but not \
   EscapeSequence |
-  LineTerminator
+  LineTerminator;
 
 WhiteSpace::=
 //  the ASCII SP character, also known as "space"
 //  the ASCII HT character, also known as "horizontal tab"
 //  the ASCII FF character, also known as "form feed"
   " " |
-  LineTerminator
+  LineTerminator;
 
 LineTerminator::=
 //the ASCII LF character, also known as "newline"
@@ -223,23 +223,23 @@ LineTerminator::=
 //the ASCII CR character followed by the ASCII LF character
   "\n" |
   "\r" |
-  "\r\n"
+  "\r\n";
 
 InputCharacter::=
-  UnicodeInputCharacter // but not CR or LF
+  UnicodeInputCharacter; // but not CR or LF
 
 UnicodeInputCharacter::=
   UnicodeEscape |
-  RawInputCharacter
+  RawInputCharacter;
 
 UnicodeEscape::=
-  '\' UnicodeMarker HexDigit HexDigit HexDigit HexDigit
+  '\' UnicodeMarker HexDigit HexDigit HexDigit HexDigit;
 
 UnicodeMarker::=
-  "u" {"u"}
+  "u" {"u"};
 
 <RawInputCharacter>::=
-  "[\u0000-\u007F]"
+  "[\u0000-\u007F]";
 
 EscapeSequence::=
   "\b"   | // (backspace BS, Unicode \u0008)
@@ -252,44 +252,44 @@ EscapeSequence::=
   "\""   | // (double quote ", Unicode \u0022)
   "\'"   | // (single quote ', Unicode \u0027)
   "\\\\" | // (backslash \, Unicode \u005c)
-  OctalEscape //(octal value, Unicode \u0000 to \u00ff)
+  OctalEscape; //(octal value, Unicode \u0000 to \u00ff)
 
 OctalEscape::=
   "\\" OctalDigit |
   "\\" OctalDigit OctalDigit |
-  "\\" ZeroToThree OctalDigit OctalDigit
+  "\\" ZeroToThree OctalDigit OctalDigit;
 
 ZeroToThree::=
 //  (one of)
-  0 | 1 | 2 | 3
+  0 | 1 | 2 | 3;
 
 NullLiteral::=
-  "null"
+  "null";
 
 Separator::=
 //(one of)
-  "(" |  ")" |  "{" |  "}" |  "[" |  "]" |  ";" |  "," | "." | "..." | "@" | "::"
+  "(" |  ")" |  "{" |  "}" |  "[" |  "]" |  ";" |  "," | "." | "..." | "@" | "::";
 
 Operator::=
 //(one of)
   "="  | ">"  | "<"  | "!"  | "~"  | "?"  | ":"  | "->" |
   "==" | ">=" | "<=" | "!=" | "&&" | "||" | "++" | "--" |
   "+"  | "-"  | "*"  | "/"  | "&"  | "|"  | "^"  | "%"  | "<<"  | ">> " | ">>>" |
-  "+=" | "-=" | "*=" | "/=" | "&=" | "|=" | "^=" | "%=" | "<<=" | ">>=" | ">>>="
+  "+=" | "-=" | "*=" | "/=" | "&=" | "|=" | "^=" | "%=" | "<<=" | ">>=" | ">>>=";
 
 
 // Productions from §4 (Types, Values, and Variables)
 Type::=
   PrimitiveType |
-  ReferenceType
+  ReferenceType;
 
 PrimitiveType::=
   {Annotation} NumericType |
-  {Annotation} "boolean"
+  {Annotation} "boolean";
 
 NumericType::=
   IntegralType |
-  FloatingPointType
+  FloatingPointType;
 
 IntegralType::=
 //  (one of)
@@ -297,169 +297,169 @@ IntegralType::=
   "short" |
   "int" |
   "long" |
-  "char"
+  "char";
 
 FloatingPointType::=
 //  (one of)
   "float" |
-  "double"
+  "double";
 
 ReferenceType::=
   ClassOrInterfaceType |
   TypeVariable |
-  ArrayType
+  ArrayType;
 
 ClassOrInterfaceType::=
   ClassType |
-  InterfaceType
+  InterfaceType;
 
 ClassType::=
   {Annotation} TypeIdentifier [TypeArguments] |
   PackageName "." {Annotation} TypeIdentifier [TypeArguments] |
-  ClassOrInterfaceType "." {Annotation} TypeIdentifier [TypeArguments]
+  ClassOrInterfaceType "." {Annotation} TypeIdentifier [TypeArguments];
 
 InterfaceType::=
-  ClassType
+  ClassType;
 
 TypeVariable::=
-  {Annotation} TypeIdentifier
+  {Annotation} TypeIdentifier;
 
 ArrayType::=
   PrimitiveType Dims |
   ClassOrInterfaceType Dims |
-  TypeVariable Dims
+  TypeVariable Dims;
 
 Dims::=
-  {Annotation} "[]" {{Annotation} "[]"}
+  {Annotation} "[]" {{Annotation} "[]"};
 
 TypeParameter::=
-  {TypeParameterModifier} TypeIdentifier [TypeBound]
+  {TypeParameterModifier} TypeIdentifier [TypeBound];
 
 TypeParameterModifier::=
-  Annotation
+  Annotation;
 
 TypeBound::=
   "extends" TypeVariable |
-  "extends" ClassOrInterfaceType {AdditionalBound}
+  "extends" ClassOrInterfaceType {AdditionalBound};
 
 AdditionalBound::=
-  "& " InterfaceType
+  "& " InterfaceType;
 
 TypeArguments::=
-  "<" TypeArgumentList ">"
+  "<" TypeArgumentList ">";
 
 TypeArgumentList::=
-  TypeArgument {"," TypeArgument}
+  TypeArgument {"," TypeArgument};
 
 TypeArgument::=
   ReferenceType |
-  Wildcard
+  Wildcard;
 
 Wildcard::=
-  {Annotation} "?" [WildcardBounds]
+  {Annotation} "?" [WildcardBounds];
 
 WildcardBounds::=
   "extends" ReferenceType |
-  "super" ReferenceType
+  "super" ReferenceType;
 
 
 // Productions from §6 (Names)
 ModuleName::=
   Identifier |
-  ModuleName "." Identifier
+  ModuleName "." Identifier;
 
 PackageName::=
   Identifier |
-  PackageName "." Identifier
+  PackageName "." Identifier;
 
 TypeName::=
   TypeIdentifier |
-  PackageOrTypeName "." TypeIdentifier
+  PackageOrTypeName "." TypeIdentifier;
 
 ExpressionName::=
   Identifier
   "ClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
   "==>> expression_name(Identifier, ClassIdentifier)" |
-  AmbiguousName "." Identifier
+  AmbiguousName "." Identifier;
 
 MethodName::=
-  UnqualifiedMethodIdentifier
+  UnqualifiedMethodIdentifier;
 
 PackageOrTypeName::=
   Identifier |
-  PackageOrTypeName "." Identifier
+  PackageOrTypeName "." Identifier;
 
 AmbiguousName::=
   Identifier |
-  AmbiguousName "." Identifier
+  AmbiguousName "." Identifier;
 
 
 // Productions from §7 (Packages and Modules)
 CompilationUnit::=
   OrdinaryCompilationUnit |
-  ModularCompilationUnit
+  ModularCompilationUnit;
 
 OrdinaryCompilationUnit::=
-  [PackageDeclaration] {ImportDeclaration} {TopLevelClassOrInterfaceDeclaration}
+  [PackageDeclaration] {ImportDeclaration} {TopLevelClassOrInterfaceDeclaration};
 
 ModularCompilationUnit::=
-  {ImportDeclaration} ModuleDeclaration
+  {ImportDeclaration} ModuleDeclaration;
 
 PackageDeclaration::=
-  {PackageModifier} "package" Identifier {"." Identifier} ";"
+  {PackageModifier} "package" Identifier {"." Identifier} ";";
 
 PackageModifier::=
-  Annotation
+  Annotation;
 
 ImportDeclaration::=
   SingleTypeImportDeclaration |
   TypeImportOnDemandDeclaration |
   SingleStaticImportDeclaration |
-  StaticImportOnDemandDeclaration
+  StaticImportOnDemandDeclaration;
 
 SingleTypeImportDeclaration::=
-  "import" TypeName ";"
+  "import" TypeName ";";
 
 TypeImportOnDemandDeclaration::=
-  "import" PackageOrTypeName ".*" ";"
+  "import" PackageOrTypeName ".*" ";";
 
 SingleStaticImportDeclaration::=
-  "import static" TypeName "." Identifier ";"
+  "import static" TypeName "." Identifier ";";
 
 StaticImportOnDemandDeclaration::=
-  "import static" TypeName ".*" ";"
+  "import static" TypeName ".*" ";";
 
 TopLevelClassOrInterfaceDeclaration::=
   ClassDeclaration |
   InterfaceDeclaration |
-  ";"
+  ";";
 
 ModuleDeclaration::=
-  {Annotation} ["open"] "module" Identifier {"." Identifier} { {ModuleDirective} }
+  {Annotation} ["open"] "module" Identifier {"." Identifier} { {ModuleDirective} };
 
 ModuleDirective::=
   "requires" {RequiresModifier} ModuleName ";" |
   "exports" PackageName ["to" ModuleName {"," ModuleName}] ";" |
   "opens" PackageName ["to" ModuleName {"," ModuleName}] ";" |
   "uses" TypeName ";" |
-  "provides" TypeName "with" TypeName {"," TypeName} ";"
+  "provides" TypeName "with" TypeName {"," TypeName} ";";
 
 RequiresModifier::=
 //  (one of)
   "transitive" |
-  "static"
+  "static";
 
 
 //Productions from §8 (Classes)
 ClassDeclaration::=
   NormalClassDeclaration |
   EnumDeclaration |
-  RecordDeclaration
+  RecordDeclaration;
 
 NormalClassDeclaration::=
   {ClassModifier} "class" TypeIdentifier [TypeParameters] [ClassExtends] [ClassImplements] [ClassPermits] ClassBody
   "EnclosingClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
-  "==>> normal_class_declaration(ClassModifier, TypeIdentifier, EnclosingClassIdentifier)"
+  "==>> normal_class_declaration(ClassModifier, TypeIdentifier, EnclosingClassIdentifier)";
 
 ClassModifier::=
 //(one of)
@@ -472,46 +472,46 @@ ClassModifier::=
   "final" |
   "sealed" |
   "non-sealed" |
-  "strictfp"
+  "strictfp";
 
 TypeParameters::=
-  "<" TypeParameterList ">"
+  "<" TypeParameterList ">";
 
 TypeParameterList::=
-  TypeParameter {"," TypeParameter}
+  TypeParameter {"," TypeParameter};
 
 ClassExtends::=
-  "extends " ClassType
+  "extends " ClassType;
 
 ClassImplements::=
-  "implements " InterfaceTypeList
+  "implements " InterfaceTypeList;
 
 InterfaceTypeList::=
-  InterfaceType {"," InterfaceType}
+  InterfaceType {"," InterfaceType};
 
 ClassPermits::=
-  "permits " TypeName {"," TypeName}
+  "permits " TypeName {"," TypeName};
 
 ClassBody::=
-  "{" {ClassBodyDeclaration} "}"
+  "{" {ClassBodyDeclaration} "}";
 
 ClassBodyDeclaration::=
   ClassMemberDeclaration |
   InstanceInitializer |
   StaticInitializer |
-  ConstructorDeclaration
+  ConstructorDeclaration;
 
 ClassMemberDeclaration::=
   FieldDeclaration |
   MethodDeclaration |
   ClassDeclaration |
   InterfaceDeclaration |
-  ";"
+  ";";
 
 FieldDeclaration::=
   {FieldModifier} UnannType VariableDeclaratorList ";"
   "CurrentClass =:= NormalClassDeclaration.TypeIdentifier"
-  "==>> field_declaration(FieldModifier, UnannType, VariableDeclaratorList, CurrentClass)"
+  "==>> field_declaration(FieldModifier, UnannType, VariableDeclaratorList, CurrentClass)";
 
 FieldModifier::=
 //(one of)
@@ -522,58 +522,58 @@ FieldModifier::=
   "static" |
   "final" |
   "transient" |
-  "volatile"
+  "volatile";
 
 VariableDeclaratorList::=
-  VariableDeclarator {"," VariableDeclarator}
+  VariableDeclarator {"," VariableDeclarator};
 
 VariableDeclarator::=
-  VariableDeclaratorId ["=" VariableInitializer]
+  VariableDeclaratorId ["=" VariableInitializer];
 
 VariableDeclaratorId::=
-  Identifier [Dims]
+  Identifier [Dims];
 
 VariableInitializer::=
   Expression |
-  ArrayInitializer
+  ArrayInitializer;
 
 UnannType::=
   UnannPrimitiveType |
-  UnannReferenceType
+  UnannReferenceType;
 
 UnannPrimitiveType::=
   NumericType |
-  "boolean"
+  "boolean";
 
 UnannReferenceType::=
   UnannClassOrInterfaceType |
   UnannTypeVariable |
-  UnannArrayType
+  UnannArrayType;
 
 UnannClassOrInterfaceType::=
   UnannClassType |
-  UnannInterfaceType
+  UnannInterfaceType;
 
 UnannClassType::=
   TypeIdentifier [TypeArguments] |
   PackageName "." {Annotation} TypeIdentifier [TypeArguments] |
-  UnannClassOrInterfaceType "." {Annotation} TypeIdentifier [TypeArguments]
+  UnannClassOrInterfaceType "." {Annotation} TypeIdentifier [TypeArguments];
 
 UnannInterfaceType::=
-  UnannClassType
+  UnannClassType;
 
 UnannTypeVariable::=
-  TypeIdentifier
+  TypeIdentifier;
 
 UnannArrayType::=
   UnannPrimitiveType Dims |
   UnannClassOrInterfaceType Dims |
-  UnannTypeVariable Dims
+  UnannTypeVariable Dims;
 
 MethodDeclaration::=
   {MethodModifier} MethodHeader MethodBody
   "ClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
-  "==>> method_declaration(ClassIdentifier, MethodModifier, MethodHeader, MethodBody)"
+  "==>> method_declaration(ClassIdentifier, MethodModifier, MethodHeader, MethodBody)";
 
 MethodModifier::=
 //(one of)
@@ -586,145 +586,145 @@ MethodModifier::=
   "final" |
   "synchronized" |
   "native" |
-  "strictfp"
+  "strictfp";
 
 MethodHeader::=
   Result MethodDeclarator [Throws]
   "==>> method_header(MethodDeclarator)" |
-  TypeParameters {Annotation} Result MethodDeclarator [Throws]
+  TypeParameters {Annotation} Result MethodDeclarator [Throws];
 
 Result::=
   UnannType |
-  "void"
+  "void";
 
 MethodDeclarator::=
-  Identifier ( [ReceiverParameter ","] [FormalParameterList] ) [Dims]
-  "==>> method_declarator(Identifier, FormalParameterList)"
+  Identifier "(" [ReceiverParameter ","] [FormalParameterList] ")" [Dims]
+  "==>> method_declarator(Identifier, FormalParameterList)";
 
 ReceiverParameter::=
-  {Annotation} UnannType [Identifier "."] "this"
+  {Annotation} UnannType [Identifier "."] "this";
 
 FormalParameterList::=
   FormalParameter {"," FormalParameter}
-  "==>> formal_parameter_list(FormalParameter._1, FormalParameter._2)"
+  "==>> formal_parameter_list(FormalParameter._1, FormalParameter._2)";
 
 FormalParameter::=
   {VariableModifier} UnannType VariableDeclaratorId
   "==>> formal_parameter(UnannType, VariableDeclaratorId)" |
-  VariableArityParameter
+  VariableArityParameter;
 
 VariableArityParameter::=
-  {VariableModifier} UnannType {Annotation} "..." Identifier
+  {VariableModifier} UnannType {Annotation} "..." Identifier;
 
 VariableModifier::=
   Annotation |
-  "final"
+  "final";
 
 Throws::=
-  "throws" ExceptionTypeList
+  "throws" ExceptionTypeList;
 
 ExceptionTypeList::=
-  ExceptionType {"," ExceptionType}
+  ExceptionType {"," ExceptionType};
 
 ExceptionType::=
   ClassType |
-  TypeVariable
+  TypeVariable;
 
 MethodBody::=
   Block |
-  ";"
+  ";";
 
 InstanceInitializer::=
-  Block
+  Block;
 
 StaticInitializer::=
-  "static" Block
+  "static" Block;
 
 ConstructorDeclaration::=
   {ConstructorModifier} ConstructorDeclarator [Throws] ConstructorBody
-  "==>> constructor_declaration(ConstructorModifier, ConstructorDeclarator)"
+  "==>> constructor_declaration(ConstructorModifier, ConstructorDeclarator)";
 
 ConstructorModifier::=
 //(one of)
   Annotation |
   "public" |
   "protected" |
-  "private"
+  "private";
 
 ConstructorDeclarator::=
   [TypeParameters] SimpleTypeName "(" [ReceiverParameter ","] [FormalParameterList] ")"
   "SimpleTypeName =:= NormalClassDeclaration.TypeIdentifier"
-  "==>> constructor_declarator(SimpleTypeName, FormalParameterList)"
+  "==>> constructor_declarator(SimpleTypeName, FormalParameterList)";
 
 SimpleTypeName::=
-  TypeIdentifier
+  TypeIdentifier;
 
 ConstructorBody::=
-  "{" [ExplicitConstructorInvocation] [BlockStatements] "}"
+  "{" [ExplicitConstructorInvocation] [BlockStatements] "}";
 
 ExplicitConstructorInvocation::=
   [TypeArguments] "this" "(" [ArgumentList] ")" ";" |
   [TypeArguments] "super" "(" [ArgumentList] ")" ";" |
   ExpressionName "." [TypeArguments] "super" "(" [ArgumentList] ")" ";" |
-  Primary "." [TypeArguments] "super" "(" [ArgumentList] ")" ";"
+  Primary "." [TypeArguments] "super" "(" [ArgumentList] ")" ";";
 
 EnumDeclaration::=
-  {ClassModifier} "enum" TypeIdentifier [ClassImplements] EnumBody
+  {ClassModifier} "enum" TypeIdentifier [ClassImplements] EnumBody;
 
 EnumBody::=
-"{" [EnumConstantList] [","] [EnumBodyDeclarations] "}"
+"{" [EnumConstantList] [","] [EnumBodyDeclarations] "}";
 
 EnumConstantList::=
-  EnumConstant {"," EnumConstant}
+  EnumConstant {"," EnumConstant};
 
 EnumConstant::=
-  {EnumConstantModifier} Identifier ["(" [ArgumentList] ")"] [ClassBody]
+  {EnumConstantModifier} Identifier ["(" [ArgumentList] ")"] [ClassBody];
 
 EnumConstantModifier::=
-  Annotation
+  Annotation;
 
 EnumBodyDeclarations::=
-  ";" {ClassBodyDeclaration}
+  ";" {ClassBodyDeclaration};
 
 RecordDeclaration::=
-  {ClassModifier} "record" TypeIdentifier [TypeParameters] RecordHeader [ClassImplements] RecordBody
+  {ClassModifier} "record" TypeIdentifier [TypeParameters] RecordHeader [ClassImplements] RecordBody;
 
 RecordHeader::=
-  "(" [RecordComponentList] ")"
+  "(" [RecordComponentList] ")";
 
 RecordComponentList::=
-  RecordComponent {"," RecordComponent}
+  RecordComponent {"," RecordComponent};
 
 RecordComponent::=
   {RecordComponentModifier} UnannType Identifier |
-  VariableArityRecordComponent
+  VariableArityRecordComponent;
 
 VariableArityRecordComponent::=
-  {RecordComponentModifier} UnannType {Annotation} "..." Identifier
+  {RecordComponentModifier} UnannType {Annotation} "..." Identifier;
 
 RecordComponentModifier::=
-  Annotation
+  Annotation;
 
 RecordBody::=
-  "{" {RecordBodyDeclaration} "}"
+  "{" {RecordBodyDeclaration} "}";
 
 RecordBodyDeclaration::=
   ClassBodyDeclaration |
-  CompactConstructorDeclaration
+  CompactConstructorDeclaration;
 
 CompactConstructorDeclaration::=
-  {ConstructorModifier} SimpleTypeName ConstructorBody
+  {ConstructorModifier} SimpleTypeName ConstructorBody;
 
 
 // Productions from §9 (Interfaces)
 InterfaceDeclaration::=
   NormalInterfaceDeclaration |
-  AnnotationInterfaceDeclaration
+  AnnotationInterfaceDeclaration;
 
 NormalInterfaceDeclaration::=
   {InterfaceModifier} "interface" TypeIdentifier [TypeParameters] [InterfaceExtends] [InterfacePermits] InterfaceBody
   "EnclosingInterfaceIdentifier =:= NormalInterfaceDeclaration.TypeIdentifier"
-  "==>> normal_interface_declaration(InterfaceModifier, TypeIdentifier, EnclosingInterfaceIdentifier)"
+  "==>> normal_interface_declaration(InterfaceModifier, TypeIdentifier, EnclosingInterfaceIdentifier)";
 
 InterfaceModifier::=
 //(one of)
@@ -736,40 +736,40 @@ InterfaceModifier::=
   "static" |
   "sealed" |
   "non-sealed" |
-  "strictfp"
+  "strictfp";
 
 InterfaceExtends::=
-  "extends" InterfaceTypeList
+  "extends" InterfaceTypeList;
 
 InterfacePermits::=
-  "permits" TypeName {"," TypeName}
+  "permits" TypeName {"," TypeName};
 
 InterfaceBody::=
-  "{" {InterfaceMemberDeclaration} "}"
+  "{" {InterfaceMemberDeclaration} "}";
 
 InterfaceMemberDeclaration::=
   ConstantDeclaration |
   InterfaceMethodDeclaration |
   ClassDeclaration |
   InterfaceDeclaration |
-  ";"
+  ";";
 
 ConstantDeclaration::=
   {ConstantModifier} UnannType VariableDeclaratorList ";"
   "CurrentInterface =:= NormalInterfaceDeclaration.TypeIdentifier"
-  "==>> constant_declaration(ConstantModifier, UnannType, VariableDeclaratorList, CurrentInterface)"
+  "==>> constant_declaration(ConstantModifier, UnannType, VariableDeclaratorList, CurrentInterface)";
 
 ConstantModifier::=
 //(one of)
   Annotation |
   "public" |
   "static" |
-  "final"
+  "final";
 
 InterfaceMethodDeclaration::=
   {InterfaceMethodModifier} MethodHeader MethodBody
   "InterfaceIdentifier =:= NormalInterfaceDeclaration.TypeIdentifier"
-  "==>> interface_method_declaration(InterfaceIdentifier, InterfaceMethodModifier, MethodHeader, MethodBody)"
+  "==>> interface_method_declaration(InterfaceIdentifier, InterfaceMethodModifier, MethodHeader, MethodBody)";
 
 InterfaceMethodModifier::=
 //(one of)
@@ -779,98 +779,98 @@ InterfaceMethodModifier::=
   "abstract" |
   "default" |
   "static" |
-  "strictfp"
+  "strictfp";
 
 AnnotationInterfaceDeclaration::=
-  {InterfaceModifier} "@interface" TypeIdentifier AnnotationInterfaceBody
+  {InterfaceModifier} "@interface" TypeIdentifier AnnotationInterfaceBody;
 
 AnnotationInterfaceBody::=
-  "{" {AnnotationInterfaceMemberDeclaration} "}"
+  "{" {AnnotationInterfaceMemberDeclaration} "}";
 
 AnnotationInterfaceMemberDeclaration::=
   AnnotationInterfaceElementDeclaration |
   ConstantDeclaration |
   ClassDeclaration |
   InterfaceDeclaration |
-  ";"
+  ";";
 
 AnnotationInterfaceElementDeclaration::=
-  {AnnotationInterfaceElementModifier} UnannType Identifier "()" [Dims] [DefaultValue] ";"
+  {AnnotationInterfaceElementModifier} UnannType Identifier "()" [Dims] [DefaultValue] ";";
 
 AnnotationInterfaceElementModifier::=
 //(one of)
   Annotation |
   "public" |
-  "abstract"
+  "abstract";
 
 DefaultValue::=
-  "default" ElementValue
+  "default" ElementValue;
 
 Annotation::=
   NormalAnnotation |
   MarkerAnnotation |
-  SingleElementAnnotation
+  SingleElementAnnotation;
 
 NormalAnnotation::=
-  "@" TypeName "(" [ElementValuePairList] ")"
+  "@" TypeName "(" [ElementValuePairList] ")";
 
 ElementValuePairList::=
-  ElementValuePair {"," ElementValuePair}
+  ElementValuePair {"," ElementValuePair};
 
 ElementValuePair::=
-  Identifier "=" ElementValue
+  Identifier "=" ElementValue;
 
 ElementValue::=
   ConditionalExpression |
   ElementValueArrayInitializer |
-  Annotation
+  Annotation;
 
 ElementValueArrayInitializer::=
-  "{" [ElementValueList] [","] "}"
+  "{" [ElementValueList] [","] "}";
 
 ElementValueList::=
-  ElementValue {"," ElementValue}
+  ElementValue {"," ElementValue};
 
 MarkerAnnotation::=
-  "@" TypeName
+  "@" TypeName;
 
 SingleElementAnnotation::=
-  "@" TypeName "(" ElementValue ")"
+  "@" TypeName "(" ElementValue ")";
 
 
 // Productions from §10 (Arrays)
 ArrayInitializer::=
-  "{" [VariableInitializerList] [","] "}"
+  "{" [VariableInitializerList] [","] "}";
 
 VariableInitializerList::=
-  VariableInitializer {"," VariableInitializer}
+  VariableInitializer {"," VariableInitializer};
 
 
 // Productions from §14 (Blocks, Statements, and Patterns)
 Block::=
-  "{" [BlockStatements] "}"
+  "{" [BlockStatements] "}";
 
 BlockStatements::=
-  BlockStatement {BlockStatement}
+  BlockStatement {BlockStatement};
 
 BlockStatement::=
   LocalClassOrInterfaceDeclaration |
   LocalVariableDeclarationStatement |
-  Statement
+  Statement;
 
 LocalClassOrInterfaceDeclaration::=
   ClassDeclaration |
-  NormalInterfaceDeclaration
+  NormalInterfaceDeclaration;
 
 LocalVariableDeclarationStatement::=
-  LocalVariableDeclaration ";"
+  LocalVariableDeclaration ";";
 
 LocalVariableDeclaration::=
-  {VariableModifier} LocalVariableType VariableDeclaratorList
+  {VariableModifier} LocalVariableType VariableDeclaratorList;
 
 LocalVariableType::=
   UnannType |
-  "var"
+  "var";
 
 Statement::=
   StatementWithoutTrailingSubstatement |
@@ -878,14 +878,14 @@ Statement::=
   IfThenStatement |
   IfThenElseStatement |
   WhileStatement |
-  ForStatement
+  ForStatement;
 
 StatementNoShortIf::=
   StatementWithoutTrailingSubstatement |
   LabeledStatementNoShortIf |
   IfThenElseStatementNoShortIf |
   WhileStatementNoShortIf |
-  ForStatementNoShortIf
+  ForStatementNoShortIf;
 
 StatementWithoutTrailingSubstatement::=
   Block |
@@ -900,18 +900,19 @@ StatementWithoutTrailingSubstatement::=
   SynchronizedStatement |
   ThrowStatement |
   TryStatement |
-  YieldStatement
+  YieldStatement;
 
 EmptyStatement::=
-  ";"
+  ";";
+
 LabeledStatement::=
-  Identifier ":" Statement
+  Identifier ":" Statement;
 
 LabeledStatementNoShortIf::=
-  Identifier ":" StatementNoShortIf
+  Identifier ":" StatementNoShortIf;
 
 ExpressionStatement::=
-  StatementExpression ";"
+  StatementExpression ";";
 
 StatementExpression::=
   Assignment |
@@ -920,151 +921,151 @@ StatementExpression::=
   PostIncrementExpression |
   PostDecrementExpression |
   MethodInvocation |
-  ClassInstanceCreationExpression
+  ClassInstanceCreationExpression;
 
 IfThenStatement::=
-  "if" "(" Expression ")" Statement
+  "if" "(" Expression ")" Statement;
 
 IfThenElseStatement::=
-"if" "(" Expression ")" StatementNoShortIf "else" Statement
+  "if" "(" Expression ")" StatementNoShortIf "else" Statement;
 
 IfThenElseStatementNoShortIf::=
-  "if" "(" Expression ")" StatementNoShortIf "else" StatementNoShortIf
+  "if" "(" Expression ")" StatementNoShortIf "else" StatementNoShortIf;
 
 AssertStatement::=
   "assert" Expression ";" |
-  "assert" Expression ":" Expression ";"
+  "assert" Expression ":" Expression ";";
 
 SwitchStatement::=
   "switch" "(" Expression ")" SwitchBlock
   "ClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
-  "switch_statement(Expression, SwitchBlock, ClassIdentifier)"
+  "switch_statement(Expression, SwitchBlock, ClassIdentifier)";
 
 SwitchBlock::=
   "{" SwitchRule {SwitchRule} "}" |
   "{" {SwitchBlockStatementGroup} {SwitchLabel ":"} "}"
-  "switch_block(SwitchLabel)"
+  "switch_block(SwitchLabel)";
 
 SwitchRule::=
   SwitchLabel "->" Expression ";" |
   SwitchLabel "->" Block |
-  SwitchLabel "->" ThrowStatement
+  SwitchLabel "->" ThrowStatement;
 
 SwitchBlockStatementGroup::=
-  SwitchLabel ":" {SwitchLabel ":"} BlockStatements
+  SwitchLabel ":" {SwitchLabel ":"} BlockStatements;
 
 SwitchLabel::=
   "case" CaseConstant {"," CaseConstant} |
-  "default"
+  "default";
 
 CaseConstant::=
-  ConditionalExpression
+  ConditionalExpression;
 
 WhileStatement::=
-  "while" "(" Expression ")" Statement
+  "while" "(" Expression ")" Statement;
 
 WhileStatementNoShortIf::=
-  "while" "(" Expression ")" StatementNoShortIf
+  "while" "(" Expression ")" StatementNoShortIf;
 
 DoStatement::=
-  "do" Statement "while" "(" Expression ")" ";"
+  "do" Statement "while" "(" Expression ")" ";";
 
 ForStatement::=
   BasicForStatement |
-  EnhancedForStatement
+  EnhancedForStatement;
 
 ForStatementNoShortIf::=
   BasicForStatementNoShortIf |
-  EnhancedForStatementNoShortIf
+  EnhancedForStatementNoShortIf;
 
 BasicForStatement::=
-  "for" "(" [ForInit] ";" [Expression] ";" [ForUpdate] ")" Statement
+  "for" "(" [ForInit] ";" [Expression] ";" [ForUpdate] ")" Statement;
 
 BasicForStatementNoShortIf::=
-  "for" "(" [ForInit] ";" [Expression] ";" [ForUpdate] ")" StatementNoShortIf
+  "for" "(" [ForInit] ";" [Expression] ";" [ForUpdate] ")" StatementNoShortIf;
 
 ForInit::=
   StatementExpressionList |
-  LocalVariableDeclaration
+  LocalVariableDeclaration;
 
 ForUpdate::=
-  StatementExpressionList
+  StatementExpressionList;
 
 StatementExpressionList::=
-  StatementExpression {"," StatementExpression}
+  StatementExpression {"," StatementExpression};
 
 EnhancedForStatement::=
-  "for" "(" LocalVariableDeclaration ":" Expression ")" Statement
+  "for" "(" LocalVariableDeclaration ":" Expression ")" Statement;
 
 EnhancedForStatementNoShortIf::=
-  "for" "(" LocalVariableDeclaration ":" Expression ")" StatementNoShortIf
+  "for" "(" LocalVariableDeclaration ":" Expression ")" StatementNoShortIf;
 
 BreakStatement::=
-  "break" [Identifier] ";"
+  "break" [Identifier] ";";
 
 YieldStatement::=
-  "yield" Expression ";"
+  "yield" Expression ";";
 
 ContinueStatement::=
-  "continue" [Identifier] ";"
+  "continue" [Identifier] ";";
 
 ReturnStatement::=
-  "return" [Expression] ";"
+  "return" [Expression] ";";
 
 ThrowStatement::=
-  "throw" Expression ";"
+  "throw" Expression ";";
 
 SynchronizedStatement::=
-  "synchronized" "(" Expression ")" Block
+  "synchronized" "(" Expression ")" Block;
 
 TryStatement::=
   "try" Block Catches |
   "try" Block [Catches] Finally |
-  TryWithResourcesStatement
+  TryWithResourcesStatement;
 
 Catches::=
-  CatchClause {CatchClause}
+  CatchClause {CatchClause};
 
 CatchClause::=
-  "catch" "(" CatchFormalParameter ")" Block
+  "catch" "(" CatchFormalParameter ")" Block;
 
 CatchFormalParameter::=
-  {VariableModifier} CatchType VariableDeclaratorId
+  {VariableModifier} CatchType VariableDeclaratorId;
 
 CatchType::=
-  UnannClassType {| ClassType}
+  UnannClassType {| ClassType};
 
 Finally::=
-  "finally" Block
+  "finally" Block;
 
 TryWithResourcesStatement::=
-  "try" ResourceSpecification Block [Catches] [Finally]
+  "try" ResourceSpecification Block [Catches] [Finally];
 
 ResourceSpecification::=
-  "(" ResourceList [";"] ")"
+  "(" ResourceList [";"] ")";
 
 ResourceList::=
-  Resource {";" Resource}
+  Resource {";" Resource};
 
 Resource::=
   LocalVariableDeclaration |
-  VariableAccess
+  VariableAccess;
 
 VariableAccess::=
   ExpressionName |
-  FieldAccess
+  FieldAccess;
 
 Pattern::=
-  TypePattern
+  TypePattern;
 
 TypePattern::=
-  LocalVariableDeclaration
+  LocalVariableDeclaration;
 
 
 // Productions from §15 (Expressions)
 Primary::=
   PrimaryNoNewArray |
-  ArrayCreationExpression
+  ArrayCreationExpression;
 
 PrimaryNoNewArray::=
   Literal |
@@ -1076,38 +1077,38 @@ PrimaryNoNewArray::=
   FieldAccess |
   ArrayAccess |
   MethodInvocation |
-  MethodReference 
+  MethodReference;
 
 ClassLiteral::=
   TypeName {"[]"} "." "class" |
   NumericType {"[]"} "." "class" |
   "boolean" {"[]"} "." "class" |
-  "void" "." "class"
+  "void" "." "class";
 
 ClassInstanceCreationExpression::=
   UnqualifiedClassInstanceCreationExpression |
   ExpressionName "." UnqualifiedClassInstanceCreationExpression |
-  Primary "." UnqualifiedClassInstanceCreationExpression
+  Primary "." UnqualifiedClassInstanceCreationExpression;
 
 UnqualifiedClassInstanceCreationExpression::=
-  "new" [TypeArguments] ClassOrInterfaceTypeToInstantiate "(" [ArgumentList] ")" [ClassBody]
+  "new" [TypeArguments] ClassOrInterfaceTypeToInstantiate "(" [ArgumentList] ")" [ClassBody];
 
 ClassOrInterfaceTypeToInstantiate::=
   {Annotation} Identifier {"." {Annotation} Identifier} [TypeArgumentsOrDiamond]
-  "==>> class_or_interface_type_to_instantiate(Identifier._1, Identifier._2)"
+  "==>> class_or_interface_type_to_instantiate(Identifier._1, Identifier._2)";
 
 TypeArgumentsOrDiamond::=
-  TypeArguments | 
-  "<>"
+  TypeArguments |
+  "<>";
 
 FieldAccess::=
   Primary "." Identifier |
   "super" "." Identifier |
-  TypeName '.' "super" "." Identifier
+  TypeName '.' "super" "." Identifier;
 
 ArrayAccess::=
   ExpressionName [ Expression ] |
-  PrimaryNoNewArray [ Expression ]
+  PrimaryNoNewArray [ Expression ];
 
 MethodInvocation::=
   MethodName "(" [ArgumentList] ")"
@@ -1118,10 +1119,10 @@ MethodInvocation::=
   ExpressionName "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
   Primary "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
   "super" "." [TypeArguments] Identifier "(" [ArgumentList] ")" |
-  TypeName "." "super" "." [TypeArguments] Identifier "(" [ArgumentList] ")"
+  TypeName "." "super" "." [TypeArguments] Identifier "(" [ArgumentList] ")";
 
 ArgumentList::=
-  Expression {"," Expression}
+  Expression {"," Expression};
 
 MethodReference::=
   ExpressionName "::" [TypeArguments] Identifier |
@@ -1130,60 +1131,60 @@ MethodReference::=
   "super" "::" [TypeArguments] Identifier |
   TypeName "." "super" "::" [TypeArguments] Identifier |
   ClassType "::" [TypeArguments] "new" |
-  ArrayType "::" "new"
-  
+  ArrayType "::" "new";
+
 ArrayCreationExpression::=
   "new" PrimitiveType DimExprs [Dims] |
   "new" ClassOrInterfaceType DimExprs [Dims] |
   "new" PrimitiveType Dims ArrayInitializer |
-  "new" ClassOrInterfaceType Dims ArrayInitializer
+  "new" ClassOrInterfaceType Dims ArrayInitializer;
 
 DimExprs::=
-  DimExpr {DimExpr}
+  DimExpr {DimExpr};
 
 DimExpr::=
   {Annotation} "[" Expression "]"
-  "==>> dim_expr(Expression)"
+  "==>> dim_expr(Expression)";
 
 Expression::=
   LambdaExpression |
-  AssignmentExpression
+  AssignmentExpression;
 
 LambdaExpression::=
-  LambdaParameters "->" LambdaBody
+  LambdaParameters "->" LambdaBody;
 
 LambdaParameters::=
   "(" [LambdaParameterList] ")" |
-  Identifier
+  Identifier;
 
 LambdaParameterList::=
   LambdaParameter {"," LambdaParameter} |
-  Identifier {"," Identifier}
+  Identifier {"," Identifier};
 
 LambdaParameter::=
   {VariableModifier} LambdaParameterType VariableDeclaratorId |
-  VariableArityParameter
+  VariableArityParameter;
 
 LambdaParameterType::=
   UnannType |
-  "var"
+  "var";
 
 LambdaBody::=
   Expression |
-  Block
+  Block;
 
 AssignmentExpression::=
   ConditionalExpression |
-  Assignment
+  Assignment;
 
 Assignment::=
   LeftHandSide AssignmentOperator Expression
-  "==>> assignment(LeftHandSide, Expression)"
+  "==>> assignment(LeftHandSide, Expression)";
 
 LeftHandSide::=
   ExpressionName |
   FieldAccess |
-  ArrayAccess
+  ArrayAccess;
 
 AssignmentOperator::=
 //(one of)
@@ -1198,37 +1199,37 @@ AssignmentOperator::=
   ">>>=" |
   "&=" |
   "^=" |
-  "|="
+  "|=";
 
 ConditionalExpression::=
   ConditionalOrExpression |
   ConditionalOrExpression "?" Expression ":" ConditionalExpression |
-  ConditionalOrExpression "?" Expression ":" LambdaExpression
+  ConditionalOrExpression "?" Expression ":" LambdaExpression;
 
 ConditionalOrExpression::=
   ConditionalAndExpression |
-  ConditionalOrExpression "||" ConditionalAndExpression
+  ConditionalOrExpression "||" ConditionalAndExpression;
 
 ConditionalAndExpression::=
   InclusiveOrExpression |
-  ConditionalAndExpression "&&" InclusiveOrExpression
+  ConditionalAndExpression "&&" InclusiveOrExpression;
 
 InclusiveOrExpression::=
   ExclusiveOrExpression |
-  InclusiveOrExpression "|" ExclusiveOrExpression
+  InclusiveOrExpression "|" ExclusiveOrExpression;
 
 ExclusiveOrExpression::=
   AndExpression |
-  ExclusiveOrExpression "^" AndExpression
+  ExclusiveOrExpression "^" AndExpression;
 
 AndExpression::=
   EqualityExpression |
-  AndExpression "&" EqualityExpression
+  AndExpression "&" EqualityExpression;
 
 EqualityExpression::=
   RelationalExpression |
   EqualityExpression "==" RelationalExpression |
-  EqualityExpression "!=" RelationalExpression
+  EqualityExpression "!=" RelationalExpression;
 
 RelationalExpression::=
   ShiftExpression |
@@ -1236,70 +1237,70 @@ RelationalExpression::=
   RelationalExpression ">" ShiftExpression |
   RelationalExpression "<=" ShiftExpression |
   RelationalExpression ">=" ShiftExpression |
-  InstanceofExpression
+  InstanceofExpression;
 
 InstanceofExpression::=
   RelationalExpression "instanceof" ReferenceType |
-  RelationalExpression "instanceof" Pattern
+  RelationalExpression "instanceof" Pattern;
 
 ShiftExpression::=
   AdditiveExpression |
   ShiftExpression "<<" AdditiveExpression |
   ShiftExpression ">>" AdditiveExpression |
-  ShiftExpression ">>>" AdditiveExpression
+  ShiftExpression ">>>" AdditiveExpression;
 
 AdditiveExpression::=
   MultiplicativeExpression |
   AdditiveExpression "+" MultiplicativeExpression |
-  AdditiveExpression "-" MultiplicativeExpression
+  AdditiveExpression "-" MultiplicativeExpression;
 
 MultiplicativeExpression::=
   UnaryExpression |
   MultiplicativeExpression "*" UnaryExpression |
   MultiplicativeExpression "/" UnaryExpression |
-  MultiplicativeExpression "%" UnaryExpression
+  MultiplicativeExpression "%" UnaryExpression;
 
 UnaryExpression::=
   PreIncrementExpression |
   PreDecrementExpression |
   "+" UnaryExpression |
   "-" UnaryExpression |
-  UnaryExpressionNotPlusMinus
+  UnaryExpressionNotPlusMinus;
 
 PreIncrementExpression::=
-  "++" UnaryExpression
+  "++" UnaryExpression;
 
 PreDecrementExpression::=
-  "--" UnaryExpression
+  "--" UnaryExpression;
 
 UnaryExpressionNotPlusMinus::=
   PostfixExpression |
   "~" UnaryExpression |
   "!" UnaryExpression |
   CastExpression |
-  SwitchExpression
+  SwitchExpression;
 
 PostfixExpression::=
   Primary |
   ExpressionName |
   PostIncrementExpression |
-  PostDecrementExpression
+  PostDecrementExpression;
 
 PostIncrementExpression::=
-  PostfixExpression "++"
+  PostfixExpression "++";
 
 PostDecrementExpression::=
-  PostfixExpression "--"
+  PostfixExpression "--";
 
 CastExpression::=
   "(" PrimitiveType ")" UnaryExpression |
   "(" ReferenceType {AdditionalBound} ")" UnaryExpressionNotPlusMinus |
-  "(" ReferenceType {AdditionalBound} ")" LambdaExpression
+  "(" ReferenceType {AdditionalBound} ")" LambdaExpression;
 
 SwitchExpression::=
   "switch" "(" Expression ")" SwitchBlock
   "ClassIdentifier =:= NormalClassDeclaration.TypeIdentifier"
-  "==>> switch_expression(Expression, SwitchBlock, ClassIdentifier)"
+  "==>> switch_expression(Expression, SwitchBlock, ClassIdentifier)";
 
 ConstantExpression::=
-  Expression
+  Expression;
