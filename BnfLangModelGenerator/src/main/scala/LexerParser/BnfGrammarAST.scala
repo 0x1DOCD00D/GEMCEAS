@@ -34,6 +34,7 @@ sealed trait RuleContent extends BnfGrammarAST
 case class RuleLiteral(lit: Literal) extends RuleContent
 case class RuleOpt(rc: RuleContent) extends RuleContent
 case class RuleRep(rc: RuleContent) extends RuleContent
+case class RuleGroup(rc: RuleContent) extends RuleContent
 case class RuleOr(rc: RuleContent) extends RuleContent
 case class RuleCollection(rcc: List[RuleContent]) extends RuleContent
 case class PARSEFAILURE(err: String) extends BnfGrammarAST

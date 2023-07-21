@@ -27,7 +27,8 @@ case class COMMENT() extends Separators
 case class UNKNOWNTOKEN() extends Separators
 case class SEMICOLON() extends Separators
 
-
+case class LEFTPAREN() extends LogicalOperations
+case class RIGHTPAREN() extends LogicalOperations
 case class VERTICALBAR() extends LogicalOperations
 case class BRA() extends LogicalOperations
 case class KET() extends LogicalOperations
