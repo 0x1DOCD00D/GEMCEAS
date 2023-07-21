@@ -21,8 +21,6 @@ import org.slf4j.Logger
  rule                 ::=  (non_terminal | non_terminal_regex) "::=" topRhs
  topRhs               ::= rhs {topRhs}
  rhs                  ::= (literal | non_terminal | non_terminal_regex) | "|" topRhs | "[" topRhs "]" | "{" topRhs "}" | "(" topRhs ")"
- ruleContent        ::= termlie {ruleContent};
- term               ::= <literal> | <rule-name>;
  non_terminal       ::= stringLiteral
  <non_terminal_regex> ::= stringLiteral
  literal              ::= doubleQuotedString
@@ -65,14 +63,14 @@ object BnfGrammarParser extends Parsers with PackratParsers with DebugParserUtil
       }
   end apply
 
-//  mainRule           ::= rule {mainRule};
+//  mainRule             ::= {rule ";"}
   lazy val mainFuleProcessor: PackratParser[MainRule] = positioned {
     lazy val theMainRule = repsep(rule, semiColonEndsRule) ^^ (rl => MainRule(rl))
 
     show(theMainRule)("the mother of all rules")
   }
 
-//rule               ::= <rule-name> "::=" rhs;
+//rule                 ::=  (non_terminal | non_terminal_regex) "::=" topRhs
   lazy val rule: PackratParser[Rule] = positioned {
     val basicRule = (non_terminal | non_terminal_regex) ~ defdAs ~ topRhs ^^ {
       case nt ~ _ ~ exp => Rule(nt, exp)

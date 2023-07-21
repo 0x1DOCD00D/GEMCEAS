@@ -111,9 +111,14 @@ object BnfGrammarLexer extends JavaTokenParsers:
       }
     }
 
-  def doubleSlash: Parser[DOUBLESLASH] = positioned("//" ^^^ DOUBLESLASH())
 
-  def openComment: Parser[SLASHSTAROPEN] = positioned("/*" ^^^ SLASHSTAROPEN())
+  def singleLineComment: Parser[COMMENT] = """(//)(.*[\n\r])""".r ^^ { comment =>
+    if debugLexerTokens then logger.info(s"Parsed comment: $comment")
+    COMMENT()
+  }
 
-  def singleLineComment: Parser[COMMENT] = doubleSlash ~ rep(not("\n") ~ ".".r) ^^^ COMMENT()
-  def multiLineComment: Parser[COMMENT] = openComment ~ rep(not("*/") ~ "(?s).".r) ~ "*/" ^^^ COMMENT()
+  def multiLineComment: Parser[COMMENT] =
+    """(/\\*)(.|\n|\r)*?(\\*/)""".r ^^ { comment =>
+      if debugLexerTokens then logger.info(s"Parsed multiline comment: $comment")
+      COMMENT()
+    }
