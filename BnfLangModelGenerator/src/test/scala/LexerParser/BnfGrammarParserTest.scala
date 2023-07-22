@@ -25,7 +25,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
       Rule(
         Nonterminal("mainRule"),
         RuleCollection(List(
-          RuleLiteral(Terminal("\"aWord\"")),
+          RuleLiteral(Terminal("aWord")),
           RuleCollection(List(
             RuleLiteral(Nonterminal("mainRule"))))))
         )
@@ -88,4 +88,204 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
     )
     )
   }
+
+  it should "parse a grammar with a three rules containing OR" in {
+    val simpleGrammar =
+      """
+        | mainRule  ::= nt_regex rule;
+        | rule      ::= mainRule | "+" done
+        | ;
+        | done      ::= "a" | "b" | "c" | rule | done   ;
+        |""".stripMargin
+    val ast = BnfGrammarCompiler(simpleGrammar)
+    ast shouldBe MainRule(List(
+      Rule(Nonterminal("mainRule"),
+        RuleCollection(List(RuleLiteral(Nonterminal("nt_regex")), RuleCollection(List(RuleLiteral(Nonterminal("rule"))))))
+      ),
+      Rule(Nonterminal("rule"),
+        RuleCollection(List(RuleLiteral(Nonterminal("mainRule")),
+          RuleCollection(List(RuleOr(
+            RuleCollection(List(RuleLiteral(Terminal("+")), RuleCollection(List(RuleLiteral(Nonterminal("done")))))))
+          ))))
+      ),
+      Rule(Nonterminal("done"),
+        RuleCollection(List(RuleLiteral(Terminal("a")),
+          RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("b")),
+            RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("c")),
+              RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Nonterminal("rule")),
+                RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Nonterminal("done"))))))))))))))))))))))))
+      ))
+    )
+  }
+
+  it should "parse a grammar with rules that contain optional constructs []" in {
+    val simpleGrammar =
+      """
+        | mainRule ::= nt1 nt2 "x" nt3;
+        | nt1 ::= nt1 [nt2 "x"];
+        | nt2 ::= [nt1 nt2 "x"];
+        | nt3 ::= [[nt1 nt2] "x"];
+        |""".stripMargin
+    val ast = BnfGrammarCompiler(simpleGrammar)
+    ast shouldBe MainRule(List(
+      Rule(Nonterminal("mainRule"),
+        RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
+          RuleCollection(List(RuleLiteral(Nonterminal("nt2")),
+            RuleCollection(List(RuleLiteral(Terminal("x")),
+              RuleCollection(List(RuleLiteral(Nonterminal("nt3"))))))))))),
+      Rule(Nonterminal("nt1"),RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
+        RuleCollection(List(
+          RuleOpt(RuleCollection(List(
+            RuleLiteral(Nonterminal("nt2")),
+            RuleCollection(List(RuleLiteral(Terminal("x"))))))))
+        )))
+      ),
+      Rule(Nonterminal("nt2"),
+        RuleCollection(List(
+          RuleOpt(RuleCollection(List(
+            RuleLiteral(Nonterminal("nt1")),
+            RuleCollection(List(RuleLiteral(Nonterminal("nt2")),
+              RuleCollection(List(RuleLiteral(Terminal("x"))))))))
+          )))
+      ),
+      Rule(Nonterminal("nt3"),
+        RuleCollection(List(
+          RuleOpt(RuleCollection(List(
+            RuleOpt(RuleCollection(List(
+              RuleLiteral(Nonterminal("nt1")),
+              RuleCollection(List(RuleLiteral(Nonterminal("nt2"))))))
+            ),
+            RuleCollection(List(RuleLiteral(Terminal("x"))))))))))))
+  }
+
+  it should "parse a grammar with rules with reps {}" in {
+    val simpleGrammar =
+      """
+        | mainRule ::= nt1 nt2 "x" nt3;
+        | nt1 ::= nt1 {nt2 "x"};
+        | nt2 ::= {nt1 nt2 "x"};
+        | nt3 ::= {{nt1 nt2} "x"};
+        |""".stripMargin
+    val ast = BnfGrammarCompiler(simpleGrammar)
+    ast shouldBe MainRule(List(
+      Rule(Nonterminal("mainRule"),
+        RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
+          RuleCollection(List(RuleLiteral(Nonterminal("nt2")),
+            RuleCollection(List(RuleLiteral(Terminal("x")),
+              RuleCollection(List(RuleLiteral(Nonterminal("nt3"))))))))))),
+      Rule(Nonterminal("nt1"), RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
+        RuleCollection(List(
+          RuleRep(RuleCollection(List(
+            RuleLiteral(Nonterminal("nt2")),
+            RuleCollection(List(RuleLiteral(Terminal("x"))))))))
+        )))
+      ),
+      Rule(Nonterminal("nt2"),
+        RuleCollection(List(
+          RuleRep(RuleCollection(List(
+            RuleLiteral(Nonterminal("nt1")),
+            RuleCollection(List(RuleLiteral(Nonterminal("nt2")),
+              RuleCollection(List(RuleLiteral(Terminal("x"))))))))
+          )))
+      ),
+      Rule(Nonterminal("nt3"),
+        RuleCollection(List(
+          RuleRep(RuleCollection(List(
+            RuleRep(RuleCollection(List(
+              RuleLiteral(Nonterminal("nt1")),
+              RuleCollection(List(RuleLiteral(Nonterminal("nt2"))))))
+            ),
+            RuleCollection(List(RuleLiteral(Terminal("x"))))))))))))
+  }
+
+  it should "parse a grammar with rules containing groups ()" in {
+    val simpleGrammar =
+      """
+        | mainRule ::= nt1 nt2 "x" nt3;
+        | nt1 ::= nt1 (nt2 "x");
+        | nt2 ::= (nt1 nt2 "x");
+        | nt3 ::= ((nt1 nt2) "x");
+        | """.stripMargin
+    val ast = BnfGrammarCompiler(simpleGrammar)
+    ast shouldBe MainRule(List(
+      Rule(Nonterminal("mainRule"),
+        RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
+          RuleCollection(List(RuleLiteral(Nonterminal("nt2")),
+            RuleCollection(List(RuleLiteral(Terminal("x")),
+              RuleCollection(List(RuleLiteral(Nonterminal("nt3"))))))))))),
+      Rule(Nonterminal("nt1"), RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
+        RuleCollection(List(
+          RuleGroup(RuleCollection(List(
+            RuleLiteral(Nonterminal("nt2")),
+            RuleCollection(List(RuleLiteral(Terminal("x"))))))))
+        )))
+      ),
+      Rule(Nonterminal("nt2"),
+        RuleCollection(List(
+          RuleGroup(RuleCollection(List(
+            RuleLiteral(Nonterminal("nt1")),
+            RuleCollection(List(RuleLiteral(Nonterminal("nt2")),
+              RuleCollection(List(RuleLiteral(Terminal("x"))))))))
+          )))
+      ),
+      Rule(Nonterminal("nt3"),
+        RuleCollection(List(
+          RuleGroup(RuleCollection(List(
+            RuleGroup(RuleCollection(List(
+              RuleLiteral(Nonterminal("nt1")),
+              RuleCollection(List(RuleLiteral(Nonterminal("nt2"))))))
+            ),
+            RuleCollection(List(RuleLiteral(Terminal("x"))))))))))))
+  }
+
+  it should "parse a grammar with a three rules containing OR and {} and [] and ()" in {
+    val simpleGrammar =
+      """
+        | mainRule  ::= nt_regex (rule [do "it"]);
+        | rule      ::= mainRule | ["+" done]
+        | ;
+        | done      ::= {"a" | ("b" | "c" | rule)} | done   ;
+        |""".stripMargin
+    val ast = BnfGrammarCompiler(simpleGrammar)
+    ast shouldBe MainRule(List(
+      Rule(Nonterminal("mainRule"),
+        RuleCollection(List(
+          RuleLiteral(Nonterminal("nt_regex")),
+          RuleCollection(List(
+            RuleGroup(RuleCollection(List(RuleLiteral(Nonterminal("rule")),
+              RuleCollection(List(
+                RuleOpt(RuleCollection(List(
+                  RuleLiteral(Nonterminal("do")), RuleCollection(List(RuleLiteral(Terminal("it"))))))
+                )))))
+            )))))),
+      Rule(Nonterminal("rule"),
+        RuleCollection(List(
+          RuleLiteral(Nonterminal("mainRule")), RuleCollection(List(
+            RuleOr(RuleCollection(List(
+              RuleOpt(
+                RuleCollection(List(RuleLiteral(Terminal("+")), RuleCollection(List(RuleLiteral(Nonterminal("done"))))))
+              )))
+            )))))),
+      Rule(Nonterminal("done"),RuleCollection(List(
+        RuleRep(
+          RuleCollection(List(
+            RuleLiteral(Terminal("a")),
+            RuleCollection(List(
+              RuleOr(RuleCollection(List(
+                RuleGroup(RuleCollection(List(RuleLiteral(Terminal("b")),
+                  RuleCollection(List(
+                    RuleOr(RuleCollection(List(RuleLiteral(Terminal("c")),
+                      RuleCollection(List(
+                        RuleOr(
+                          RuleCollection(List(RuleLiteral(Nonterminal("rule"))))
+                        )))))
+                    ))))))))
+              )))))
+        ),
+        RuleCollection(List(
+          RuleOr(
+            RuleCollection(List(RuleLiteral(Nonterminal("done")))))))))))
+    )
+  }
+
 }
