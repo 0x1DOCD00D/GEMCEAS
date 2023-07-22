@@ -23,7 +23,8 @@ object BnfGrammarLexer extends JavaTokenParsers:
   }
 
   def BnfTokens: Parser[List[LexerToken]] = phrase(rep1(isDefinedAs | verticalBar | bra | ket |
-        curlybra | curlyket | nonterminal | nonterminalRegex | terminal | regex_string | endOfRule | singleLineComment | multiLineComment))
+        curlybra | curlyket | nonterminal | nonterminalRegex | terminal | regex_string | endOfRule |
+        leftParen | rightParen | singleLineComment | multiLineComment))
     ^^ { allCapturedTokens => allCapturedTokens.filterNot(_ == COMMENT()) }
 
   def isDefinedAs:Parser[ISDEFINEDAS] = positioned {
@@ -99,7 +100,7 @@ object BnfGrammarLexer extends JavaTokenParsers:
     positioned{
       stringLiteral ^^ { strContent =>
         if debugLexerTokens then logger.info(s"Lexed terminal: $strContent")
-        Terminal(strContent)
+        Terminal(removeFirstAndLastDoubleQuotes(strContent))
       }
     }
 
