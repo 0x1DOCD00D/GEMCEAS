@@ -8,10 +8,24 @@
 
 package Compiler
 
-import LexerParser.BnfGrammarAST
+import LexerParser.{BnfGrammarAST, MainRule, PARSEFAILURE, Rule, RuleContent}
 
 object AstAnalyzer:
-  def apply(ast: BnfGrammarAST): Either[IrError, BnFGrammarIrMap] = ???
+  def apply(ast: BnfGrammarAST): Either[IrError, BnFGrammarIrMap] =
+    def constructIr(lOr: List[Rule]): Either[IrError, BnFGrammarIrMap] =
+      val ir =  lOr.map {
+        rule => null
+
+      }
+      ???
+    end constructIr
+
+    ast match
+      case MainRule(rules) => constructIr(rules)
+      case PARSEFAILURE(err) => Left(IrError(err))
+      case err => Left(IrError(s"Ast should have MainRule as the root, not ${err.toString}"))
+  end apply
+
 
   @main def runMain_AstAnalyzer(): Unit =
     println(AstAnalyzer.getClass.getName)

@@ -113,7 +113,12 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
           RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("b")),
             RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("c")),
               RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Nonterminal("rule")),
-                RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Nonterminal("done"))))))))))))))))))))))))
+                RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Nonterminal("done"))))))
+                )))))
+              )))))
+            )))))
+          )
+        ))
       ))
     )
   }
