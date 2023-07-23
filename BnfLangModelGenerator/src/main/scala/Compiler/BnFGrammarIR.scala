@@ -15,8 +15,9 @@ trait OptionalConstruct extends BnFGrammarIR
 trait RepeatConstruct extends BnFGrammarIR
 trait GroupConstruct extends BnFGrammarIR
 trait UnionConstruct extends BnFGrammarIR
-trait Literal extends BnFGrammarIR
-trait RegExSpec extends Literal
-trait PlainText extends Literal
+trait IrLiteral extends BnFGrammarIR
+case class RegExSpec(token: String) extends IrLiteral
+case class NT(token: String) extends IrLiteral
+case class T(token: String) extends IrLiteral
 
 case class IrError(err: String) extends BnFGrammarIR
