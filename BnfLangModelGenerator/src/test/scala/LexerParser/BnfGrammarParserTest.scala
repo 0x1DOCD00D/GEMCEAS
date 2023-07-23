@@ -295,35 +295,40 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         |sum_sub ::= product_div {("+"|"-") product_div};
         |product_div ::= ["+"|"-"] term {("*"|"/") term};
         |term ::= number | "(" expression ")";
-        |<number> ::= "~>(\+|\-)?[0-9]+(\.[0-9]+)?<~";
+        |<number> ::= "(\+|\-)?[0-9]+(\.[0-9]+)?";
         |""".stripMargin
     val ast = BnfGrammarCompiler(expGrammar)
     ast shouldBe MainRule(List(
       Rule(Nonterminal("expression"),RuleCollection(List(RuleLiteral(Nonterminal("sum_sub"))))),
       Rule(Nonterminal("sum_sub"),RuleCollection(List(
-        RuleLiteral(Nonterminal("product_div")), RuleCollection(List(
-          RuleRep(RuleCollection(List(
-            RuleGroup(RuleCollection(List(RuleLiteral(Terminal("+")), RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))),
-            RuleCollection(List(RuleLiteral(Nonterminal("product_div")))))))))))
+        RuleLiteral(Nonterminal("product_div")),
+        RuleCollection(List(
+          RuleRep(RuleCollection(List(RuleGroup(RuleCollection(List(RuleLiteral(Terminal("+")), RuleCollection(List(
+            RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))),
+            RuleCollection(List(RuleLiteral(Nonterminal("product_div"))))))))
+        )))
       ),
       Rule(Nonterminal("product_div"),RuleCollection(List(
         RuleOpt(RuleCollection(List(RuleLiteral(Terminal("+")), RuleCollection(List(
           RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))
         ),
         RuleCollection(List(RuleLiteral(Nonterminal("term")),
-          RuleCollection(List(RuleRep(RuleCollection(List(
-            RuleGroup(RuleCollection(List(RuleLiteral(Terminal("*")),
-              RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("/")))))))))
-            ),
-            RuleCollection(List(RuleLiteral(Nonterminal("term")))))))))))))
+          RuleCollection(List(
+            RuleRep(RuleCollection(List(
+              RuleGroup(RuleCollection(List(RuleLiteral(Terminal("*")), RuleCollection(List(
+                RuleOr(RuleCollection(List(RuleLiteral(Terminal("/")))))))))
+              ),
+              RuleCollection(List(RuleLiteral(Nonterminal("term"))))))))))
+        )))
       ),
-      Rule(Nonterminal("term"),RuleCollection(List(
-        RuleLiteral(Nonterminal("number")), RuleCollection(List(
-          RuleOr(RuleCollection(List(RuleLiteral(Terminal("(")),
-            RuleCollection(List(RuleLiteral(Nonterminal("expression")), RuleCollection(List(
-              RuleLiteral(Terminal(")")))))))))
-          )))))
-      )
+      Rule(Nonterminal("term"),RuleCollection(List(RuleLiteral(Nonterminal("number")), RuleCollection(List(
+        RuleOr(
+          RuleCollection(List(RuleLiteral(Terminal("(")),
+            RuleCollection(List(RuleLiteral(Nonterminal("expression")),
+              RuleCollection(List(RuleLiteral(Terminal(")"))))))))
+        )))))
+      ),
+      Rule(NonterminalRegex("<number>"),RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?"""))))
     )
   }
 

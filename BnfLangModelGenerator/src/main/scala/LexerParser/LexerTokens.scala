@@ -21,8 +21,6 @@ case class Terminal(id: String) extends Literal
 case class RegexString(id: String) extends Literal
 
 case class ISDEFINEDAS() extends Separators
-case class SLASHSTAROPEN() extends Separators
-case class DOUBLESLASH() extends Separators
 case class COMMENT() extends Separators
 case class UNKNOWNTOKEN() extends Separators
 case class SEMICOLON() extends Separators

@@ -21,7 +21,7 @@ import org.slf4j.Logger
  rule                 ::=  (non_terminal | non_terminal_regex) "::=" topRhs
  topRhs               ::= rhs {topRhs}
  rhs                  ::= (literal | non_terminal | non_terminal_regex) | "|" topRhs | "[" topRhs "]" | "{" topRhs "}" | "(" topRhs ")"
- non_terminal       ::= stringLiteral
+ non_terminal         ::= stringLiteral
  <non_terminal_regex> ::= stringLiteral
  literal              ::= doubleQuotedString
  */
@@ -72,10 +72,14 @@ object BnfGrammarParser extends Parsers with PackratParsers with DebugParserUtil
 
 //rule                 ::=  (non_terminal | non_terminal_regex) "::=" topRhs
   lazy val rule: PackratParser[Rule] = positioned {
-    val basicRule = (non_terminal | non_terminal_regex) ~ defdAs ~ topRhs ^^ {
+    lazy val aNtRgxRhs = aRegExp ^^ (lt => RuleLiteral(lt))
+    val basicRule = non_terminal ~ defdAs ~ topRhs ^^ {
       case nt ~ _ ~ exp => Rule(nt, exp)
     }
-    show(basicRule)("basicRule")
+    val regexRule = non_terminal_regex ~ defdAs ~ aNtRgxRhs ^^ {
+      case nt ~ _ ~ exp => Rule(nt, exp)
+    }
+    show(basicRule)("basicRule") | show(regexRule)("regexRule")
   }
 
   lazy val topRhs: PackratParser[RuleCollection] = positioned {
@@ -115,12 +119,16 @@ object BnfGrammarParser extends Parsers with PackratParsers with DebugParserUtil
   }
 
   private def non_terminal_regex: PackratParser[NonterminalRegex] = positioned {
-    accept("nonterminal defines regex", { case id@NonterminalRegex(name) => id })
+    accept("nonterminal regex", { case id@NonterminalRegex(name) => id })
   }
 
 
   private def aTerminal: PackratParser[Terminal] = positioned {
     accept("terminal", { case Terminal(value) => Terminal(value) })
+  }
+
+  private def aRegExp: PackratParser[RegexString] = positioned {
+    accept("regexp string", { case RegexString(value) => RegexString(value) })
   }
 
   private def defdAs: PackratParser[ISDEFINEDAS] = positioned {

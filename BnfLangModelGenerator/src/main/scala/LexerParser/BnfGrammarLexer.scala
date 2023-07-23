@@ -94,7 +94,6 @@ object BnfGrammarLexer extends JavaTokenParsers:
   }
 
   val removeFirstAndLastDoubleQuotes: String => String = (s: String) => if s.charAt(0) == '\"' && s.charAt(s.length-1) == '\"' then s.substring(1, s.length - 1) else s
-  val removeWigglyArrows: String => String = (s: String) => s.substring(2, s.length - 2)
 
   def terminal: Parser[Terminal] =
     positioned{
@@ -106,9 +105,10 @@ object BnfGrammarLexer extends JavaTokenParsers:
 
   def regex_string: Parser[RegexString] =
     positioned {
-      "\"~>[^\n]+<~\"".r ^^ { strContent =>
-        if debugLexerTokens then logger.info(s"Lexed regex: ${removeWigglyArrows(removeFirstAndLastDoubleQuotes(strContent))}")
-        RegexString(removeWigglyArrows(removeFirstAndLastDoubleQuotes(strContent)))
+//      "\"[^\n]+\"".r ^^ { strContent =>
+      """(\")(.|\n|\r)*?(\")""".r ^^ { strContent =>
+        if debugLexerTokens then logger.info(s"Lexed regex: ${removeFirstAndLastDoubleQuotes(strContent)}")
+        RegexString(removeFirstAndLastDoubleQuotes(strContent))
       }
     }
 
