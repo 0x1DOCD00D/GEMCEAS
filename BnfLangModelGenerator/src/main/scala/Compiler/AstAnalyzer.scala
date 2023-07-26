@@ -18,7 +18,7 @@ class AstAnalyzer:
   private val logger = CreateLogger(classOf[AstAnalyzer])
   private val terminals: Array[String] = Array.empty
   def checkMainRule(mr: MainRule): Either[IrError, List[Rule]] =
-    if mr.rules.filterNot(_.isInstanceOf[Rule]).length > 0 then Left(IrError("MainRule contains non rules."))
+    if !mr.rules.forall(_.isInstanceOf[Rule]) then Left(IrError("MainRule contains non rules."))
     else Right(mr.rules)
   end checkMainRule
 
