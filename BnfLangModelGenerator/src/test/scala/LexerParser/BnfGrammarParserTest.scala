@@ -27,10 +27,10 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         RuleCollection(List(
           RuleLiteral(Terminal("aWord")),
           RuleCollection(List(
-            RuleLiteral(Nonterminal("mainRule"))))))
+            RuleLiteral(Nonterminal("mainRule")))))
         )
       )
-    )
+    ))
   }
 
   it should "parse a grammar with a simple rule that consists of a nonterminal" in {
@@ -45,6 +45,24 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
           RuleCollection(List(
             RuleLiteral(Nonterminal("mainRule")))))
       )
+    )
+  }
+
+  it should "parse a grammar with a simple repeat of a terminal" in {
+    val simpleGrammar =
+      """
+        | mainRule ::= {"x"}
+        | ;
+        |""".stripMargin
+    val ast = BnfGrammarCompiler(simpleGrammar)
+    ast shouldBe MainRule(List(
+      Rule(Nonterminal("mainRule"),
+        RuleCollection(List(
+          RuleRep(RuleCollection(List(
+            RuleLiteral(Terminal("x"))))
+          )
+        ))
+      ))
     )
   }
 
@@ -137,12 +155,14 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
           RuleCollection(List(RuleLiteral(Nonterminal("nt2")),
             RuleCollection(List(RuleLiteral(Terminal("x")),
-              RuleCollection(List(RuleLiteral(Nonterminal("nt3"))))))))))),
+              RuleCollection(List(RuleLiteral(Nonterminal("nt3")))))))))
+        )),
       Rule(Nonterminal("nt1"),RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
         RuleCollection(List(
           RuleOpt(RuleCollection(List(
             RuleLiteral(Nonterminal("nt2")),
-            RuleCollection(List(RuleLiteral(Terminal("x"))))))))
+            RuleCollection(List(RuleLiteral(Terminal("x")))))
+          )))
         )))
       ),
       Rule(Nonterminal("nt2"),
@@ -177,13 +197,19 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
           RuleCollection(List(RuleLiteral(Nonterminal("nt2")),
             RuleCollection(List(RuleLiteral(Terminal("x")),
-              RuleCollection(List(RuleLiteral(Nonterminal("nt3"))))))))))),
-      Rule(Nonterminal("nt1"), RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
+              RuleCollection(List(RuleLiteral(Nonterminal("nt3")))))))))
+        )
+      ),
+      Rule(Nonterminal("nt1"),
         RuleCollection(List(
-          RuleRep(RuleCollection(List(
-            RuleLiteral(Nonterminal("nt2")),
-            RuleCollection(List(RuleLiteral(Terminal("x"))))))))
-        )))
+          RuleLiteral(Nonterminal("nt1")),
+          RuleCollection(List(
+            RuleRep(RuleCollection(List(
+              RuleLiteral(Nonterminal("nt2")),
+              RuleCollection(List(RuleLiteral(Terminal("x"))))))
+            ))
+          ))
+        )
       ),
       Rule(Nonterminal("nt2"),
         RuleCollection(List(
@@ -217,8 +243,10 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
           RuleCollection(List(RuleLiteral(Nonterminal("nt2")),
             RuleCollection(List(RuleLiteral(Terminal("x")),
-              RuleCollection(List(RuleLiteral(Nonterminal("nt3"))))))))))),
-      Rule(Nonterminal("nt1"), RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
+              RuleCollection(List(RuleLiteral(Nonterminal("nt3"))))))))))
+      ),
+      Rule(Nonterminal("nt1"),
+        RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
         RuleCollection(List(
           RuleGroup(RuleCollection(List(
             RuleLiteral(Nonterminal("nt2")),
@@ -262,34 +290,133 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
                 RuleOpt(RuleCollection(List(
                   RuleLiteral(Nonterminal("do")), RuleCollection(List(RuleLiteral(Terminal("it"))))))
                 )))))
-            )))))),
+            ))))
+        )),
       Rule(Nonterminal("rule"),
         RuleCollection(List(
-          RuleLiteral(Nonterminal("mainRule")), RuleCollection(List(
+          RuleLiteral(Nonterminal("mainRule")),
+          RuleCollection(List(
             RuleOr(RuleCollection(List(
               RuleOpt(
                 RuleCollection(List(RuleLiteral(Terminal("+")), RuleCollection(List(RuleLiteral(Nonterminal("done"))))))
               )))
-            )))))),
-      Rule(Nonterminal("done"),RuleCollection(List(
-        RuleRep(
-          RuleCollection(List(
-            RuleLiteral(Terminal("a")),
+            ))))
+        )
+      ),
+      Rule(Nonterminal("done"),
+        RuleCollection(List(
+          RuleRep(
             RuleCollection(List(
-              RuleOr(RuleCollection(List(
-                RuleGroup(RuleCollection(List(RuleLiteral(Terminal("b")),
-                  RuleCollection(List(
-                    RuleOr(RuleCollection(List(RuleLiteral(Terminal("c")),
-                      RuleCollection(List(
-                        RuleOr(
-                          RuleCollection(List(RuleLiteral(Nonterminal("rule"))))
-                        )))))
-                    ))))))))
-              )))))
+              RuleLiteral(Terminal("a")),
+              RuleCollection(List(
+                RuleOr(RuleCollection(List(
+                  RuleGroup(RuleCollection(List(RuleLiteral(Terminal("b")),
+                    RuleCollection(List(
+                      RuleOr(RuleCollection(List(RuleLiteral(Terminal("c")),
+                        RuleCollection(List(
+                          RuleOr(
+                            RuleCollection(List(RuleLiteral(Nonterminal("rule"))))
+                          )))))
+                      ))))))))
+                )))))
+          ),
+          RuleCollection(List(
+            RuleOr(
+              RuleCollection(List(RuleLiteral(Nonterminal("done"))))))))
+        ))
+      )
+    )
+  }
+
+  it should "parse a grammar with a combination of unionized constructs" in {
+    val simpleGrammar =
+      """
+        | mainRule ::= [{a} (b | c)] | d | e f;
+        |""".stripMargin
+    val ast = BnfGrammarCompiler(simpleGrammar)
+    ast shouldBe MainRule(List(
+      Rule(Nonterminal("mainRule"), RuleCollection(List(
+        RuleOpt(RuleCollection(List(
+          RuleRep(RuleCollection(List(
+            RuleLiteral(Nonterminal("a"))))
+          ),
+          RuleCollection(List(
+            RuleGroup(RuleCollection(List(
+              RuleLiteral(Nonterminal("b")),
+              RuleCollection(List(
+                RuleOr(RuleCollection(List(
+                  RuleLiteral(Nonterminal("c"))))
+                )))))
+            ))
+          )))
         ),
         RuleCollection(List(
-          RuleOr(
-            RuleCollection(List(RuleLiteral(Nonterminal("done")))))))))))
+          RuleOr(RuleCollection(List(
+            RuleLiteral(Nonterminal("d")),
+            RuleCollection(List(
+              RuleOr(RuleCollection(List(
+                RuleLiteral(Nonterminal("e")),
+                RuleCollection(List(
+                  RuleLiteral(Nonterminal("f")))
+                )))
+              ))
+            )))
+          ))
+        )))
+      ))
+    )
+  }
+
+  it should "parse a grammar with a combination of groupped constructs" in {
+    val simpleGrammar =
+      """
+        | mainRule ::= ((a) (b (c))) (d (e) f);
+        |""".stripMargin
+    val ast = BnfGrammarCompiler(simpleGrammar)
+    ast shouldBe MainRule(List(
+      Rule(Nonterminal("mainRule"),
+        RuleCollection(List(
+          RuleGroup(
+            RuleCollection(List(
+              RuleGroup(
+                RuleCollection(List(
+                  RuleLiteral(Nonterminal("a")))
+                )
+              ),
+              RuleCollection(List(
+                RuleGroup(
+                  RuleCollection(List(
+                    RuleLiteral(Nonterminal("b")),
+                    RuleCollection(List(
+                      RuleGroup(
+                        RuleCollection(List(
+                          RuleLiteral(Nonterminal("c")))
+                        )
+                      ))
+                    )))
+                ))
+              ))
+            )
+          ),
+          RuleCollection(List(
+            RuleGroup(
+              RuleCollection(List(
+                RuleLiteral(Nonterminal("d")),
+                RuleCollection(List(
+                  RuleGroup(
+                    RuleCollection(List(
+                      RuleLiteral(Nonterminal("e")))
+                    )
+                  ),
+                  RuleCollection(List(
+                    RuleLiteral(Nonterminal("f")))
+                  ))
+                ))
+              )
+            ))
+          ))
+        )
+      ))
     )
   }
 
@@ -304,16 +431,17 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         |""".stripMargin
     val ast = BnfGrammarCompiler(expGrammar)
     ast shouldBe MainRule(List(
-      Rule(Nonterminal("expression"),RuleCollection(List(RuleLiteral(Nonterminal("sum_sub"))))),
-      Rule(Nonterminal("sum_sub"),RuleCollection(List(
+      Rule(Nonterminal("expression"), RuleCollection(List(RuleLiteral(Nonterminal("sum_sub"))))),
+      Rule(Nonterminal("sum_sub"), RuleCollection(List(
         RuleLiteral(Nonterminal("product_div")),
         RuleCollection(List(
           RuleRep(RuleCollection(List(RuleGroup(RuleCollection(List(RuleLiteral(Terminal("+")), RuleCollection(List(
             RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))),
-            RuleCollection(List(RuleLiteral(Nonterminal("product_div"))))))))
+            RuleCollection(List(RuleLiteral(Nonterminal("product_div"))))))
+          ))
         )))
       ),
-      Rule(Nonterminal("product_div"),RuleCollection(List(
+      Rule(Nonterminal("product_div"), RuleCollection(List(
         RuleOpt(RuleCollection(List(RuleLiteral(Terminal("+")), RuleCollection(List(
           RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))
         ),
@@ -326,15 +454,14 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
               RuleCollection(List(RuleLiteral(Nonterminal("term"))))))))))
         )))
       ),
-      Rule(Nonterminal("term"),RuleCollection(List(RuleLiteral(Nonterminal("number")), RuleCollection(List(
+      Rule(Nonterminal("term"), RuleCollection(List(RuleLiteral(Nonterminal("number")), RuleCollection(List(
         RuleOr(
           RuleCollection(List(RuleLiteral(Terminal("(")),
             RuleCollection(List(RuleLiteral(Nonterminal("expression")),
               RuleCollection(List(RuleLiteral(Terminal(")"))))))))
         )))))
       ),
-      Rule(NonterminalRegex("<number>"),RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?"""))))
+      Rule(NonterminalRegex("<number>"), RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?"""))))
     )
   }
-
 }
