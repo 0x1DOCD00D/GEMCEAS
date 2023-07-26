@@ -30,25 +30,16 @@ object AstExtractors:
           case RuleLiteral(lit) =>
             val LiteralExtractor(v) = lit : @unchecked
             Option(Map(ruleId.get -> List(v)))
-          case RuleOpt(rc) =>
-            logger.error(s"Opt rule $rc cannot be used to define the top content of the rule")
-            None
-          case RuleRep(rc) =>
-            logger.error(s"Rep rule $rc cannot be used to define the top content of the rule")
-            None
-          case RuleGroup(rc) =>
-            logger.error(s"Group rule $rc cannot be used to define the top content of the rule")
-            None
-          case RuleOr(rc) =>
-            logger.error(s"Union rule $rc cannot be used to define the top content of the rule")
-            None
           case RuleCollection(rcc) =>
             val subRules = rcc.map {
               sr =>
-                val RuleCollectionExtractor(rIr) = sr : @unchecked
+                val RuleCollectionExtractor(rIr) = sr: @unchecked
                 rIr
             }
             Option(Map(ruleId.get -> subRules))
+          case err =>
+            logger.error(s"Rule ${err.toString}")
+            None
       else None
 
 
@@ -72,26 +63,25 @@ object AstExtractors:
           logger.error(s"Only RuleCollection can be specified under the repeat modifier: error ${err.toString}")
           None
 
-
   object GroupExtractor:
-    def unapply(l: RuleGroup): RepeatConstruct =
+    def unapply(l: RuleGroup): Option[GroupConstruct] =
       l.rc match
-        case RuleLiteral(lit) => ???
-        case RuleOpt(rc) => ???
-        case RuleRep(rc) => ???
-        case RuleGroup(rc) => ???
-        case RuleOr(rc) => ???
-        case RuleCollection(rcc) => ???
+        case rcv@RuleCollection(rcc) =>
+          val RuleCollectionExtractor(rCIr) = rcv: @unchecked
+          Option(GroupConstruct(rCIr))
+        case err =>
+          logger.error(s"Only RuleCollection can be specified under the group modifier: error ${err.toString}")
+          None
 
   object OptExtractor:
-    def unapply(l: RuleOpt): RepeatConstruct =
+    def unapply(l: RuleOpt): Option[OptionalConstruct] =
       l.rc match
-        case RuleLiteral(lit) => ???
-        case RuleOpt(rc) => ???
-        case RuleRep(rc) => ???
-        case RuleGroup(rc) => ???
-        case RuleOr(rc) => ???
-        case RuleCollection(rcc) => ???
+        case rcv@RuleCollection(rcc) =>
+          val RuleCollectionExtractor(rCIr) = rcv: @unchecked
+          Option(OptionalConstruct(rCIr))
+        case err =>
+          logger.error(s"Only RuleCollection can be specified under the group modifier: error ${err.toString}")
+          None
 
   object RuleCollectionExtractor:
     def unapply(c: RuleContent): Option[BnFGrammarIR] =
