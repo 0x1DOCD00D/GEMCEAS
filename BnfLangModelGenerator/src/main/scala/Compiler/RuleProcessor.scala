@@ -8,7 +8,8 @@
 
 package Compiler
 
-import LexerParser.{Nonterminal, NonterminalRegex, Terminal, Literal, Rule, RuleCollection, RuleContent, RuleGroup, RuleLiteral, RuleOpt, RuleOr, RuleRep}
+import Compiler.AstExtractors.{LiteralExtractor}
+import LexerParser.{Literal, Nonterminal, NonterminalRegex, Rule, RuleCollection, RuleContent, RuleGroup, RuleLiteral, RuleOpt, RuleOr, RuleRep, Terminal}
 import Utilz.CreateLogger
 
 
@@ -21,18 +22,16 @@ class RuleContentProcessor(rule: Rule) extends RuleProcessor(rule):
     if rule.id.isInstanceOf[Terminal] then
       logger.error(s"Terminal ${rule.id} cannot be used to define a rule")
       None
-    else Some((literalProcessing(rule.id)._2, null))
+    else Some((null,null))
+    ???
 
-  private def literalProcessing(l: Literal): (IrLiteral, String) =
-    l match
-      case NonterminalRegex(id) => (RegExSpec(id), id)
-      case Nonterminal(id) => (NT(id), id)
-      case Terminal(id) => (T(id), id)
-
-  private def content(rc: RuleContent): BnFGrammarIR = rc match
-    case RuleLiteral(lit) => literalProcessing(lit)._1
-    case RuleOpt(c) => ???
-    case RuleRep(c) => ???
-    case RuleGroup(c) => ???
-    case RuleOr(c) => ???
-    case RuleCollection(cc) => ???
+  private def content(rc: RuleContent): BnFGrammarIR =
+    rc match
+      case lt @ RuleLiteral(_) =>
+        val LiteralExtractor(bnfl) = lt : @unchecked
+        bnfl
+      case RuleOpt(c) => ???
+      case RuleRep(c) => ???
+      case RuleGroup(c) => ???
+      case RuleOr(c) => ???
+      case RuleCollection(cc) => ???

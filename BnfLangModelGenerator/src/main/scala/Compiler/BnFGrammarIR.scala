@@ -11,13 +11,14 @@ package Compiler
 trait BnFGrammarIR
 type BnFGrammarIrMap = Map[String, List[BnFGrammarIR]]
 
+enum LiteralType:
+  case TERM, NONTERM, NTREGEX
+
 trait OptionalConstruct extends BnFGrammarIR
-trait RepeatConstruct extends BnFGrammarIR
+case class RepeatConstruct(bnfObjects: BnFGrammarIR) extends BnFGrammarIR
 trait GroupConstruct extends BnFGrammarIR
 trait UnionConstruct extends BnFGrammarIR
 trait IrLiteral extends BnFGrammarIR
-case class RegExSpec(token: String) extends IrLiteral
-case class NT(token: String) extends IrLiteral
-case class T(token: String) extends IrLiteral
+case class BnfLiteral(token: String, literalType: LiteralType) extends IrLiteral
 
 case class IrError(err: String) extends BnFGrammarIR

@@ -58,8 +58,10 @@ object BnfGrammarParser extends Parsers with PackratParsers with DebugParserUtil
     else
       val tokenReader = new PackratReader(BnfGrammarTokenReader(bnfTokens))
       mainFuleProcessor(tokenReader) match {
-        case NoSuccess(msg, next) ⇒ Left(BnfParserError(Location(next.pos.line, next.pos.column), msg))
-        case Success(ast, _) ⇒ Right(ast)
+        case NoSuccess(msg, next) => Left(BnfParserError(Location(next.pos.line, next.pos.column), msg))
+        case Failure(msg, next) => Left(BnfParserError(Location(next.pos.line, next.pos.column), msg))
+        case Error(msg, next) => Left(BnfParserError(Location(next.pos.line, next.pos.column), msg))
+        case Success(ast, _) => Right(ast)
       }
   end apply
 

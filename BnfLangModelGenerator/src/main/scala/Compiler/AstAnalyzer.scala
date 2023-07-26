@@ -8,7 +8,48 @@
 
 package Compiler
 
-import LexerParser.{BnfGrammarAST, MainRule, PARSEFAILURE, Rule, RuleContent}
+import Compiler.AstExtractors.LiteralExtractor
+import LexerParser.{BnfGrammarAST, MainRule, Nonterminal, NonterminalRegex, PARSEFAILURE, Rule, RuleCollection, RuleContent, RuleGroup, RuleLiteral, RuleOpt, RuleOr, RuleRep}
+import Utilz.CreateLogger
+
+import scala.collection.mutable.ListBuffer
+
+class AstAnalyzer:
+  private val logger = CreateLogger(classOf[AstAnalyzer])
+  private val terminals: Array[String] = Array.empty
+  def checkMainRule(mr: MainRule): Either[IrError, List[Rule]] =
+    if mr.rules.filterNot(_.isInstanceOf[Rule]).length > 0 then Left(IrError("MainRule contains non rules."))
+    else Right(mr.rules)
+  end checkMainRule
+
+  def checkRule(r: Rule): Either[IrError, (String, RuleContent)] =
+    if r.id.isInstanceOf[Nonterminal] || r.id.isInstanceOf[NonterminalRegex] then
+      val name: String =
+        if r.id.isInstanceOf[Nonterminal] then r.id.asInstanceOf[Nonterminal].id
+        else r.id.asInstanceOf[NonterminalRegex].id
+      checkContent(r.rhs) match
+        case Left(err) => Left(err)
+        case Right(c) => Right((name, c))
+    else Left(IrError(s"Rule is defined as ${r.id} that is neither nt nor nt regex."))
+  end checkRule
+
+  def checkContent(content: RuleContent): Either[IrError, RuleContent] =
+    content match
+      case rl@RuleLiteral(lit) =>
+//        val ltral = LiteralExtractor(rl)
+        ???
+      case RuleOpt(rc) => ???
+      case RuleRep(rc) => ???
+      case RuleGroup(rc) => ???
+      case RuleOr(rc) => ???
+      case RuleCollection(rcc) =>
+        if rcc.count(_.isInstanceOf[RuleOr]) > 0 then
+          ???
+        ???
+  end checkContent
+
+end AstAnalyzer
+
 
 object AstAnalyzer:
   def apply(ast: BnfGrammarAST): Either[IrError, BnFGrammarIrMap] =
