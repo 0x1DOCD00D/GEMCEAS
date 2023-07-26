@@ -14,9 +14,9 @@ type BnFGrammarIrMap = Map[String, List[BnFGrammarIR]]
 enum LiteralType:
   case TERM, NONTERM, NTREGEX
 
-trait OptionalConstruct extends BnFGrammarIR
+case class OptionalConstruct(bnfObjects: BnFGrammarIR) extends BnFGrammarIR
 case class RepeatConstruct(bnfObjects: BnFGrammarIR) extends BnFGrammarIR
-trait GroupConstruct extends BnFGrammarIR
+case class GroupConstruct(bnfObjects: BnFGrammarIR) extends BnFGrammarIR
 trait UnionConstruct extends BnFGrammarIR
 trait IrLiteral extends BnFGrammarIR
 case class BnfLiteral(token: String, literalType: LiteralType) extends IrLiteral
