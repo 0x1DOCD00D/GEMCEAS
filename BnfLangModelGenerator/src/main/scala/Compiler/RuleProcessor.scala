@@ -8,13 +8,14 @@
 
 package Compiler
 
-import Compiler.AstExtractors.{LiteralExtractor}
+import Compiler.AstExtractors.LiteralExtractor
 import LexerParser.{Literal, Nonterminal, NonterminalRegex, Rule, RuleCollection, RuleContent, RuleGroup, RuleLiteral, RuleOpt, RuleOr, RuleRep, Terminal}
 import Utilz.CreateLogger
+import org.slf4j.Logger
 
 
 trait RuleProcessor(rule: Rule):
-  val logger = CreateLogger(classOf[RuleProcessor])
+  protected val logger: Logger = CreateLogger(classOf[RuleProcessor])
   def extractMapping: Option[(String, List[BnFGrammarIR])]
 
 class RuleContentProcessor(rule: Rule) extends RuleProcessor(rule):
