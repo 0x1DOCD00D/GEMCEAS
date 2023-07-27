@@ -30,9 +30,9 @@ object AstExtractors:
 //      BnfLiteral(aWord,TERM), List(BnfLiteral(mainRule,NONTERM))
       l match
         case head :: next  =>
-          if head.isInstanceOf[SeqConstruct] then
-            head.asInstanceOf[SeqConstruct].bnfObjects ::: flattenTreeOfLists(next)
-          else List(head) ::: flattenTreeOfLists(next)
+          head match
+            case construct: SeqConstruct => construct.bnfObjects ::: flattenTreeOfLists(next)
+            case _ => List(head) ::: flattenTreeOfLists(next)
         case Nil => Nil
     end flattenTreeOfLists
 
