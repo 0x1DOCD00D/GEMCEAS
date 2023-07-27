@@ -23,20 +23,7 @@ install_name_tool -change @rpath/libswipl.9.dylib /Applications/SWI-Prolog.app/C
 - Set the SWI_HOME_DIR env var in the same run config `SWI_HOME_DIR=/Applications/SWI-Prolog.app/Contents/swipl`
 
 
-
-## Notes
-
-Section for random notes. Will be cleaned up later
-
-// -Djava.library.path=/Applications/SWI-Prolog.app/Contents/swipl/lib/fat-darwin/
-// SWI_HOME_DIR=/Applications/SWI-Prolog.app/Contents/swipl
-
-// install_name_tool -change @rpath/libjsig.dylib /Users/melburne/Library/Java/JavaVirtualMachines/corretto-17.0.6/Contents/Home/lib/server/libjsig.dylib libjpl.dylib
-// install_name_tool -change @rpath/libjvm.dylib /Users/melburne/Library/Java/JavaVirtualMachines/corretto-17.0.6/Contents/Home/lib/server/libjvm.dylib libjpl.dylib
-// install_name_tool -change @executable_path/Applications/SWI-Prolog.app/Contents/Frameworks/libswipl.dylib /Applications/SWI-Prolog.app//Contents/Frameworks/libswipl.dylib libjpl.dylib
-
-// install_name_tool -change @rpath/libswipl.9.dylib /Applications/SWI-Prolog.app//Contents/Frameworks/libswipl.dylib libjpl.dylib
-
-// install_name_tool -change @rpath/libswipl.dylib /Applications/SWI-Prolog.app//Contents/Frameworks/libswipl.dylib libjpl.dylib
-
-// run prolog from /Applications/SWI-Prolog.app/Contents/MacOS/swipl
+## Run Tests
+### Prolog
+To run Prolog unit tests, run `swipl -g run_tests -t halt src/test/prolog/<file-name>.plt` from the home directory of 
+this project. Multiple _.plt_ files can be passed to test multiple files at once.
