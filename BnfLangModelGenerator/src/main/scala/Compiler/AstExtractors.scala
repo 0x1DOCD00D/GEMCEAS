@@ -83,12 +83,42 @@ object AstExtractors:
           logger.error(s"Only RuleCollection can be specified under the group modifier: error ${err.toString}")
           None
 
+  object UnionExtractor:
+    def unapply(l: RuleOr): Option[UnionConstruct] =
+      l.rc match
+        case rcv@RuleCollection(rcc) =>
+          val RuleCollectionExtractor(rCIr) = rcv: @unchecked
+          Option(UnionConstruct(List(rCIr)))
+        case err =>
+          logger.error(s"Only RuleCollection can be specified under the group modifier: error ${err.toString}")
+          None
+
   object RuleCollectionExtractor:
-    def unapply(c: RuleContent): Option[BnFGrammarIR] =
+    private def flattenTreeContent(rcc: List[RuleContent]): List[BnFGrammarIR] =
+      rcc match
+        case ::(head, tl) => extractIR(head) :: flattenTreeContent(tl)
+        case Nil => Nil
+    end flattenTreeContent
+
+    private def extractIR(c: RuleContent): BnFGrammarIR =
       c match
-        case RuleLiteral(lit) => ???
-        case RuleOpt(rc) => ???
-        case RuleRep(rc) => ???
-        case RuleGroup(rc) => ???
+        case rlit @ RuleLiteral(lit) =>
+          val LiteralExtractor(l) = rlit : @unchecked
+          l
+        case ro @ RuleOpt(rc) =>
+          val OptExtractor(o) = ro : @unchecked
+          o
+        case rrep @ RuleRep(rc) =>
+          val RepeatExtractor(r) = rrep: @unchecked
+          r
+        case rgrp @ RuleGroup(rc) =>
+          val GroupExtractor(g) = rgrp: @unchecked
+          g
+
         case RuleOr(rc) => ???
-        case RuleCollection(rcc) => ???
+
+        case RuleCollection(rcc) => SeqConstruct(flattenTreeContent(rcc))
+
+    end extractIR
+
+    def unapply(c: RuleCollection): Option[BnFGrammarIR] = Some(SeqConstruct(flattenTreeContent(c.rcc)))

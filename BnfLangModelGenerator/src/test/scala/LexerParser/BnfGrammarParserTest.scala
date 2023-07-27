@@ -48,6 +48,72 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
     )
   }
 
+  it should "parse a grammar with a simple union of a terminal and a nonterminal" in {
+    val simpleGrammar =
+      """
+        | mainRule ::= y|"x"
+        | ;
+        |""".stripMargin
+    val ast = BnfGrammarCompiler(simpleGrammar)
+    ast shouldBe MainRule(List(
+      Rule(Nonterminal("mainRule"),
+        RuleCollection(List(
+          RuleLiteral(Nonterminal("y")),
+          RuleCollection(List(
+            RuleOr(
+              RuleCollection(List(
+                RuleLiteral(Terminal("x"))))
+            ))))
+        )))
+    )
+  }
+
+  it should "parse a grammar with a union of a nonterminal, an option and a repeat" in {
+    val simpleGrammar =
+      """
+        | mainRule ::= x | ["y" z] | {v w} | theRestOfIt
+        | ;
+        |""".stripMargin
+    val ast = BnfGrammarCompiler(simpleGrammar)
+    ast shouldBe MainRule(List(
+      Rule(Nonterminal("mainRule"),
+        RuleCollection(List(
+          RuleLiteral(Nonterminal("x")),
+          RuleCollection(List(
+            RuleOr(
+              RuleCollection(List(
+                RuleOpt(
+                  RuleCollection(List(
+                    RuleLiteral(Terminal("y")),
+                    RuleCollection(List(
+                      RuleLiteral(Nonterminal("z")))
+                    ))
+                  )
+                ),
+                RuleCollection(List(
+                  RuleOr(
+                    RuleCollection(List(
+                      RuleRep(
+                        RuleCollection(List(
+                          RuleLiteral(Nonterminal("v")),
+                          RuleCollection(List(
+                            RuleLiteral(Nonterminal("w"))))))),
+                      RuleCollection(List(
+                        RuleOr(
+                          RuleCollection(List(
+                            RuleLiteral(Nonterminal("theRestOfIt")))
+                          )
+                        ))
+                      ))
+                    )
+                  ))
+                )))
+            ))
+          ))
+        )))
+    )
+  }
+
   it should "parse a grammar with a simple repeat of a terminal" in {
     val simpleGrammar =
       """
