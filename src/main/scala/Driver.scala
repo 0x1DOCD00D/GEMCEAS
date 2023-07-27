@@ -1,3 +1,4 @@
+import Utilz.CreateLogger
 import org.jpl7.{Atom, JPL, Query, Term}
 
 import java.io.{DataOutputStream, File, FileOutputStream, PrintWriter}
@@ -5,25 +6,27 @@ import scala.util.Random
 
 object Driver {
   def main(args: Array[String]): Unit = {
+    val logger = CreateLogger(this.getClass)
     JPL.setTraditional()
 
-    val query: Query = new Query("consult", Array[Term](new Atom("src/main/prolog/scala-test.pl")))
-    println("consult " + (if query.hasSolution then "succeeded" else "failed"))
+    logger.info("running query...")
+    val query: Query = new Query("consult", Array[Term](new Atom("/Users/drmark/github/gemceas/src/main/prolog/scala-test.pl")))
+    logger.info("consult " + (if query.hasSolution then "succeeded" else "failed"))
 
-    val writer = createJavaFile()
+//    val writer = createJavaFile()
 
     val generateInts = new Query("generate_integers")
     if generateInts.hasSolution then
       val intExprs: List[ArithExp[Int]] =
         ArithmeticExpressionGenerator.generateIntegerExpressions(Random.between(1, 10))
       // printExpressions(intExprs)
-      writeDataType(writer, "INT")
-      writeExpressions(writer, intExprs)
-
+//      writeDataType(writer, "INT")
+//      writeExpressions(writer, intExprs)
+//
     else
-      println("nope")
+      logger.error("nope")
 
-    closeJavaFile(writer)
+//    closeJavaFile(writer)
   }
 
   private def printExpressions[T](exprList: List[ArithExp[T]]): Unit = {
