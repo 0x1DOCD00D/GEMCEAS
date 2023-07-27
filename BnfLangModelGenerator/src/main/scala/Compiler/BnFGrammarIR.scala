@@ -17,7 +17,8 @@ enum LiteralType:
 case class OptionalConstruct(bnfObjects: BnFGrammarIR) extends BnFGrammarIR
 case class RepeatConstruct(bnfObjects: BnFGrammarIR) extends BnFGrammarIR
 case class GroupConstruct(bnfObjects: BnFGrammarIR) extends BnFGrammarIR
-trait UnionConstruct extends BnFGrammarIR
+case class SeqConstruct(bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIR
+case class UnionConstruct(bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIR
 trait IrLiteral extends BnFGrammarIR
 case class BnfLiteral(token: String, literalType: LiteralType) extends IrLiteral
 
