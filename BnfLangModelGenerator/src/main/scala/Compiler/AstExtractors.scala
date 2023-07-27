@@ -8,7 +8,7 @@
 
 package Compiler
 
-import LexerParser.{Nonterminal, NonterminalRegex, Rule, RuleCollection, RuleContent, RuleGroup, RuleLiteral, RuleOpt, RuleOr, RuleRep, Terminal}
+import LexerParser.{Literal, MainRule, Nonterminal, NonterminalRegex, RegexString, Rule, RuleCollection, RuleContent, RuleGroup, RuleLiteral, RuleOpt, RuleOr, RuleRep, Terminal}
 import LiteralType.*
 import Utilz.CreateLogger
 
@@ -17,8 +17,26 @@ import scala.collection.mutable.ListBuffer
 object AstExtractors:
   private val logger = CreateLogger(classOf[AstExtractors.type])
 
+  def apply(mr: MainRule): List[BnFGrammarIR] =
+    mr.rules.map {
+      r =>
+        val RuleExtractor(ir) = r : @unchecked
+        ir
+    }
+
   object RuleExtractor:
-    def unapply(r: Rule): Option[BnFGrammarIrMap] =
+    def flattenTreeOfLists(l: List[BnFGrammarIR]): List[BnFGrammarIR] =
+//      SeqConstruct(List(BnfLiteral(aWord,TERM), List(BnfLiteral(mainRule,NONTERM))))
+//      BnfLiteral(aWord,TERM), List(BnfLiteral(mainRule,NONTERM))
+      l match
+        case head :: next  =>
+          if head.isInstanceOf[SeqConstruct] then
+            head.asInstanceOf[SeqConstruct].bnfObjects ::: flattenTreeOfLists(next)
+          else List(head) ::: flattenTreeOfLists(next)
+        case Nil => Nil
+    end flattenTreeOfLists
+
+    def unapply(r: Rule): Option[BnFGrammarIR] =
       val LiteralExtractor(ntid) = r.id : @unchecked
       val ruleId:Option[String] = ntid match
         case BnfLiteral(t, TERM) =>
@@ -29,23 +47,25 @@ object AstExtractors:
         r.rhs match
           case RuleLiteral(lit) =>
             val LiteralExtractor(v) = lit : @unchecked
-            Option(Map(ruleId.get -> List(v)))
-          case RuleCollection(rcc) =>
-            val subRules = rcc.map {
-              sr =>
-                val RuleCollectionExtractor(rIr) = sr: @unchecked
-                rIr
-            }
-            Option(Map(ruleId.get -> subRules))
+            Option(v)
+          case rc @ RuleCollection(rcc) =>
+            val RuleCollectionExtractor(rIr) = rc: @unchecked
+            val res = Option(SeqConstruct(flattenTreeOfLists(rIr.bnfObjects)))
+            res
           case err =>
             logger.error(s"Rule ${err.toString}")
             None
       else None
-
+    end unapply
+  end RuleExtractor
 
   object LiteralExtractor:
     def unapply(l: RuleLiteral): Option[BnfLiteral] =
-      l.lit match
+      val LiteralExtractor(bl) = l.lit : @unchecked
+      Option(bl)
+
+    def unapply(rl: Literal): Option[BnfLiteral] =
+      rl match
         case Terminal(name) => Option(BnfLiteral(name, TERM))
         case Nonterminal(name) => Option(BnfLiteral(name, NONTERM))
         case NonterminalRegex(name) => Option(BnfLiteral(name, NTREGEX))
@@ -84,6 +104,10 @@ object AstExtractors:
           None
 
   object UnionExtractor:
+    private def flattenUnionStructure(or: RuleOr): UnionConstruct =
+      ???
+    end flattenUnionStructure
+
     def unapply(l: RuleOr): Option[UnionConstruct] =
       l.rc match
         case rcv@RuleCollection(rcc) =>
@@ -94,11 +118,11 @@ object AstExtractors:
           None
 
   object RuleCollectionExtractor:
-    private def flattenTreeContent(rcc: List[RuleContent]): List[BnFGrammarIR] =
+    private def processTreeContent(rcc: List[RuleContent]): List[BnFGrammarIR] =
       rcc match
-        case ::(head, tl) => extractIR(head) :: flattenTreeContent(tl)
+        case ::(head, tl) => extractIR(head) :: processTreeContent(tl)
         case Nil => Nil
-    end flattenTreeContent
+    end processTreeContent
 
     private def extractIR(c: RuleContent): BnFGrammarIR =
       c match
@@ -115,10 +139,17 @@ object AstExtractors:
           val GroupExtractor(g) = rgrp: @unchecked
           g
 
-        case RuleOr(rc) => ???
+        case or @ RuleOr(rc) =>
+          val UnionExtractor(un) = or: @unchecked
+          un
 
-        case RuleCollection(rcc) => SeqConstruct(flattenTreeContent(rcc))
+        case rc @ RuleCollection(rcc) =>
+          val RuleCollectionExtractor(nested) = rc
+          nested
 
     end extractIR
 
-    def unapply(c: RuleCollection): Option[BnFGrammarIR] = Some(SeqConstruct(flattenTreeContent(c.rcc)))
+    def unapply(c: RuleCollection): Option[SeqConstruct] =
+      val res = processTreeContent(c.rcc)
+      Some(SeqConstruct(res))
+

@@ -75,3 +75,6 @@ ThisBuild / assemblyMergeStrategy := {
   case "reference.conf" => MergeStrategy.concat
   case _ => MergeStrategy.first
 }
+BnfLangModelGenerator / libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % "latest.integration" % Test
+)
