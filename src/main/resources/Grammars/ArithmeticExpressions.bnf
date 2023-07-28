@@ -1,5 +1,18 @@
-expression ::= sum_sub;
-sum_sub ::= product_div {("+"|"-") product_div};
-product_div ::= ["+"|"-"] term {("*"|"/") term};
-term ::= number | "(" expression ")";
-<number> ::= "(\+|\-)?[0-9]+(\.[0-9]+)?";
+expression ::=
+  sum_sub;
+
+sum_sub ::=
+  product_div {("+"|"-") product_div}
+  "==>> sum_sub(_, second_product_div(Sign, ProductDiv))";
+
+product_div ::=
+  ["+"|"-"] term {("*"|"/") term}
+  "==>> product_div(_, _, second_term(SecondTermSign, SecondTerm))";
+
+term ::=
+  number
+  "==>> term(Number)" |
+  "(" expression ")" ;
+
+<number> ::=
+  "(\+|\-)?[0-9]+(\.[0-9]+)?";
