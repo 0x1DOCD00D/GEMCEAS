@@ -24,7 +24,7 @@ object AstExtractors:
       case head :: next =>
         head match
           case construct: SeqConstruct => flattenTreeOfLists(construct.bnfObjects, union) ::: flattenTreeOfLists(next, union)
-          case construct: UnionConstruct if union == true => flattenTreeOfLists(construct.bnfObjects, true) ::: flattenTreeOfLists(next, true)
+          case construct: UnionConstruct if union => flattenTreeOfLists(construct.bnfObjects, true) ::: flattenTreeOfLists(next, true)
           case _ => List(head) ::: flattenTreeOfLists(next, union)
       case Nil => Nil
   end flattenTreeOfLists
@@ -34,9 +34,9 @@ object AstExtractors:
       UnionConstruct(
         bnfObjects = sq.bnfObjects.foldLeft(List[BnFGrammarIR]()) {
           (acc,bo) =>
-            if bo.isInstanceOf[UnionConstruct] then
-              acc ::: flattenTreeOfLists(bo.asInstanceOf[UnionConstruct].bnfObjects, true)
-            else bo :: acc
+            bo match
+              case construct: UnionConstruct => acc ::: flattenTreeOfLists(construct.bnfObjects, true)
+              case _ => bo :: acc
         }
       )
     else sq
