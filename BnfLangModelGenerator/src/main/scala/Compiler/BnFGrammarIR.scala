@@ -14,8 +14,9 @@ type BnFGrammarIrMap = Map[String, List[BnFGrammarIR]]
 enum LiteralType:
   case TERM, NONTERM, NTREGEX
 
-case class OptionalConstruct(bnfObjects: BnFGrammarIR) extends BnFGrammarIR
-case class RepeatConstruct(bnfObjects: BnFGrammarIR) extends BnFGrammarIR
+case class ProductionRule(lhs: BnFGrammarIR, rhs: BnFGrammarIR) extends BnFGrammarIR
+case class OptionalConstruct(bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIR
+case class RepeatConstruct(bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIR
 case class GroupConstruct(bnfObjects: BnFGrammarIR) extends BnFGrammarIR
 case class SeqConstruct(bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIR
 case class UnionConstruct(bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIR

@@ -114,6 +114,26 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
     )
   }
 
+  it should "parse a grammar with a repeat of a terminal and an nt" in {
+    val simpleGrammar =
+      """
+        | mainRule ::= {"x" y z}
+        | ;
+        |""".stripMargin
+    val ast = BnfGrammarCompiler(simpleGrammar)
+    ast shouldBe MainRule(List(Rule(Nonterminal("mainRule"),
+      RuleCollection(List(
+        RuleRep(
+          RuleCollection(List(
+            RuleLiteral(Terminal("x")),
+            RuleCollection(List(RuleLiteral(Nonterminal("y")), RuleCollection(List(RuleLiteral(Nonterminal("z"))))))
+          )
+          )
+        ))
+      )))
+    )
+  }
+
   it should "parse a grammar with a simple repeat of a terminal" in {
     val simpleGrammar =
       """

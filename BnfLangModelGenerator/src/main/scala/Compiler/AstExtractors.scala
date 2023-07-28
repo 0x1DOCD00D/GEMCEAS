@@ -17,45 +17,58 @@ import scala.collection.mutable.ListBuffer
 object AstExtractors:
   private val logger = CreateLogger(classOf[AstExtractors.type])
 
+  private def flattenTreeOfLists(l: List[BnFGrammarIR], union: Boolean = false): List[BnFGrammarIR] =
+  //      SeqConstruct(List(BnfLiteral(aWord,TERM), List(BnfLiteral(mainRule,NONTERM))))
+  //      BnfLiteral(aWord,TERM), List(BnfLiteral(mainRule,NONTERM))
+    l match
+      case head :: next =>
+        head match
+          case construct: SeqConstruct => flattenTreeOfLists(construct.bnfObjects, union) ::: flattenTreeOfLists(next, union)
+          case construct: UnionConstruct if union == true => flattenTreeOfLists(construct.bnfObjects, true) ::: flattenTreeOfLists(next, true)
+          case _ => List(head) ::: flattenTreeOfLists(next, union)
+      case Nil => Nil
+  end flattenTreeOfLists
+
+  private def rewriteUnionization(sq: SeqConstruct): BnFGrammarIR =
+    if sq.bnfObjects.count(_.isInstanceOf[UnionConstruct]) > 0 then
+      UnionConstruct(
+        bnfObjects = sq.bnfObjects.foldLeft(List[BnFGrammarIR]()) {
+          (acc,bo) =>
+            if bo.isInstanceOf[UnionConstruct] then
+              acc ::: flattenTreeOfLists(bo.asInstanceOf[UnionConstruct].bnfObjects, true)
+            else bo :: acc
+        }
+      )
+    else sq
+  end rewriteUnionization
+
   def apply(mr: MainRule): List[BnFGrammarIR] =
-    mr.rules.map {
-      r =>
-        val RuleExtractor(ir) = r : @unchecked
-        ir
-    }
+      mr.rules.map {
+        r =>
+          logger.info(s"Processing rule $r")
+          val RuleExtractor(ir) = r : @unchecked
+          ir
+      }
 
   object RuleExtractor:
-    def flattenTreeOfLists(l: List[BnFGrammarIR]): List[BnFGrammarIR] =
-//      SeqConstruct(List(BnfLiteral(aWord,TERM), List(BnfLiteral(mainRule,NONTERM))))
-//      BnfLiteral(aWord,TERM), List(BnfLiteral(mainRule,NONTERM))
-      l match
-        case head :: next  =>
-          head match
-            case construct: SeqConstruct => construct.bnfObjects ::: flattenTreeOfLists(next)
-            case _ => List(head) ::: flattenTreeOfLists(next)
-        case Nil => Nil
-    end flattenTreeOfLists
-
-    def unapply(r: Rule): Option[BnFGrammarIR] =
+    def unapply(r: Rule): Option[ProductionRule] =
       val LiteralExtractor(ntid) = r.id : @unchecked
-      val ruleId:Option[String] = ntid match
+      ntid match
         case BnfLiteral(t, TERM) =>
           logger.error(s"Terminal $t cannot be used to define a rule")
           None
-        case BnfLiteral(t, _) => Some(t)
-      if ruleId.nonEmpty then
-        r.rhs match
-          case RuleLiteral(lit) =>
-            val LiteralExtractor(v) = lit : @unchecked
-            Option(v)
-          case rc @ RuleCollection(rcc) =>
-            val RuleCollectionExtractor(rIr) = rc: @unchecked
-            val res = Option(SeqConstruct(flattenTreeOfLists(rIr.bnfObjects)))
-            res
-          case err =>
-            logger.error(s"Rule ${err.toString}")
-            None
-      else None
+        case BnfLiteral(t, _) =>
+          Some(t)
+          r.rhs match
+            case RuleLiteral(lit) =>
+              val LiteralExtractor(v) = lit : @unchecked
+              Option(ProductionRule(ntid, v))
+            case rc @ RuleCollection(rcc) =>
+              val RuleCollectionExtractor(rIr) = rc: @unchecked
+              Option(ProductionRule(ntid, rewriteUnionization(SeqConstruct(flattenTreeOfLists(rIr.bnfObjects)))))
+            case err =>
+              logger.error(s"Rule ${err.toString}")
+              None
     end unapply
   end RuleExtractor
 
@@ -78,7 +91,7 @@ object AstExtractors:
       l.rc match
         case rcv@RuleCollection(rcc) =>
           val RuleCollectionExtractor(rCIr) = rcv : @unchecked
-          Option(RepeatConstruct(rCIr))
+          Option(RepeatConstruct(flattenTreeOfLists(rCIr.bnfObjects)))
         case err =>
           logger.error(s"Only RuleCollection can be specified under the repeat modifier: error ${err.toString}")
           None
@@ -98,21 +111,18 @@ object AstExtractors:
       l.rc match
         case rcv@RuleCollection(rcc) =>
           val RuleCollectionExtractor(rCIr) = rcv: @unchecked
-          Option(OptionalConstruct(rCIr))
+          Option(OptionalConstruct(flattenTreeOfLists(rCIr.bnfObjects)))
         case err =>
           logger.error(s"Only RuleCollection can be specified under the group modifier: error ${err.toString}")
           None
 
   object UnionExtractor:
-    private def flattenUnionStructure(or: RuleOr): UnionConstruct =
-      ???
-    end flattenUnionStructure
-
     def unapply(l: RuleOr): Option[UnionConstruct] =
       l.rc match
         case rcv@RuleCollection(rcc) =>
           val RuleCollectionExtractor(rCIr) = rcv: @unchecked
-          Option(UnionConstruct(List(rCIr)))
+          val res = Option(UnionConstruct(flattenTreeOfLists(rCIr.bnfObjects)))
+          res
         case err =>
           logger.error(s"Only RuleCollection can be specified under the group modifier: error ${err.toString}")
           None
@@ -144,7 +154,7 @@ object AstExtractors:
           un
 
         case rc @ RuleCollection(rcc) =>
-          val RuleCollectionExtractor(nested) = rc
+          val RuleCollectionExtractor(nested) = rc : @unchecked
           nested
 
     end extractIR
