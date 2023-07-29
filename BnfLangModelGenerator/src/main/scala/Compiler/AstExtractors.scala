@@ -24,22 +24,21 @@ object AstExtractors:
       case head :: next =>
         head match
           case construct: SeqConstruct => flattenTreeOfLists(construct.bnfObjects, union) ::: flattenTreeOfLists(next, union)
-          case construct: UnionConstruct if union => flattenTreeOfLists(construct.bnfObjects, true) ::: flattenTreeOfLists(next, true)
+          case construct: UnionConstruct if union => List(GroupConstruct(flattenTreeOfLists(construct.bnfObjects, true) ::: flattenTreeOfLists(next, true)))
           case _ => List(head) ::: flattenTreeOfLists(next, union)
       case Nil => Nil
   end flattenTreeOfLists
 
-  private def rewriteUnionization(sq: SeqConstruct): BnFGrammarIR =
-    if sq.bnfObjects.count(_.isInstanceOf[UnionConstruct]) > 0 then
-      UnionConstruct(
-        bnfObjects = sq.bnfObjects.foldLeft(List[BnFGrammarIR]()) {
-          (acc,bo) =>
-            bo match
-              case construct: UnionConstruct => acc ::: flattenTreeOfLists(construct.bnfObjects, true)
-              case _ => bo :: acc
+  private def rewriteUnionization[T <: BnFGrammarIRContainer](sq: T, top: Boolean = false): List[BnFGrammarIRContainer] =
+    val unionPresent: Boolean = sq.bnfObjects.count(_.isInstanceOf[UnionConstruct]) > 0
+    val xformed: List[BnFGrammarIRContainer] =
+      if unionPresent then
+        val (unionConstructs, otherConstructs) = sq.bnfObjects.partition(_.isInstanceOf[UnionConstruct])
+        GroupConstruct(otherConstructs) :: unionConstructs.foldLeft(List[BnFGrammarIRContainer]()) {
+          (acc, uc) => acc ::: rewriteUnionization(uc.asInstanceOf[BnFGrammarIRContainer])
         }
-      )
-    else sq
+      else List(GroupConstruct(sq.bnfObjects))
+    if unionPresent && top then List(UnionConstruct(xformed)) else xformed
   end rewriteUnionization
 
   def apply(mr: MainRule): List[BnFGrammarIR] =
@@ -65,7 +64,7 @@ object AstExtractors:
               Option(ProductionRule(ntid, v))
             case rc @ RuleCollection(rcc) =>
               val RuleCollectionExtractor(rIr) = rc: @unchecked
-              Option(ProductionRule(ntid, rewriteUnionization(SeqConstruct(flattenTreeOfLists(rIr.bnfObjects)))))
+              Option(ProductionRule(ntid, SeqConstruct(rewriteUnionization(SeqConstruct(flattenTreeOfLists(rIr.bnfObjects)), true))))
             case err =>
               logger.error(s"Rule ${err.toString}")
               None
@@ -82,16 +81,14 @@ object AstExtractors:
         case Terminal(name) => Option(BnfLiteral(name, TERM))
         case Nonterminal(name) => Option(BnfLiteral(name, NONTERM))
         case NonterminalRegex(name) => Option(BnfLiteral(name, NTREGEX))
-        case err =>
-          logger.error(s"Unknown type of literal, $err")
-          None
+        case RegexString(str) => Option(BnfLiteral(str, REGEXTERM))
 
   object RepeatExtractor:
     def unapply(l: RuleRep): Option[RepeatConstruct] =
       l.rc match
         case rcv@RuleCollection(rcc) =>
           val RuleCollectionExtractor(rCIr) = rcv : @unchecked
-          Option(RepeatConstruct(flattenTreeOfLists(rCIr.bnfObjects)))
+          Option(RepeatConstruct(rewriteUnionization(RepeatConstruct(flattenTreeOfLists(rCIr.bnfObjects)), true)))
         case err =>
           logger.error(s"Only RuleCollection can be specified under the repeat modifier: error ${err.toString}")
           None
@@ -101,7 +98,7 @@ object AstExtractors:
       l.rc match
         case rcv@RuleCollection(rcc) =>
           val RuleCollectionExtractor(rCIr) = rcv: @unchecked
-          Option(GroupConstruct(rCIr))
+          Option(GroupConstruct(rewriteUnionization(GroupConstruct(flattenTreeOfLists(rCIr.bnfObjects)),true)))
         case err =>
           logger.error(s"Only RuleCollection can be specified under the group modifier: error ${err.toString}")
           None
@@ -111,7 +108,7 @@ object AstExtractors:
       l.rc match
         case rcv@RuleCollection(rcc) =>
           val RuleCollectionExtractor(rCIr) = rcv: @unchecked
-          Option(OptionalConstruct(flattenTreeOfLists(rCIr.bnfObjects)))
+          Option(OptionalConstruct(rewriteUnionization(OptionalConstruct(flattenTreeOfLists(rCIr.bnfObjects)),true)))
         case err =>
           logger.error(s"Only RuleCollection can be specified under the group modifier: error ${err.toString}")
           None

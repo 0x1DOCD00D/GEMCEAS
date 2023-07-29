@@ -68,6 +68,54 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
     )
   }
 
+  it should "parse a grammar with a simple union of seven nonterminals" in {
+    val simpleGrammar =
+      """
+        | mainRule ::= a b | c d e | f g | z
+        | ;
+        |""".stripMargin
+    val ast = BnfGrammarCompiler(simpleGrammar)
+    ast shouldBe MainRule(List(
+      Rule(
+        Nonterminal("mainRule"),
+        RuleCollection(List(
+          RuleLiteral(Nonterminal("a")),
+          RuleCollection(List(
+            RuleLiteral(Nonterminal("b")),
+            RuleCollection(List(
+              RuleOr(
+                RuleCollection(List(
+                  RuleLiteral(Nonterminal("c")),
+                  RuleCollection(List(RuleLiteral(Nonterminal("d")),
+                    RuleCollection(List(RuleLiteral(Nonterminal("e")),
+                      RuleCollection(List(
+                        RuleOr(
+                          RuleCollection(List(
+                            RuleLiteral(Nonterminal("f")),
+                            RuleCollection(List(
+                              RuleLiteral(Nonterminal("g")),
+                              RuleCollection(List(
+                                RuleOr(
+                                  RuleCollection(List(
+                                    RuleLiteral(Nonterminal("z"))
+                                  ))
+                                ))
+                              ))
+                            ))
+                          )
+                        )
+                      ))
+                    ))
+                  ))
+                ))
+              )))
+          ))
+        ))
+      ))
+    )
+  }
+
+
   it should "parse a grammar with a union of a nonterminal, an option and a repeat" in {
     val simpleGrammar =
       """

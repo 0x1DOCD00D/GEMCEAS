@@ -9,17 +9,21 @@
 package Compiler
 
 trait BnFGrammarIR
+trait BnFGrammarIRContainer extends BnFGrammarIR:
+  val bnfObjects: List[BnFGrammarIR]
+end BnFGrammarIRContainer
+
 type BnFGrammarIrMap = Map[String, List[BnFGrammarIR]]
 
 enum LiteralType:
-  case TERM, NONTERM, NTREGEX
+  case TERM, NONTERM, NTREGEX, REGEXTERM
 
 case class ProductionRule(lhs: BnFGrammarIR, rhs: BnFGrammarIR) extends BnFGrammarIR
-case class OptionalConstruct(bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIR
-case class RepeatConstruct(bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIR
-case class GroupConstruct(bnfObjects: BnFGrammarIR) extends BnFGrammarIR
-case class SeqConstruct(bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIR
-case class UnionConstruct(bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIR
+case class OptionalConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
+case class RepeatConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
+case class GroupConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
+case class SeqConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
+case class UnionConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 trait IrLiteral extends BnFGrammarIR
 case class BnfLiteral(token: String, literalType: LiteralType) extends IrLiteral
 
