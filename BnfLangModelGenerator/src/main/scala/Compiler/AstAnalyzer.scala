@@ -10,6 +10,7 @@ package Compiler
 
 import Utilz.CreateLogger
 
+import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
 class AstAnalyzer private (ast: List[ProductionRule]):
@@ -49,6 +50,7 @@ class AstAnalyzer private (ast: List[ProductionRule]):
   end extractLhs2RhsMappings
 
   private def obtainDims(mappings: List[Option[(BnfLiteral, List[BnfLiteral])]]): (List[BnfLiteral], List[BnfLiteral]) =
+    @tailrec
     def constructSetOfLiterals(l: List[BnfLiteral], resSet: Set[BnfLiteral]): Set[BnfLiteral] =
       l match
         case ::(head, next) => constructSetOfLiterals(next, resSet + head)
@@ -87,19 +89,17 @@ end AstAnalyzer
 
 
 object AstAnalyzer:
-  def apply(ast: List[ProductionRule]) =
+  def apply(ast: List[ProductionRule]): ((List[BnfLiteral], List[BnfLiteral]), Array[Array[Int]]) =
     val aStAn = new AstAnalyzer(ast)
     val rM = aStAn.extractLhs2RhsMappings()
     val dims = aStAn.obtainDims(rM)
     val matrix = aStAn.usageMatrix(rM.flatten, dims)
     aStAn.logger.info(dims._2.map(_.token).mkString(","))
-    aStAn.toCsv(dims, matrix).foreach{
+    aStAn.toCsv(dims, matrix).foreach {
       l =>
         aStAn.logger.info(l)
     }
-/*    aStAn.logger.info(dims._1.mkString(", "))
-    aStAn.logger.info(dims._2.mkString(", "))
-*/
+    (dims, matrix)
   end apply
 
 
