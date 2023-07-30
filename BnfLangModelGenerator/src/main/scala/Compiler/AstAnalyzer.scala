@@ -8,65 +8,210 @@
 
 package Compiler
 
-import Compiler.AstExtractors.LiteralExtractor
-import LexerParser.{BnfGrammarAST, MainRule, Nonterminal, NonterminalRegex, PARSEFAILURE, Rule, RuleCollection, RuleContent, RuleGroup, RuleLiteral, RuleOpt, RuleOr, RuleRep}
 import Utilz.CreateLogger
 
 import scala.collection.mutable.ListBuffer
 
-class AstAnalyzer:
+class AstAnalyzer private (ast: List[ProductionRule]):
   private val logger = CreateLogger(classOf[AstAnalyzer])
-  private val terminals: Array[String] = Array.empty
-  def checkMainRule(mr: MainRule): Either[IrError, List[Rule]] =
-    if !mr.rules.forall(_.isInstanceOf[Rule]) then Left(IrError("MainRule contains non rules."))
-    else Right(mr.rules)
-  end checkMainRule
 
-  def checkRule(r: Rule): Either[IrError, (String, RuleContent)] =
-    if r.id.isInstanceOf[Nonterminal] || r.id.isInstanceOf[NonterminalRegex] then
-      val name: String =
-        if r.id.isInstanceOf[Nonterminal] then r.id.asInstanceOf[Nonterminal].id
-        else r.id.asInstanceOf[NonterminalRegex].id
-      checkContent(r.rhs) match
-        case Left(err) => Left(err)
-        case Right(c) => Right((name, c))
-    else Left(IrError(s"Rule is defined as ${r.id} that is neither nt nor nt regex."))
-  end checkRule
+  private def prRhsProcessor(rhs: BnFGrammarIR): List[BnfLiteral] =
+    rhs match
+      case container: BnFGrammarIRContainer =>
+        val (bnfLit, bnfElse) = container.bnfObjects.partition(_.isInstanceOf[BnfLiteral])
+        bnfLit.asInstanceOf[List[BnfLiteral]] ::: (bnfElse match
+          case ::(head, next) => (head match
+            case container: BnFGrammarIRContainer => prRhsProcessor(container)
+            case literal: BnfLiteral => List(literal)
+            ) ::: next.foldLeft(List[BnfLiteral]())((acc,e)=> prRhsProcessor(e):::acc)
+          case Nil => List()
+          )
+      case ltrl: BnfLiteral => List(ltrl)
+      case err =>
+        logger.error(s"The rhs of the prod rule cannot be processed: ${err.toString}")
+        List()
+  end prRhsProcessor
 
-  def checkContent(content: RuleContent): Either[IrError, RuleContent] =
-    content match
-      case rl@RuleLiteral(lit) =>
-//        val ltral = LiteralExtractor(rl)
-        ???
-      case RuleOpt(rc) => ???
-      case RuleRep(rc) => ???
-      case RuleGroup(rc) => ???
-      case RuleOr(rc) => ???
-      case RuleCollection(rcc) =>
-        if rcc.count(_.isInstanceOf[RuleOr]) > 0 then
-          ???
-        ???
-  end checkContent
+  private def prodRuleProcessor(pr: ProductionRule): Option[(BnfLiteral, List[BnfLiteral])] =
+    pr.lhs match
+      case literal: BnfLiteral => Option((literal, prRhsProcessor(pr.rhs)))
+      case err =>
+        logger.error(s"Lhs of the prod rule ${pr.toString}.toString}")
+        None
+
+  end prodRuleProcessor
+
+  private def extractLhs2RhsMappings(): List[Option[(BnfLiteral, List[BnfLiteral])]] = ast match
+    case ::(head, next) => prodRuleProcessor(head) :: next.foldLeft(List[Option[(BnfLiteral, List[BnfLiteral])]]()) {
+      (acc, rl) => prodRuleProcessor(rl) :: acc
+    }
+    case Nil => List()
+  end extractLhs2RhsMappings
+
+  private def obtainDims(mappings: List[Option[(BnfLiteral, List[BnfLiteral])]]): (List[BnfLiteral], List[BnfLiteral]) =
+    def constructSetOfLiterals(l: List[BnfLiteral], resSet: Set[BnfLiteral]): Set[BnfLiteral] =
+      l match
+        case ::(head, next) => constructSetOfLiterals(next, resSet + head)
+        case Nil => resSet
+    end constructSetOfLiterals
+
+    val rhs: Set[BnfLiteral] = Set.empty
+    (mappings.flatten.map(_._1),
+      mappings.flatten.map(e=>constructSetOfLiterals(e._2, Set.empty)).foldLeft(Set[BnfLiteral]())((acc,v)=> acc ++ v).toList
+    )
+  end obtainDims
+
+  private def usageMatrix(mappings: List[(BnfLiteral, List[BnfLiteral])], dims: (List[BnfLiteral], List[BnfLiteral])): Array[Array[Int]] =
+    val matrx: Array[Array[Int]] = Array.fill(dims._1.length)(Array.fill(dims._2.length)(0))
+    mappings.foreach {
+      p =>
+        val row = dims._1.indexOf(p._1)
+        p._2.foreach {
+          e =>
+            val col = dims._2.indexOf(e)
+            matrx(row)(col) = matrx(row)(col) + 1
+        }
+    }
+    matrx
+  end usageMatrix
+
+  private def toCsv(dims: (List[BnfLiteral], List[BnfLiteral]), m: Array[Array[Int]]): List[String] =
+    val header = dims._2.mkString(",")
+    val rowLen = dims._2.length
+    val pm = m.zipWithIndex.map((row, ir) => dims._1(ir).token + ", " + row.zipWithIndex.map((col, ic) => s"${m(ir)(ic)}").mkString(", ")).toList
+    pm
+  end toCsv
+
 
 end AstAnalyzer
 
 
 object AstAnalyzer:
-  def apply(ast: BnfGrammarAST): Either[IrError, BnFGrammarIrMap] =
-    def constructIr(lOr: List[Rule]): Either[IrError, BnFGrammarIrMap] =
-      val ir =  lOr.map {
-        rule => null
-
-      }
-      ???
-    end constructIr
-
-    ast match
-      case MainRule(rules) => constructIr(rules)
-      case PARSEFAILURE(err) => Left(IrError(err))
-      case err => Left(IrError(s"Ast should have MainRule as the root, not ${err.toString}"))
+  def apply(ast: List[ProductionRule]) =
+    val aStAn = new AstAnalyzer(ast)
+    val rM = aStAn.extractLhs2RhsMappings()
+    val dims = aStAn.obtainDims(rM)
+    val matrix = aStAn.usageMatrix(rM.flatten, dims)
+    aStAn.logger.info(dims._2.map(_.token).mkString(","))
+    aStAn.toCsv(dims, matrix).foreach{
+      l =>
+        aStAn.logger.info(l)
+    }
+/*    aStAn.logger.info(dims._1.mkString(", "))
+    aStAn.logger.info(dims._2.mkString(", "))
+*/
   end apply
 
 
   @main def runMain_AstAnalyzer(): Unit =
-    println(AstAnalyzer.getClass.getName)
+    import LiteralType.*
+    /*
+    expression ::= sum_sub;
+    sum_sub ::= product_div {("+"|"-") product_div};
+    product_div ::= ["+"|"-"] term {("*"|"/") term};
+    term ::= number | "(" expression ")";
+    <number> ::= "(\+|\-)?[0-9]+(\.[0-9]+)?";
+    */
+
+    val ast = List(
+
+      ProductionRule(BnfLiteral("expression", NONTERM),
+        SeqConstruct(List(
+          GroupConstruct(List(
+            BnfLiteral("sum_sub", NONTERM))
+          ))
+        )
+      ),
+      ProductionRule(BnfLiteral("sum_sub", NONTERM),
+        SeqConstruct(List(
+          GroupConstruct(List(
+            BnfLiteral("product_div", NONTERM),
+            RepeatConstruct(List(
+              GroupConstruct(List(
+                GroupConstruct(List(
+                  UnionConstruct(List(
+                    GroupConstruct(List(
+                      BnfLiteral("+", TERM))
+                    ),
+                    GroupConstruct(List(
+                      BnfLiteral("-", TERM))
+                    ))
+                  ))
+                ),
+                BnfLiteral("product_div", NONTERM))
+              ))
+            ))
+          ))
+        )
+      ),
+      /*
+      product_div ::= ["+"|"-"] term {("*"|"/") term};
+      term ::= number | "(" expression ")";
+      <number> ::= "(\+|\-)?[0-9]+(\.[0-9]+)?";
+      */
+      ProductionRule(
+        BnfLiteral("product_div", NONTERM),
+        SeqConstruct(List(
+          GroupConstruct(List(
+            OptionalConstruct(List(
+              UnionConstruct(List(
+                GroupConstruct(List(
+                  BnfLiteral("+", TERM))
+                ),
+                GroupConstruct(List(
+                  BnfLiteral("-", TERM))
+                ))
+              ))
+            ),
+            BnfLiteral("term", NONTERM),
+            RepeatConstruct(List(
+              GroupConstruct(List(
+                GroupConstruct(List(
+                  UnionConstruct(List(
+                    GroupConstruct(List(
+                      BnfLiteral("*", TERM))
+                    ),
+                    GroupConstruct(List(
+                      BnfLiteral("/", TERM))
+                    ))
+                  ))
+                ),
+                BnfLiteral("term", NONTERM))
+              ))
+            ))
+          ))
+        )
+      ),
+      /*
+      term ::= number | "(" expression ")";
+      <number> ::= "(\+|\-)?[0-9]+(\.[0-9]+)?";
+      */
+      ProductionRule(
+        BnfLiteral("term", NONTERM),
+        SeqConstruct(List(
+          UnionConstruct(List(
+            GroupConstruct(List(
+              BnfLiteral("number", NONTERM))
+            ),
+            GroupConstruct(List(
+              BnfLiteral("(", TERM),
+              BnfLiteral("expression", NONTERM),
+              BnfLiteral(")", TERM))
+            ))
+          ))
+        )
+      ),
+      ProductionRule(
+        BnfLiteral("<number>", NTREGEX),
+        BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM)
+      )
+    )
+    AstAnalyzer(ast)
+    /*
+    expression ::= sum_sub;
+    sum_sub ::= product_div {("+"|"-") product_div};
+    product_div ::= ["+"|"-"] term {("*"|"/") term};
+    term ::= number | "(" expression ")";
+    <number> ::= "(\+|\-)?[0-9]+(\.[0-9]+)?";
+    */
+

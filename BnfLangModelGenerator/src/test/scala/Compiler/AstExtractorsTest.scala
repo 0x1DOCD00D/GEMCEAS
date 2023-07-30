@@ -227,7 +227,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
     )
     val res = AstExtractors(parsedGrammar)
     //    mainRule ::= x | ["y" z] | {v w} | theRestOfIt
-    res shouldBe List(
+    res shouldBe List[ProductionRule](
       ProductionRule(
         BnfLiteral("mainRule", NONTERM),
         SeqConstruct(List(
