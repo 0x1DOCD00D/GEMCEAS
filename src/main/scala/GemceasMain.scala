@@ -71,5 +71,6 @@ object GemceasMain:
     val srcGrammar:String = LoadGrammarFile(grammarFilePath)
     if srcGrammar.isEmpty then logger.error("Failed to load a grammar, terminating Gemceas.")
     else logger.info(srcGrammar)
-    val ast = BnfGrammarCompiler(srcGrammar)
-    logger.info(ast.toString)
+    logger.info(List.fill(0)("a").flatten.mkString)
+/*    val ast = BnfGrammarCompiler(srcGrammar)
+    logger.info(ast)*/

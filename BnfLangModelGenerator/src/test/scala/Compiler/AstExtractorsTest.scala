@@ -471,7 +471,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
         )
       ),
       ProductionRule(
-        BnfLiteral("<number>", NTREGEX),
+        BnfLiteral("number", NTREGEX),
         BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM)
       )
     )

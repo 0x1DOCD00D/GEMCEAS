@@ -10,6 +10,7 @@ package Compiler
 
 import Utilz.CreateLogger
 
+import java.util.UUID
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 
@@ -78,17 +79,28 @@ class AstAnalyzer private (ast: List[ProductionRule]):
   end usageMatrix
 
   private def toCsv(dims: (List[BnfLiteral], List[BnfLiteral]), m: Array[Array[Int]]): List[String] =
-    val header = dims._2.mkString(",")
-    val rowLen = dims._2.length
+    val header: String = dims._2.mkString(",")
+    val rowLen: Int = dims._2.length
     val pm = m.zipWithIndex.map((row, ir) => dims._1(ir).token + ", " + row.zipWithIndex.map((col, ic) => s"${m(ir)(ic)}").mkString(", ")).toList
     pm
   end toCsv
 
+  private def transitiveClosure(m: Array[Array[Int]], rowLabels: List[BnfLiteral]): Array[Array[Int]] =
+    require(m.length == rowLabels.length,"The number of rows is not the same as the number of row labels.")
+    
+    ???
+  end transitiveClosure
+  
 
 end AstAnalyzer
 
 
 object AstAnalyzer:
+  def reachable(ast: List[ProductionRule]): Map[UUID, Int] =
+    ???
+  end reachable
+  
+  
   def apply(ast: List[ProductionRule]): ((List[BnfLiteral], List[BnfLiteral]), Array[Array[Int]]) =
     val aStAn = new AstAnalyzer(ast)
     val rM = aStAn.extractLhs2RhsMappings()

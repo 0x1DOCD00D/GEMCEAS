@@ -8,20 +8,22 @@
 
 package Compiler
 
-import LexerParser.{BnfGrammarAST, BnfGrammarLexer, BnfGrammarParser, GrammarCompilationError, PARSEFAILURE}
+import LexerParser.{BnfGrammarAST, BnfGrammarLexer, BnfGrammarParser, GrammarCompilationError, MainRule, PARSEFAILURE}
 import Utilz.CreateLogger
 
 object BnfGrammarCompiler:
   private lazy val logger = CreateLogger(classOf[BnfGrammarCompiler.type])
 
-  def apply(srcGrammar: String): BnfGrammarAST =
+  def apply(srcGrammar: String) =
     val parsed = for {
       lexTokens <- BnfGrammarLexer(srcGrammar)
       ast <- BnfGrammarParser(lexTokens)
-    } yield (lexTokens, ast)
-    parsed match
+      gIr = AstExtractors(ast.asInstanceOf[MainRule])
+    } yield (gIr)
+    ???
+/*    parsed match
       case Left(err) =>
         logger.error(s"Error processing the input grammar: ${err.toString}")
         PARSEFAILURE(err.toString)
       case Right(ast) => ast._2
-
+*/

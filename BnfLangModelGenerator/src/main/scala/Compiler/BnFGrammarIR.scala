@@ -8,7 +8,11 @@
 
 package Compiler
 
-trait BnFGrammarIR
+import java.util.UUID
+
+trait BnFGrammarIR:
+  val uuid: UUID = UUID.randomUUID()
+
 trait BnFGrammarIRContainer extends BnFGrammarIR:
   val bnfObjects: List[BnFGrammarIR]
 end BnFGrammarIRContainer
@@ -26,5 +30,5 @@ case class SeqConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnF
 case class UnionConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 trait IrLiteral extends BnFGrammarIR
 case class BnfLiteral(token: String, literalType: LiteralType) extends IrLiteral
-
+case class ProgramEntity(code: String) extends IrLiteral
 case class IrError(err: String) extends BnFGrammarIR

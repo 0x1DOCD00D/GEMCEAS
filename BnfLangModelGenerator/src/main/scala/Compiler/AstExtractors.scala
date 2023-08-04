@@ -80,7 +80,7 @@ object AstExtractors:
       rl match
         case Terminal(name) => Option(BnfLiteral(name, TERM))
         case Nonterminal(name) => Option(BnfLiteral(name, NONTERM))
-        case NonterminalRegex(name) => Option(BnfLiteral(name, NTREGEX))
+        case NonterminalRegex(name) => Option(BnfLiteral(name.substring(name.indexOf('<')+1,name.indexOf('>')), NTREGEX))
         case RegexString(str) => Option(BnfLiteral(str, REGEXTERM))
 
   object RepeatExtractor:
@@ -160,3 +160,4 @@ object AstExtractors:
       val res = processTreeContent(c.rcc)
       Some(SeqConstruct(res))
 
+end AstExtractors
