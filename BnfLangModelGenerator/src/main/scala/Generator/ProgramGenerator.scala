@@ -35,7 +35,7 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
       }
       prState
 */
-    if prState.elements.filterNot(_.isInstanceOf[ProgramEntity]).length > 0 then
+    if !prState.elements.forall(_.isInstanceOf[ProgramEntity]) then
       val accum = deriveProgram(List(), prState.elements, level > 20)
       derivedProgramInstance(GeneratedProgramState(accum), level+1)
     else prState
@@ -48,7 +48,7 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
   end deriveProgram
 
   private def generateSourceCode(st: GeneratedProgramState): GeneratedProgram =
-    if st.elements.filterNot(_.isInstanceOf[ProgramEntity]).length > 0 then
+    if !st.elements.forall(_.isInstanceOf[ProgramEntity]) then
       logger.error(s"The generated program is not well structured.")
       List()
     else
@@ -65,7 +65,7 @@ object ProgramGenerator:
       if nt.literalType == LiteralType.TERM || nt.literalType == LiteralType.REGEXTERM then
         logger.error(s"BnF literal $nt cannot be used to define a rule.")
         None
-      else grammar.find(_.lhs.asInstanceOf[BnfLiteral].token == nt.token).headOption
+      else grammar.find(_.lhs.asInstanceOf[BnfLiteral].token == nt.token)
 
   def grammar(): List[ProductionRule] = _grammar
   def lookup(go: UUID): Option[TerminationData] = reachabilityMap.get(go)

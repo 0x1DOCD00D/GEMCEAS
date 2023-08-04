@@ -10,12 +10,15 @@ package Generator
 
 import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, IrError, IrLiteral, OptionalConstruct, ProductionRule, ProgramEntity, RepeatConstruct, SeqConstruct, UnionConstruct}
 import Utilz.CreateLogger
+import org.slf4j.Logger
 
 trait DeriveConstructs:
-  val logger = CreateLogger(classOf[DeriveConstructs])
+  val logger: Logger = CreateLogger(classOf[DeriveConstructs])
 
   val funcContainedConstructs: BnFGrammarIR => List[BnFGrammarIR] =
-    (container: BnFGrammarIR) => if container.isInstanceOf[BnFGrammarIRContainer] then container.asInstanceOf[BnFGrammarIRContainer].bnfObjects.flatMap(construct => deriveElement(construct)) else List()
+    (container: BnFGrammarIR) => container match
+      case container1: BnFGrammarIRContainer => container1.bnfObjects.flatMap(construct => deriveElement(construct))
+      case _ => List()
 
   def deriveElement(e: BnFGrammarIR, limit: Boolean = false): List[BnFGrammarIR] =
     e match

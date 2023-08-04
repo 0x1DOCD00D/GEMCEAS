@@ -43,7 +43,7 @@ object UnionConstructProcessor extends ((UnionConstruct, Boolean) => List[BnFGra
     else if sz == 1 then v1.bnfObjects
     else
       if v2 then
-        v1.bnfObjects.filter(e => findTermination(e)).headOption match
+        v1.bnfObjects.find(e => findTermination(e)) match
           case Some(value) => funcContainedConstructs(value)
           case None => List()
       else

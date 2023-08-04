@@ -74,12 +74,13 @@ class GrammarRewriter(ast: List[ProductionRule]):
       val combined = if processUnions then removeAllTerminals(acc ::: expandedRHS) else removeAllTerminals(removeAllUnions(acc ::: expandedRHS))
       val infLoopCheck = combined.diff(combined.distinct)
       logger.info(s"Inf loop check: ${infLoopCheck.mkString("; ")}")
-      if combined.map(_.uuid).diff(combined.map(_.uuid).distinct).length > 0 then
+      if combined.map(_.uuid).diff(combined.map(_.uuid).distinct).nonEmpty then
         logger.info(s"Reached infinite loop")
         INFINITELOOP
       else rewriteRuleContent(expandedRHS, combined, processUnions)
   }
 
+  @tailrec
   private def deriveFromGrammarObject(go: BnFGrammarIR, processUnion: Boolean = false): List[BnFGrammarIR] = {
     go match
       case container: OptionalConstruct => List()
@@ -89,7 +90,7 @@ class GrammarRewriter(ast: List[ProductionRule]):
       case container: UnionConstruct => if processUnion then container.bnfObjects else List(container)
       case lit @ BnfLiteral(token, ltype) if ltype == LiteralType.TERM || ltype == LiteralType.REGEXTERM || ltype == LiteralType.NTREGEX => List()
       case lit @ BnfLiteral(token, ltype) if ltype == LiteralType.NONTERM =>
-        ast.find(_.lhs.asInstanceOf[BnfLiteral].token == lit.token).headOption match
+        ast.find(_.lhs.asInstanceOf[BnfLiteral].token == lit.token) match
           case Some(rule) => deriveFromGrammarObject(rule.rhs)
           case None =>
             logger.error(s"Production rule for ${lit.toString} -> ${lit.uuid} is not found")

@@ -19,7 +19,7 @@ object BnfGrammarCompiler:
       lexTokens <- BnfGrammarLexer(srcGrammar)
       ast <- BnfGrammarParser(lexTokens)
       gIr = AstExtractors(ast.asInstanceOf[MainRule])
-    } yield (gIr)
+    } yield gIr
     ???
 /*    parsed match
       case Left(err) =>
