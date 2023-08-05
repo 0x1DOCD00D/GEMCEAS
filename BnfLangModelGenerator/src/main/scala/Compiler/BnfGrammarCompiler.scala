@@ -14,7 +14,7 @@ import Utilz.CreateLogger
 object BnfGrammarCompiler:
   private lazy val logger = CreateLogger(classOf[BnfGrammarCompiler.type])
 
-  def apply(srcGrammar: String) =
+  def apply(srcGrammar: String): Nothing =
     val parsed = for {
       lexTokens <- BnfGrammarLexer(srcGrammar)
       ast <- BnfGrammarParser(lexTokens)
