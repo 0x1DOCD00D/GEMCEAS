@@ -42,7 +42,7 @@ class ProgramGeneratorTest extends AnyFlatSpec with Matchers {
   term ::= number | "(" expression ")";
   <number> ::= "(\+|\-)?[0-9]+(\.[0-9]+)?";
   */
-  val grammar = List(
+  val grammar: List[ProductionRule] = List(
     ProductionRule(BnfLiteral("expression", NONTERM),
       SeqConstruct(List(
         GroupConstruct(List(
