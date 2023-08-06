@@ -48,7 +48,6 @@ lazy val GenericSimUtilities = (project in file("GenericSimUtilities"))
   )
 
 scalacOptions ++= Seq(
-  "-deprecation", // emit warning and location for usages of deprecated APIs
   "-explain-types", // explain type errors in more detail
   "-feature", // emit warning and location for usages of features that should be imported explicitly
 //  "-verbose", // Output messages about what the compiler is doing.
@@ -60,6 +59,7 @@ scalacOptions ++= Seq(
 )
 
 ThisBuild / scalacOptions ++= Seq("-unchecked", "-deprecation", "-color:always")
+Global / excludeLintKeys += test / fork
 
 compileOrder := CompileOrder.JavaThenScala
 test / fork := true
@@ -79,6 +79,9 @@ ThisBuild / assemblyMergeStrategy := {
   case "reference.conf" => MergeStrategy.concat
   case _ => MergeStrategy.first
 }
+BnfLangModelGenerator / libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % "latest.integration" % Test
+)
 BnfLangModelGenerator / libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "latest.integration" % Test
 )

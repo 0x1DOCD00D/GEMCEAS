@@ -24,11 +24,12 @@ import scala.collection.parallel.immutable.ParVector
 
 object ConfigDb:
   val logger: Logger = CreateLogger(classOf[ConfigDb.type ])
+  val debugProgramGeneration: Boolean = getConfigEntry(Constants.configLangModel, DEBUGPROGRAMGENERATION, DEBUGPROGRAMGENERATIONDEFAULT)
   val debugProductionRules: Boolean = getConfigEntry(Constants.configLangModel, DEBUGPRODUCTIONRULES, DEBUGLEXERTOKENSDEFAULT)
   val debugLexerTokens: Boolean = getConfigEntry(Constants.configLangModel, DEBUGLEXERTOKENS, DEBUGLEXERTOKENSDEFAULT)
   val edgeProbability: Double = getConfigEntry(Constants.configLangModel, EDGEPROBABILITY, DEFAULTEDGEPROBABILITY)
   val numberOfExperiments: Int = getConfigEntry(Constants.configLangModel, NUMBEROFEXPERIMENTS, NUMBEROFEXPERIMENTSDEFAULT)
-  val graphWalkTerminationPolicy: String = getConfigEntry(Constants.configLangModel, GRAPHWALKTERMINATIONPOLICY, GRAPHWALKTERMINATIONPOLICYDEFAULT)
+  val grammarUnrollDepthTermination: Int = getConfigEntry(Constants.configLangModel, GRAMMARUNROLLDEPTHTERMINATION, GRAMMARUNROLLDEPTHTERMINATIONDEFAULT)
   val graphWalkNodeTerminationProbability: Double = getConfigEntry(Constants.configLangModel, GRAPHWALKNODETERMINATIONPROBABILITY, GRAPHWALKNODETERMINATIONPROBABILITYDEFAULT)
   val outputDirectory: String = {
     val defDir = new java.io.File(".").getCanonicalPath

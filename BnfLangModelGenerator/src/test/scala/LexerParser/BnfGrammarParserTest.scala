@@ -20,7 +20,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
       """
         | mainRule ::= "aWord" mainRule;
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(
         Nonterminal("mainRule"),
@@ -38,7 +38,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
       """
         | mainRule ::= mainRule;
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(
         Nonterminal("mainRule"),
@@ -54,7 +54,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         | mainRule ::= y|"x"
         | ;
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(Nonterminal("mainRule"),
         RuleCollection(List(
@@ -74,7 +74,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         | mainRule ::= a b | c d e | f g | z
         | ;
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(
         Nonterminal("mainRule"),
@@ -122,7 +122,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         | mainRule ::= x | ["y" z] | {v w} | theRestOfIt
         | ;
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(Nonterminal("mainRule"),
         RuleCollection(List(
@@ -168,7 +168,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         | mainRule ::= {"x" y z}
         | ;
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(Rule(Nonterminal("mainRule"),
       RuleCollection(List(
         RuleRep(
@@ -188,7 +188,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         | mainRule ::= {"x"}
         | ;
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(Nonterminal("mainRule"),
         RuleCollection(List(
@@ -207,7 +207,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         | mainRule ::= mainRule;
         | // concluding comment here
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(
         Nonterminal("mainRule"),
@@ -231,7 +231,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         |   // and it is an ignored comment
         |  */
         """.stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(
         Nonterminal("mainRule"),
@@ -249,7 +249,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         | ;
         | done      ::= "a" | "b" | "c" | rule | done   ;
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(Nonterminal("mainRule"),
         RuleCollection(List(RuleLiteral(Nonterminal("nt_regex")), RuleCollection(List(RuleLiteral(Nonterminal("rule"))))))
@@ -283,7 +283,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         | nt2 ::= [nt1 nt2 "x"];
         | nt3 ::= [[nt1 nt2] "x"];
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(Nonterminal("mainRule"),
         RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
@@ -325,7 +325,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         | nt2 ::= {nt1 nt2 "x"};
         | nt3 ::= {{nt1 nt2} "x"};
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(Nonterminal("mainRule"),
         RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
@@ -371,7 +371,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         | nt2 ::= (nt1 nt2 "x");
         | nt3 ::= ((nt1 nt2) "x");
         | """.stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(Nonterminal("mainRule"),
         RuleCollection(List(RuleLiteral(Nonterminal("nt1")),
@@ -413,7 +413,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         | ;
         | done      ::= {"a" | ("b" | "c" | rule)} | done   ;
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(Nonterminal("mainRule"),
         RuleCollection(List(
@@ -467,7 +467,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
       """
         | mainRule ::= [{a} (b | c)] | d | e f;
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(Nonterminal("mainRule"), RuleCollection(List(
         RuleOpt(RuleCollection(List(
@@ -506,7 +506,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
       """
         | mainRule ::= ((a) (b (c))) (d (e) f);
         |""".stripMargin
-    val ast = BnfGrammarCompiler(simpleGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(simpleGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(Nonterminal("mainRule"),
         RuleCollection(List(
@@ -563,7 +563,7 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         |term ::= number | "(" expression ")";
         |<number> ::= "(\+|\-)?[0-9]+(\.[0-9]+)?";
         |""".stripMargin
-    val ast = BnfGrammarCompiler(expGrammar)
+    val ast = BnfGrammarCompiler.parseGrammar(expGrammar).getOrElse(MainRule(List()))
     ast shouldBe MainRule(List(
       Rule(Nonterminal("expression"), RuleCollection(List(RuleLiteral(Nonterminal("sum_sub"))))),
       Rule(Nonterminal("sum_sub"), RuleCollection(List(

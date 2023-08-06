@@ -14,16 +14,15 @@ import Utilz.CreateLogger
 object BnfGrammarCompiler:
   private lazy val logger = CreateLogger(classOf[BnfGrammarCompiler.type])
 
-  def apply(srcGrammar: String): Nothing =
-    val parsed = for {
+  def parseGrammar(srcGrammar: String): Either[GrammarCompilationError, BnfGrammarAST] =
+    for {
+      lexTokens <- BnfGrammarLexer(srcGrammar)
+      ast <- BnfGrammarParser(lexTokens)
+    } yield ast
+
+  def apply(srcGrammar: String): Either[GrammarCompilationError, List[BnFGrammarIR]] =
+    for {
       lexTokens <- BnfGrammarLexer(srcGrammar)
       ast <- BnfGrammarParser(lexTokens)
       gIr = AstExtractors(ast.asInstanceOf[MainRule])
     } yield gIr
-    ???
-/*    parsed match
-      case Left(err) =>
-        logger.error(s"Error processing the input grammar: ${err.toString}")
-        PARSEFAILURE(err.toString)
-      case Right(ast) => ast._2
-*/

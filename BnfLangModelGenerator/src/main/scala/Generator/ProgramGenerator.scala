@@ -10,6 +10,7 @@ package Generator
 
 import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GrammarRewriter, GroupConstruct, IrError, IrLiteral, LiteralType, OptionalConstruct, ProductionRule, ProgramEntity, RepeatConstruct, SeqConstruct, TerminationData, UnionConstruct}
 import Generator.ProgramGenerator.logger
+import Utilz.ConfigDb.{debugProgramGeneration, grammarUnrollDepthTermination}
 import Utilz.CreateLogger
 
 import java.util.UUID
@@ -24,19 +25,8 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
 
   @tailrec
   private def derivedProgramInstance(prState: GeneratedProgramState = progGenState, level: Int = 0): GeneratedProgramState =
-/*    if level > 20 then
-      prState.elements.foreach {
-        unionConstructs =>
-          if unionConstructs.isInstanceOf[UnionConstruct] then
-            logger.info(s"$unionConstructs : \n\n")
-            unionConstructs.asInstanceOf[UnionConstruct].bnfObjects.foreach { rc =>
-              logger.info(s"${rc.uuid} -> ${ProgramGenerator.lookup(rc.uuid)} -> $rc \n")
-            }
-      }
-      prState
-*/
     if !prState.elements.forall(_.isInstanceOf[ProgramEntity]) then
-      val accum = deriveProgram(List(), prState.elements, level > 20)
+      val accum = deriveProgram(List(), prState.elements, level > grammarUnrollDepthTermination)
       derivedProgramInstance(GeneratedProgramState(accum), level+1)
     else prState
 
@@ -76,20 +66,18 @@ object ProgramGenerator:
       _grammar = g
       val gr = new GrammarRewriter(grammar())
       reachabilityMap = gr.rewrite()
-      logger.info(s"ProgramGenerator obtains the following reachability map: \n\n${reachabilityMap.mkString("\n\n")}")
-      val startingRule: ProductionRule = expandNT(startRuleId)(g) match
-        case Some(value) => value
+      if debugProgramGeneration then logger.info(s"ProgramGenerator obtains the following reachability map: \n\n${reachabilityMap.mkString("\n\n")}")
+      expandNT(startRuleId)(g) match
+        case Some(rl) =>
+          val initState = GeneratedProgramState(List(rl.rhs))
+          val gen = new ProgramGenerator(initState)
+          val programObject: GeneratedProgramState = gen.derivedProgramInstance()
+          val code: GeneratedProgram = gen.generateSourceCode(programObject)
+          Right(code)
         case None =>
-          logger.error(s"Cannot find a rule defined by nonterminal $startRuleId, choosing the first rule ${g.head} instead")
-          g.head
-      val initState = GeneratedProgramState(List(startingRule.rhs))
-      val gen = new ProgramGenerator(initState)
-      val programObject: GeneratedProgramState = gen.derivedProgramInstance()
-      val code: GeneratedProgram = gen.generateSourceCode(programObject)
-      logger.info(code.mkString)
-      Right(code)
-
-
+          val errStr = s"Cannot find a rule defined by nonterminal $startRuleId, choosing the first rule ${g.head} instead"
+          logger.error(errStr)
+          Left(errStr)
 
   @main def runMain_ProgramGenerator(): Unit =
     import Compiler.LiteralType.*

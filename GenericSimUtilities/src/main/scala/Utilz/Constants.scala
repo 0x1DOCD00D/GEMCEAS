@@ -28,12 +28,14 @@ object Constants:
   val DEBUGPRODUCTIONRULESDEFAULT: Boolean = true
   val DEBUGLEXERTOKENS: String = "debugLexerTokens"
   val DEBUGLEXERTOKENSDEFAULT: Boolean = true
+  val DEBUGPROGRAMGENERATION: String = "debugProgramGeneration"
+  val DEBUGPROGRAMGENERATIONDEFAULT: Boolean = true
   val EDGEPROBABILITY: String = "edgeProbability"
   val DEFAULTEDGEPROBABILITY: Double = 0.3d
   val NUMBEROFEXPERIMENTS: String = "numberOfExperiments"
   val NUMBEROFEXPERIMENTSDEFAULT: Int = 10
-  val GRAPHWALKTERMINATIONPOLICYDEFAULT = "maxpathlength"
-  val GRAPHWALKTERMINATIONPOLICY = "graphWalkTerminationPolicy"
+  val GRAMMARUNROLLDEPTHTERMINATIONDEFAULT = 20
+  val GRAMMARUNROLLDEPTHTERMINATION = "grammarUnrollDepthTermination"
   val GRAPHWALKNODETERMINATIONPROBABILITY = "graphWalkNodeTerminationProbability"
   val GRAPHWALKNODETERMINATIONPROBABILITYDEFAULT = 0.05d
   val OUTPUTDIRECTORY = "outputDirectory"
