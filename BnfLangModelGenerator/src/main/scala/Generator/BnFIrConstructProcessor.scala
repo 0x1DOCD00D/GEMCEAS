@@ -60,7 +60,7 @@ object LiteralProcessor extends (BnfLiteral => List[BnFGrammarIR]) with DeriveCo
   override def apply(v1: BnfLiteral): List[BnFGrammarIR] =
     v1 match
       case nt @ BnfLiteral(token, NONTERM) =>
-        ProgramGenerator.expandNT(nt)(ProgramGenerator.grammar()) match
+        ProgramGenerator.expandNT(nt) match
           case Some(r) => List(r.rhs)
           case None => List()
       case BnfLiteral(token, NTREGEX) => List(ProgramEntity(token))

@@ -50,24 +50,23 @@ object ProgramGenerator:
   private val logger = CreateLogger(classOf[ProgramGenerator.type])
   private var _grammar: List[ProductionRule] = _
   private var reachabilityMap: Map[UUID, TerminationData] = Map()
-  val expandNT: BnfLiteral => List[ProductionRule] => Option[ProductionRule] =
-    (nt: BnfLiteral) => (grammar: List[ProductionRule]) =>
+  val expandNT: BnfLiteral => Option[ProductionRule] =
+    (nt: BnfLiteral) =>
       if nt.literalType == LiteralType.TERM || nt.literalType == LiteralType.REGEXTERM then
         logger.error(s"BnF literal $nt cannot be used to define a rule.")
         None
-      else grammar.find(_.lhs.asInstanceOf[BnfLiteral].token == nt.token)
+      else _grammar.find(_.lhs.asInstanceOf[BnfLiteral].token == nt.token)
 
-  def grammar(): List[ProductionRule] = _grammar
   def lookup(go: UUID): Option[TerminationData] = reachabilityMap.get(go)
 
   def apply(g: List[ProductionRule], startRuleId: BnfLiteral): Either[String,GeneratedProgram] =
     if g.length <= 0 then Left("Cannot derive a program using an empty grammar")
     else
       _grammar = g
-      val gr = new GrammarRewriter(grammar())
+      val gr = new GrammarRewriter(g)
       reachabilityMap = gr.rewrite()
       if debugProgramGeneration then logger.info(s"ProgramGenerator obtains the following reachability map: \n\n${reachabilityMap.mkString("\n\n")}")
-      expandNT(startRuleId)(g) match
+      expandNT(startRuleId) match
         case Some(rl) =>
           val initState = GeneratedProgramState(List(rl.rhs))
           val gen = new ProgramGenerator(initState)
