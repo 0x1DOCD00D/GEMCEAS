@@ -64,7 +64,7 @@ object ProgramGenerator:
     else
       _grammar = g
       val gr = new GrammarRewriter(g)
-      reachabilityMap = gr.rewrite()
+      //TODO: add grammar convergence analysis
       if debugProgramGeneration then logger.info(s"ProgramGenerator obtains the following reachability map: \n\n${reachabilityMap.mkString("\n\n")}")
       expandNT(startRuleId) match
         case Some(rl) =>

@@ -83,3 +83,6 @@ ThisBuild / assemblyMergeStrategy := {
 BnfLangModelGenerator / libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "latest.integration" % Test
 )
+BnfLangModelGenerator / libraryDependencies ++= Seq(
+  "org.scalatest" %% "scalatest" % "latest.integration" % Test
+)

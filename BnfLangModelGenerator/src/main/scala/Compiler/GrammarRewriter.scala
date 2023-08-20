@@ -14,6 +14,7 @@ import Utilz.CreateLogger
 import java.util.UUID
 import scala.PartialFunction.cond
 import scala.annotation.tailrec
+import scala.util.Success
 
 enum TerminationData:
   case INFINITELOOP
@@ -23,37 +24,60 @@ enum TerminationData:
 
 class GrammarRewriter(ast: List[ProductionRule]):
   import TerminationData.*
-  def rewrite(): Map[UUID, TerminationData] = {
-    val mapOfNtTerminationPaths = ast.flatMap {
-      rule => Map(rule.lhs.uuid -> rewriteRuleContent(List(rule.rhs), List(rule.rhs)))
-    }.toMap
-
-    logger.info("Checking union constructs...")
-    mapOfNtTerminationPaths.foreach(reach => logger.info(s"${reach._1} -> ${reach._2}"))
-    val mapOfUnionsTerminations = mapOfNtTerminationPaths.flatMap {
-      me =>
-        me._2 match
+  def grammarConvergenceChecker(): List[BnFGrammarIR] = {
+    ast.flatMap {
+      rule =>
+        rewriteRuleContent(List(rule.rhs), List(rule.rhs)) match
           case TerminationData.INFINITELOOP =>
-            logger.info(s"${me._1} cannot terminate")
-            Map()
-          case TerminationData.UNIONTERMINAL(branchIndex) =>
-            logger.error(s"${me._1} cannot have union analyses results in this phase")
-            Map()
-          case TerminationData.DIRECTTERMINATION =>
-            logger.info(s"${me._1} always terminates")
-            Map()
-          case ip @ TerminationData.INPROGRESS(path) => path.flatMap(uc=> rewriteUnion(uc)).toMap
+            logger.info(s"Rule ${rule.lhs} doesn't terminate")
+            List(rule.lhs)
+          case ut@ TerminationData.UNIONTERMINAL(branchIndex) =>
+            logger.error(s"${ut} cannot have union analyses results in this phase for ${ut.branchIndex}")
+            List()
+          case TerminationData.DIRECTTERMINATION => List()
+          case TerminationData.INPROGRESS(path) =>
+            if !rewriteUnion(path) then path else List()
     }
-    mapOfUnionsTerminations.foreach(ut => logger.info(s"Union construct has a path ${ut._1} that ${ut._2}"))
-    mapOfUnionsTerminations ++ mapOfNtTerminationPaths
   }
 
-  private def rewriteUnion(uc: UnionConstruct): Map[UUID, TerminationData] = {
-    uc.bnfObjects.flatMap(c=>
-      logger.info(s"Union's member ${c.uuid} -> ${c.toString}")
-      Map(c.uuid -> rewriteRuleContent(List(c), List(c), true))
-    )
-  }.toMap
+  def findBnFObject(id: UUID): List[BnFGrammarIR] = {
+    def findGrammarObject(go: BnFGrammarIR): List[BnFGrammarIR] = go match
+      case container: BnFGrammarIRContainer => if container.uuid == id then List(container) else container.bnfObjects.flatMap(findGrammarObject(_))
+      case literal: IrLiteral => if literal.uuid == id then List(literal) else List()
+      case ProductionRule(lhs, rhs) => findGrammarObject(lhs) ::: findGrammarObject(rhs)
+      case err =>
+        logger.error(s"findGrammarObject run into a wrong object: $err")
+        List()
+    end findGrammarObject
+    ast.flatMap(findGrammarObject(_))
+  }
+
+  def findGrammarObject(id: UUID, go: BnFGrammarIR): List[BnFGrammarIR] = go match
+    case container: BnFGrammarIRContainer => if container.uuid == id then List(container) else container.bnfObjects.flatMap(findGrammarObject(id, _))
+    case literal: IrLiteral => if literal.uuid == id then List(literal) else List()
+    case ProductionRule(lhs, rhs) => findGrammarObject(id, lhs) ::: findGrammarObject(id, rhs)
+    case err =>
+      logger.error(s"findGrammarObject run into a wrong object: $err")
+      List()
+
+  private def rewriteUnion(ucl: List[UnionConstruct]): Boolean = {
+    def checkUnion4Convergence(uc: UnionConstruct): Boolean = {
+      uc.bnfObjects.foldLeft(false) {
+        (acc, c) =>
+          logger.info(s"Union's member ${c.uuid} -> ${c.toString}")
+          rewriteRuleContent(List(c), List(c), true) match
+            case TerminationData.INFINITELOOP => acc
+            case ut@TerminationData.UNIONTERMINAL(branchIndex) =>
+              logger.error(s"rewriting union $uc should not result in $ut")
+              acc
+            case TerminationData.DIRECTTERMINATION => acc | true
+            case ip@TerminationData.INPROGRESS(path) =>
+              logger.error(s"rewriting union $uc should not result in $ip")
+              acc
+      }
+    }
+    ucl.foldLeft(false)((acc, l) => acc | checkUnion4Convergence(l))
+  }
 
   @tailrec
   private def rewriteRuleContent(rhs: List[BnFGrammarIR], acc: List[BnFGrammarIR], processUnions: Boolean = false): TerminationData = {
@@ -214,5 +238,10 @@ object GrammarRewriter:
         logger.info(s"${rule.lhs.asInstanceOf[BnfLiteral].toString} -> ${rule.lhs.uuid.toString}")
     }
     val grw = new GrammarRewriter(grammar)
-    val reachMap = grw.rewrite()
-    logger.info(s"${reachMap.mkString("; ")}")
+    val divergentNTs:List[BnFGrammarIR] = grw.grammarConvergenceChecker()
+    if divergentNTs.isEmpty then logger.info("The grammar is convergent")
+    else
+      logger.error("The grammar is divergent")
+      divergentNTs.foreach {
+        nt => logger.error(s"Divergent NT: ${nt.uuid} -> ${nt.toString}")
+      }

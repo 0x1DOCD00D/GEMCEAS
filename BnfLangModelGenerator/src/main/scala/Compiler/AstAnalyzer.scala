@@ -17,6 +17,10 @@ import scala.collection.mutable.ListBuffer
 class AstAnalyzer private (ast: List[ProductionRule]):
   private val logger = CreateLogger(classOf[AstAnalyzer])
 
+/*  def analyzeGrammarConvergence(): List[UUID] =
+    (new GrammarRewriter(ast)).rewrite().toList.flatMap(e => if e._2 == TerminationData.INFINITELOOP then List(e._1) else List())
+  end analyzeGrammarConvergence
+*/
   private def prRhsProcessor(rhs: BnFGrammarIR): List[BnfLiteral] =
     rhs match
       case container: BnFGrammarIRContainer =>
@@ -96,10 +100,9 @@ end AstAnalyzer
 
 
 object AstAnalyzer:
-  def reachable(ast: List[ProductionRule]): Map[UUID, Int] =
+  def convergence(ast: List[ProductionRule], startRuleId: BnfLiteral): Either[String, Map[UUID, Int]] =
     ???
-  end reachable
-  
+  end convergence
   
   def apply(ast: List[ProductionRule]): ((List[BnfLiteral], List[BnfLiteral]), Array[Array[Int]]) =
     val aStAn = new AstAnalyzer(ast)

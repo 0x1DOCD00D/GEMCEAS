@@ -476,4 +476,31 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
       )
     )
   }
+
+  it should "extract an IR representation from an incorrect expression grammar" in {
+    val parsedGrammar = MainRule(List(
+      Rule(Nonterminal("expression"),
+        RuleCollection(List(RuleLiteral(Nonterminal("sum_sub"))))),
+      Rule(Nonterminal("sum_sub"),
+        RuleCollection(List(RuleLiteral(Nonterminal("product_div")),
+          RuleCollection(List(RuleRep(RuleCollection(List(RuleGroup(RuleCollection(List(RuleLiteral(Terminal("+")),
+            RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))),
+            RuleCollection(List(RuleLiteral(Nonterminal("product_div")))))))))))),
+      Rule(Nonterminal("product_div"),
+        RuleCollection(List(RuleOpt(RuleCollection(List(RuleLiteral(Terminal("+")),
+          RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))),
+          RuleCollection(List(RuleLiteral(Nonterminal("term")),
+            RuleCollection(List(RuleRep(RuleCollection(List(RuleGroup(RuleCollection(List(RuleLiteral(Terminal("*")),
+              RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("/")))))))))),
+              RuleCollection(List(RuleLiteral(Nonterminal("number")))))))))))))),
+      Rule(Nonterminal("term"),
+        RuleCollection(List(RuleLiteral(Nonterminal("sum_sub")),
+          RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("(")),
+            RuleCollection(List(RuleLiteral(Nonterminal("expression")),
+              RuleCollection(List(RuleLiteral(Terminal(")")))))))))))))), Rule(NonterminalRegex("<number>"),
+        RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?""")))))
+
+    val res = AstExtractors(parsedGrammar)
+    res shouldBe List(ProductionRule(BnfLiteral("expression", NONTERM), SeqConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM)))))), ProductionRule(BnfLiteral("sum_sub", NONTERM), SeqConstruct(List(GroupConstruct(List(BnfLiteral("product_div", NONTERM), RepeatConstruct(List(GroupConstruct(List(GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))), BnfLiteral("product_div", NONTERM)))))))))), ProductionRule(BnfLiteral("product_div", NONTERM), SeqConstruct(List(GroupConstruct(List(OptionalConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))), BnfLiteral("term", NONTERM), RepeatConstruct(List(GroupConstruct(List(GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("*", TERM))), GroupConstruct(List(BnfLiteral("/", TERM))))))), BnfLiteral("number", NONTERM)))))))))), ProductionRule(BnfLiteral("term", NONTERM), SeqConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM))), GroupConstruct(List(BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM)))))))), ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM)))
+  }
 }
