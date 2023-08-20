@@ -32,7 +32,7 @@ class GrammarRewriter(ast: List[ProductionRule]):
             logger.info(s"Rule ${rule.lhs} doesn't terminate")
             List(rule.lhs)
           case ut@ TerminationData.UNIONTERMINAL(branchIndex) =>
-            logger.error(s"${ut} cannot have union analyses results in this phase for ${ut.branchIndex}")
+            logger.error(s"$ut cannot have union analyses results in this phase for ${ut.branchIndex}")
             List()
           case TerminationData.DIRECTTERMINATION => List()
           case TerminationData.INPROGRESS(path) =>
@@ -42,7 +42,7 @@ class GrammarRewriter(ast: List[ProductionRule]):
 
   def findBnFObject(id: UUID): List[BnFGrammarIR] = {
     def findGrammarObject(go: BnFGrammarIR): List[BnFGrammarIR] = go match
-      case container: BnFGrammarIRContainer => if container.uuid == id then List(container) else container.bnfObjects.flatMap(findGrammarObject(_))
+      case container: BnFGrammarIRContainer => if container.uuid == id then List(container) else container.bnfObjects.flatMap(findGrammarObject)
       case literal: IrLiteral => if literal.uuid == id then List(literal) else List()
       case ProductionRule(lhs, rhs) => findGrammarObject(lhs) ::: findGrammarObject(rhs)
       case err =>
@@ -70,7 +70,7 @@ class GrammarRewriter(ast: List[ProductionRule]):
             case ut@TerminationData.UNIONTERMINAL(branchIndex) =>
               logger.error(s"rewriting union $uc should not result in $ut")
               acc
-            case TerminationData.DIRECTTERMINATION => acc | true
+            case TerminationData.DIRECTTERMINATION => true
             case ip@TerminationData.INPROGRESS(path) =>
               logger.error(s"rewriting union $uc should not result in $ip")
               acc

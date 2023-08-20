@@ -88,22 +88,10 @@ class AstAnalyzer private (ast: List[ProductionRule]):
     val pm = m.zipWithIndex.map((row, ir) => dims._1(ir).token + ", " + row.zipWithIndex.map((col, ic) => s"${m(ir)(ic)}").mkString(", ")).toList
     pm
   end toCsv
-
-  private def transitiveClosure(m: Array[Array[Int]], rowLabels: List[BnfLiteral]): Array[Array[Int]] =
-    require(m.length == rowLabels.length,"The number of rows is not the same as the number of row labels.")
-    
-    ???
-  end transitiveClosure
-  
-
 end AstAnalyzer
 
 
 object AstAnalyzer:
-  def convergence(ast: List[ProductionRule], startRuleId: BnfLiteral): Either[String, Map[UUID, Int]] =
-    ???
-  end convergence
-  
   def apply(ast: List[ProductionRule]): ((List[BnfLiteral], List[BnfLiteral]), Array[Array[Int]]) =
     val aStAn = new AstAnalyzer(ast)
     val rM = aStAn.extractLhs2RhsMappings()

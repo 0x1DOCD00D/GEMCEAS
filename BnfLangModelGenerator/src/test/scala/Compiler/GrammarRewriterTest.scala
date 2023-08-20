@@ -14,6 +14,7 @@ import LiteralType.*
 import Utilz.CreateLogger
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import org.slf4j.Logger
 
 import java.util.UUID
 import scala.collection.immutable.List
@@ -21,8 +22,8 @@ import scala.collection.immutable.List
 class GrammarRewriterTest extends AnyFlatSpec with Matchers {
   behavior of "the grammar rewriting mechanism"
 
-  val logger = CreateLogger(classOf[GrammarRewriterTest])
-  val convergentGrammar = List(
+  val logger: Logger = CreateLogger(classOf[GrammarRewriterTest])
+  val convergentGrammar: List[ProductionRule] = List(
     ProductionRule(BnfLiteral("expression", NONTERM),
       SeqConstruct(List(
         GroupConstruct(List(
@@ -115,7 +116,7 @@ class GrammarRewriterTest extends AnyFlatSpec with Matchers {
     )
   )
 
-  val divergentGrammar = List(ProductionRule(BnfLiteral("expression", NONTERM), SeqConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM)))))), ProductionRule(BnfLiteral("sum_sub", NONTERM), SeqConstruct(List(GroupConstruct(List(BnfLiteral("product_div", NONTERM), RepeatConstruct(List(GroupConstruct(List(GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))), BnfLiteral("product_div", NONTERM)))))))))), ProductionRule(BnfLiteral("product_div", NONTERM), SeqConstruct(List(GroupConstruct(List(OptionalConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))), BnfLiteral("term", NONTERM), RepeatConstruct(List(GroupConstruct(List(GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("*", TERM))), GroupConstruct(List(BnfLiteral("/", TERM))))))), BnfLiteral("number", NONTERM)))))))))), ProductionRule(BnfLiteral("term", NONTERM), SeqConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM))), GroupConstruct(List(BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM)))))))), ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM)))
+  val divergentGrammar: List[ProductionRule] = List(ProductionRule(BnfLiteral("expression", NONTERM), SeqConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM)))))), ProductionRule(BnfLiteral("sum_sub", NONTERM), SeqConstruct(List(GroupConstruct(List(BnfLiteral("product_div", NONTERM), RepeatConstruct(List(GroupConstruct(List(GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))), BnfLiteral("product_div", NONTERM)))))))))), ProductionRule(BnfLiteral("product_div", NONTERM), SeqConstruct(List(GroupConstruct(List(OptionalConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))), BnfLiteral("term", NONTERM), RepeatConstruct(List(GroupConstruct(List(GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("*", TERM))), GroupConstruct(List(BnfLiteral("/", TERM))))))), BnfLiteral("number", NONTERM)))))))))), ProductionRule(BnfLiteral("term", NONTERM), SeqConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM))), GroupConstruct(List(BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM)))))))), ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM)))
 
   it should "determine if a convergent expression grammar is convergent" in {
     val grw = new GrammarRewriter(convergentGrammar)

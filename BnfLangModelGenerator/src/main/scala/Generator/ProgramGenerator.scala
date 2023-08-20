@@ -64,7 +64,14 @@ object ProgramGenerator:
     else
       _grammar = g
       val gr = new GrammarRewriter(g)
-      //TODO: add grammar convergence analysis
+      val divergentNTs: List[BnFGrammarIR] = gr.grammarConvergenceChecker()
+      if divergentNTs.isEmpty then logger.info("The grammar is convergent")
+      else
+        logger.error("The grammar is divergent")
+        divergentNTs.foreach {
+          nt => logger.error(s"Divergent NT: ${nt.uuid} -> ${nt.toString}")
+        }
+
       if debugProgramGeneration then logger.info(s"ProgramGenerator obtains the following reachability map: \n\n${reachabilityMap.mkString("\n\n")}")
       expandNT(startRuleId) match
         case Some(rl) =>
@@ -181,5 +188,5 @@ object ProgramGenerator:
     )
 
     val gen = ProgramGenerator(grammar, BnfLiteral("expression", NONTERM))
-//    logger.info(s"${gen.toString}")
+    logger.info(s"${gen.toString}")
 end ProgramGenerator
