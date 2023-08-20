@@ -17,10 +17,8 @@ import scala.collection.mutable.ListBuffer
 class AstAnalyzer private (ast: List[ProductionRule]):
   private val logger = CreateLogger(classOf[AstAnalyzer])
 
-/*  def analyzeGrammarConvergence(): List[UUID] =
-    (new GrammarRewriter(ast)).rewrite().toList.flatMap(e => if e._2 == TerminationData.INFINITELOOP then List(e._1) else List())
-  end analyzeGrammarConvergence
-*/
+  def analyzeGrammarConvergence(): List[BnFGrammarIR] = new GrammarRewriter(ast).grammarConvergenceChecker()
+
   private def prRhsProcessor(rhs: BnFGrammarIR): List[BnfLiteral] =
     rhs match
       case container: BnFGrammarIRContainer =>
@@ -94,6 +92,14 @@ end AstAnalyzer
 object AstAnalyzer:
   def apply(ast: List[ProductionRule]): ((List[BnfLiteral], List[BnfLiteral]), Array[Array[Int]]) =
     val aStAn = new AstAnalyzer(ast)
+    val divergentNTs: List[BnFGrammarIR] = aStAn.analyzeGrammarConvergence()
+    if divergentNTs.isEmpty then aStAn.logger.info("The grammar is convergent")
+    else
+      aStAn.logger.error("The grammar is divergent")
+      divergentNTs.foreach {
+        nt => aStAn.logger.error(s"Divergent NT: ${nt.uuid} -> ${nt.toString}")
+      }
+
     val rM = aStAn.extractLhs2RhsMappings()
     val dims = aStAn.obtainDims(rM)
     val matrix = aStAn.usageMatrix(rM.flatten, dims)
