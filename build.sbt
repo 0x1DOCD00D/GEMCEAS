@@ -1,5 +1,5 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / scalaVersion := "3.2.2"
+ThisBuild / scalaVersion := "3.3.0"
 
 val scalaTestVersion = "3.2.11"
 val scalaMockitoTestVersion = "3.2.12.0-RC2"

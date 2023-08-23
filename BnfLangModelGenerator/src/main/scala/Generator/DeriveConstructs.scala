@@ -27,13 +27,13 @@ trait DeriveConstructs:
       case ir @ GroupConstruct(bnfObjects) => GroupConstructProcessor(ir)
       case ir @ SeqConstruct(bnfObjects) => SeqConstructProcessor(ir)
       case ir @ UnionConstruct(bnfObjects) => UnionConstructProcessor(ir, limit)
-      case ir @ literal: BnfLiteral =>
-        val res = LiteralProcessor(ir)
+      case literal if literal.isInstanceOf[BnfLiteral] =>
+        val res = LiteralProcessor(literal.asInstanceOf[BnfLiteral])
         if res.isEmpty then
-          logger.error(s"IR structure contains a wrong element $ir.")
+          logger.error(s"IR structure contains a wrong element $literal.")
           List()
         else res
-      case processed @ doneWithAlready: ProgramEntity => List(processed)
+      case doneWithAlready if doneWithAlready.isInstanceOf[ProgramEntity] => List(doneWithAlready)
       case err =>
         logger.error(s"IR structure contains a wrong element $err.")
         List()
