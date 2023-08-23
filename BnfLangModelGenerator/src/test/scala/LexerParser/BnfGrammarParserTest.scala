@@ -8,12 +8,16 @@
 
 package LexerParser
 
-import Compiler.BnfGrammarCompiler
+import Compiler.LoadGrammarFile.getClass
+import Compiler.{BnfGrammarCompiler, LoadGrammarFile}
+import Utilz.CreateLogger
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
   behavior of "the (E)Bnf parser"
+
+  val logger = CreateLogger(classOf[BnfGrammarParserTest])
 
   it should "parse a grammar with a simple rule that contains a terminal" in {
     val simpleGrammar =
@@ -630,5 +634,69 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
             RuleCollection(List(RuleLiteral(Nonterminal("expression")),
               RuleCollection(List(RuleLiteral(Terminal(")")))))))))))))), Rule(NonterminalRegex("<number>"),
         RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?""")))))
+  }
+
+  it should "parse an expression grammar with prolog templates from resources" in {
+    /*
+    expression ::=
+      sum_sub;
+
+    sum_sub ::=
+      product_div {("+"|"-") product_div}
+      "==>> sum_sub(_, second_product_div(Sign, ProductDiv))";
+
+    product_div ::=
+      ["+"|"-"] term {("*"|"/") term}
+      "==>> product_div(_, _, second_term(SecondTermSign, SecondTerm))";
+
+    term ::=
+      number
+      "==>> term(Number)" |
+      "(" expression ")" ;
+
+    <number> ::=
+      "(\+|\-)?[0-9]+(\.[0-9]+)?";
+    */
+
+    val grammarFilePath = System.getProperty("user.dir") + "/src/main/resources/Grammars/ArithmeticExpressions.bnf"
+    val source = scala.io.Source.fromFile(grammarFilePath)
+
+    val srcGrammar: String = try source.mkString finally source.close()
+    if srcGrammar.isEmpty then logger.error("Failed to load a grammar, terminating Gemceas.")
+    else logger.info(srcGrammar)
+    srcGrammar.isEmpty shouldBe false
+    val ast = BnfGrammarCompiler.parseGrammar(srcGrammar).getOrElse(MainRule(List()))
+    ast shouldBe MainRule(List(
+      Rule(Nonterminal("expression"), RuleCollection(List(RuleLiteral(Nonterminal("sum_sub"))))),
+      Rule(Nonterminal("sum_sub"), RuleCollection(List(RuleLiteral(Nonterminal("product_div")),
+        RuleCollection(List(
+          RuleRep(RuleCollection(List(
+            RuleGroup(RuleCollection(List(RuleLiteral(Terminal("+")),
+              RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))),
+            RuleCollection(List(RuleLiteral(Nonterminal("product_div"))))))
+          ),
+          RuleCollection(List(
+            RuleLiteral(Terminal("==>> sum_sub(_, second_product_div(Sign, ProductDiv))"))))))))
+      ),
+      Rule(Nonterminal("product_div"),
+        RuleCollection(List(
+          RuleOpt(RuleCollection(List(RuleLiteral(Terminal("+")),
+            RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))
+          ),
+          RuleCollection(List(RuleLiteral(Nonterminal("term")),
+            RuleCollection(List(
+              RuleRep(RuleCollection(List(RuleGroup(RuleCollection(List(RuleLiteral(Terminal("*")),
+                RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("/")))))))))),
+                RuleCollection(List(RuleLiteral(Nonterminal("term"))))))
+              ),
+              RuleCollection(List(
+                RuleLiteral(Terminal("==>> product_div(_, _, second_term(SecondTermSign, SecondTerm))"))))))))))
+      ),
+      Rule(Nonterminal("term"), RuleCollection(List(RuleLiteral(Nonterminal("number")),
+        RuleCollection(List(RuleLiteral(Terminal("==>> term(Number)")),
+          RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("(")),
+            RuleCollection(List(RuleLiteral(Nonterminal("expression")), RuleCollection(List(RuleLiteral(Terminal(")")))))))))))))))
+      ),
+      Rule(NonterminalRegex("<number>"), RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?""")))))
   }
 }
