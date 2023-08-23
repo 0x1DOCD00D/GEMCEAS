@@ -13,6 +13,7 @@ val parserCombinatorsVersion = "2.3.0"
 val scalaParCollVersion = "1.0.4"
 val scalaCheckVersion = "1.17.0"
 val regExGeneratorVersion = "1.1.0"
+val scalaToolkitVersion = "0.2.0"
 
 lazy val commonDependencies = Seq(
   "org.scala-lang.modules" %% "scala-parallel-collections" % scalaParCollVersion,
@@ -20,7 +21,9 @@ lazy val commonDependencies = Seq(
   "org.scalatestplus" %% "mockito-4-2" % scalaMockitoTestVersion % Test,
   "com.typesafe" % "config" % typeSafeConfigVersion,
   "ch.qos.logback" % "logback-classic" % logbackVersion,
-  "jpl" % "jpl" % jplVersion
+  "jpl" % "jpl" % jplVersion,
+  "org.scala-lang" %% "toolkit" % scalaToolkitVersion,
+  "org.scala-lang" %% "toolkit-test" % scalaToolkitVersion % Test
 )
 
 lazy val root = (project in file("."))
