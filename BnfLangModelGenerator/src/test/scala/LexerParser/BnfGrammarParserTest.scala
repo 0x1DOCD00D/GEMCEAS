@@ -13,11 +13,12 @@ import Compiler.{BnfGrammarCompiler, LoadGrammarFile}
 import Utilz.CreateLogger
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import org.slf4j.Logger
 
 class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
   behavior of "the (E)Bnf parser"
 
-  val logger = CreateLogger(classOf[BnfGrammarParserTest])
+  val logger: Logger = CreateLogger(classOf[BnfGrammarParserTest])
 
   it should "parse a grammar with a simple rule that contains a terminal" in {
     val simpleGrammar =
