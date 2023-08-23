@@ -16,9 +16,10 @@ trait DeriveConstructs:
   val logger: Logger = CreateLogger(classOf[DeriveConstructs])
 
   val funcContainedConstructs: BnFGrammarIR => List[BnFGrammarIR] =
-    (container: BnFGrammarIR) => container match
+    {
       case container1: BnFGrammarIRContainer => container1.bnfObjects.flatMap(construct => deriveElement(construct))
       case _ => List()
+    }
 
   def deriveElement(e: BnFGrammarIR, limit: Boolean = false): List[BnFGrammarIR] =
     e match
