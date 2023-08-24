@@ -1,7 +1,7 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.3.0"
 
-val scalaTestVersion = "3.2.11"
+val scalaTestVersion = "3.2.16"
 val scalaMockitoTestVersion = "3.2.12.0-RC2"
 val typeSafeConfigVersion = "1.4.2"
 val logbackVersion = "1.2.10"
@@ -19,6 +19,7 @@ lazy val commonDependencies = Seq(
   "org.scala-lang.modules" %% "scala-parallel-collections" % scalaParCollVersion,
   "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
   "org.scalatestplus" %% "mockito-4-2" % scalaMockitoTestVersion % Test,
+  "org.scalatest" %% "scalatest-flatspec" % scalaTestVersion % Test,
   "com.typesafe" % "config" % typeSafeConfigVersion,
   "ch.qos.logback" % "logback-classic" % logbackVersion,
   "jpl" % "jpl" % jplVersion,
