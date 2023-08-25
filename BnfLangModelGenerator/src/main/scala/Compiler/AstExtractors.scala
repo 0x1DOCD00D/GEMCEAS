@@ -16,6 +16,7 @@ import scala.collection.mutable.ListBuffer
 
 object AstExtractors:
   private val logger = CreateLogger(classOf[AstExtractors.type])
+  private val Prolog_Template_Designator = "==>>"
 
   private def flattenTreeOfLists(l: List[BnFGrammarIR], union: Boolean = false): List[BnFGrammarIR] =
   //      SeqConstruct(List(BnfLiteral(aWord,TERM), List(BnfLiteral(mainRule,NONTERM))))
@@ -135,7 +136,15 @@ object AstExtractors:
       c match
         case rlit @ RuleLiteral(lit) =>
           val LiteralExtractor(l) = rlit : @unchecked
-          l
+          if l.token.contains(Prolog_Template_Designator) then
+            val theSplit = l.token.trim.split(Prolog_Template_Designator)
+            if theSplit.length != 2 then
+              logger.error(s"Unexpected error processing prolog template ${l.toString}")
+              IrError(s"Unexpected error processing prolog template ${l.toString}")
+            else
+              val prologterm = theSplit(1).trim
+              PrologTemplate(prologterm)
+          else l
         case ro @ RuleOpt(rc) =>
           val OptExtractor(o) = ro : @unchecked
           o

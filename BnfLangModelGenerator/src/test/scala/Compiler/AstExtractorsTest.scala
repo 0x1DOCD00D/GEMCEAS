@@ -560,25 +560,22 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
       Rule(NonterminalRegex("<number>"), RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?""")))))
     val res = AstExtractors(expGrammar)
     res shouldBe List(
-      ProductionRule(BnfLiteral("expression", NONTERM),
-        SeqConstruct(List(
-          GroupConstruct(List(BnfLiteral("sum_sub", NONTERM)))))),
-      ProductionRule(BnfLiteral("sum_sub", NONTERM),
+      ProductionRule(
+        BnfLiteral("expression", NONTERM),
+        SeqConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM)))))
+      ),
+      ProductionRule(
+        BnfLiteral("sum_sub", NONTERM),
         SeqConstruct(List(GroupConstruct(List(BnfLiteral("product_div", NONTERM),
-          RepeatConstruct(List(GroupConstruct(List(
-            GroupConstruct(List(
-              UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))),
-            BnfLiteral("product_div", NONTERM))))
+          RepeatConstruct(List(GroupConstruct(List(GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))),
+            GroupConstruct(List(BnfLiteral("-", TERM))))))), BnfLiteral("product_div", NONTERM))))
           ),
-          BnfLiteral("==>> sum_sub(_, second_product_div(Sign, ProductDiv))", TERM)))))
+          PrologTemplate("sum_sub(_, second_product_div(Sign, ProductDiv))")))))
       ),
       ProductionRule(BnfLiteral("product_div", NONTERM),
         SeqConstruct(List(
           GroupConstruct(List(
-            OptionalConstruct(List(
-              UnionConstruct(List(
-                GroupConstruct(List(BnfLiteral("+", TERM))),
-                GroupConstruct(List(BnfLiteral("-", TERM))))))),
+            OptionalConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))),
             BnfLiteral("term", NONTERM),
             RepeatConstruct(List(
               GroupConstruct(List(
@@ -587,15 +584,18 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
                 ),
                 BnfLiteral("term", NONTERM))))
             ),
-            BnfLiteral("==>> product_div(_, _, second_term(SecondTermSign, SecondTerm))", TERM)))))),
-      ProductionRule(BnfLiteral("term", NONTERM),
+            PrologTemplate("product_div(_, _, second_term(SecondTermSign, SecondTerm))")))))
+      ),
+      ProductionRule(
+        BnfLiteral("term", NONTERM),
         SeqConstruct(List(
           UnionConstruct(List(
             GroupConstruct(List(
-              BnfLiteral("number", NONTERM),
-              BnfLiteral("==>> term(Number)", TERM))),
+              BnfLiteral("number", NONTERM), PrologTemplate("term(Number)"))
+            ),
             GroupConstruct(List(
-              BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM)))))))
+              BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM)))))
+        ))
       ),
       ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM)))
   }

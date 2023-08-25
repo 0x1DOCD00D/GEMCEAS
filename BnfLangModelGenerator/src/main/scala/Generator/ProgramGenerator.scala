@@ -8,14 +8,12 @@
 
 package Generator
 
-import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GrammarRewriter, GroupConstruct, IrError, IrLiteral, LiteralType, OptionalConstruct, ProductionRule, ProgramEntity, RepeatConstruct, SeqConstruct, TerminationData, UnionConstruct}
-import Generator.ProgramGenerator.logger
+import Compiler.{BnFGrammarIR, BnfLiteral, GrammarRewriter, GroupConstruct, LiteralType, OptionalConstruct, ProductionRule, ProgramEntity, RepeatConstruct, SeqConstruct, TerminationData, UnionConstruct}
 import Utilz.ConfigDb.{debugProgramGeneration, grammarUnrollDepthTermination}
 import Utilz.CreateLogger
 
 import java.util.UUID
 import scala.annotation.tailrec
-import scala.collection.mutable.ListBuffer
 
 case class GeneratedProgramState(elements: List[BnFGrammarIR])
 
