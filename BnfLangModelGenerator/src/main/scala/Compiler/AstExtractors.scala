@@ -136,7 +136,7 @@ object AstExtractors:
       c match
         case rlit @ RuleLiteral(lit) =>
           val LiteralExtractor(l) = rlit : @unchecked
-          if !PrologTemplateExtractor.isPrologTemplate(l.token).isEmpty then
+          if PrologTemplateExtractor.isPrologTemplate(l.token).isDefined then
               val prologterm = PrologTemplateExtractor(l.token)
               if prologterm.isEmpty then
                 logger.error(s"Failed to extract a prolog template from ${l.token}")

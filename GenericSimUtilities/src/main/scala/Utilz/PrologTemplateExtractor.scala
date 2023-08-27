@@ -56,7 +56,7 @@ object PrologTemplateExtractor:
   
   def apply(pTemplate: String): Option[PrologTemplate] =
     val template: Option[String] = isPrologTemplate(pTemplate)
-    if !template.isEmpty then
+    if template.isDefined then
       //      and we're interested in the functor itself
       new PrologTemplateExtractor(template.get).parseFunctor()
     else
