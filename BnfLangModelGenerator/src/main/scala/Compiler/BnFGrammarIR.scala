@@ -8,6 +8,8 @@
 
 package Compiler
 
+import Utilz.PrologTemplate
+
 import java.util.UUID
 
 trait BnFGrammarIR:
@@ -30,6 +32,6 @@ case class SeqConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnF
 case class UnionConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 trait IrLiteral extends BnFGrammarIR
 case class BnfLiteral(token: String, literalType: LiteralType) extends IrLiteral
-case class PrologTemplate(id: String) extends IrLiteral
+case class PrologFactsBuilder(prt: PrologTemplate) extends IrLiteral
 case class ProgramEntity(code: String) extends IrLiteral
 case class IrError(err: String) extends BnFGrammarIR

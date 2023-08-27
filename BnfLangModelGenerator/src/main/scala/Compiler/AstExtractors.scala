@@ -11,7 +11,7 @@ package Compiler
 import LexerParser.{Literal, MainRule, Nonterminal, NonterminalRegex, RegexString, Rule, RuleCollection, RuleContent, RuleGroup, RuleLiteral, RuleOpt, RuleOr, RuleRep, Terminal}
 import LiteralType.*
 import Utilz.Constants.Prolog_Template_Designator
-import Utilz.CreateLogger
+import Utilz.{CreateLogger, PrologTemplateExtractor}
 
 import scala.collection.mutable.ListBuffer
 
@@ -136,14 +136,12 @@ object AstExtractors:
       c match
         case rlit @ RuleLiteral(lit) =>
           val LiteralExtractor(l) = rlit : @unchecked
-          if l.token.contains(Prolog_Template_Designator) then
-            val theSplit = l.token.trim.split(Prolog_Template_Designator)
-            if theSplit.length != 2 then
-              logger.error(s"Unexpected error processing prolog template ${l.toString}")
-              IrError(s"Unexpected error processing prolog template ${l.toString}")
-            else
-              val prologterm = theSplit(1).trim
-              PrologTemplate(prologterm)
+          if !PrologTemplateExtractor.isPrologTemplate(l.token).isEmpty then
+              val prologterm = PrologTemplateExtractor(l.token)
+              if prologterm.isEmpty then
+                logger.error(s"Failed to extract a prolog template from ${l.token}")
+                IrError(s"Failed to extract a prolog template from ${l.token}")
+              else PrologFactsBuilder(prologterm.get)
           else l
         case ro @ RuleOpt(rc) =>
           val OptExtractor(o) = ro : @unchecked

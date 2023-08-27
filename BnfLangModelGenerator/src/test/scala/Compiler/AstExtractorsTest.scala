@@ -11,6 +11,7 @@ package Compiler
 import Compiler.BnfGrammarCompiler
 import LexerParser.{Nonterminal, *}
 import LiteralType.*
+import Utilz.PrologTemplate
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -560,42 +561,37 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
       Rule(NonterminalRegex("<number>"), RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?""")))))
     val res = AstExtractors(expGrammar)
     res shouldBe List(
-      ProductionRule(
-        BnfLiteral("expression", NONTERM),
-        SeqConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM)))))
+      ProductionRule(BnfLiteral("expression", NONTERM), SeqConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM)))))),
+      ProductionRule(BnfLiteral("sum_sub", NONTERM), SeqConstruct(List(
+        GroupConstruct(List(BnfLiteral("product_div", NONTERM), RepeatConstruct(List(
+          GroupConstruct(List(GroupConstruct(List(
+            UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))),
+            BnfLiteral("product_div", NONTERM))))
+        ),
+          PrologFactsBuilder(PrologTemplate("sum_sub",
+            List(PrologTemplate("_", List()), PrologTemplate("second_product_div", List(PrologTemplate("Sign", List()), PrologTemplate("ProductDiv", List())))))
+          ))))
+      )
       ),
-      ProductionRule(
-        BnfLiteral("sum_sub", NONTERM),
-        SeqConstruct(List(GroupConstruct(List(BnfLiteral("product_div", NONTERM),
-          RepeatConstruct(List(GroupConstruct(List(GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))),
-            GroupConstruct(List(BnfLiteral("-", TERM))))))), BnfLiteral("product_div", NONTERM))))
+      ProductionRule(BnfLiteral("product_div", NONTERM), SeqConstruct(List(
+        GroupConstruct(List(OptionalConstruct(List(
+          UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))
+        ),
+          BnfLiteral("term", NONTERM),
+          RepeatConstruct(List(GroupConstruct(List(
+            GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("*", TERM))), GroupConstruct(List(BnfLiteral("/", TERM))))))),
+            BnfLiteral("term", NONTERM))))
           ),
-          PrologTemplate("sum_sub(_, second_product_div(Sign, ProductDiv))")))))
+          PrologFactsBuilder(PrologTemplate("product_div",
+            List(PrologTemplate("_", List()), PrologTemplate("_", List()),
+              PrologTemplate("second_term", List(PrologTemplate("SecondTermSign", List()), PrologTemplate("SecondTerm", List()))))))))))
       ),
-      ProductionRule(BnfLiteral("product_div", NONTERM),
-        SeqConstruct(List(
-          GroupConstruct(List(
-            OptionalConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))),
-            BnfLiteral("term", NONTERM),
-            RepeatConstruct(List(
-              GroupConstruct(List(
-                GroupConstruct(List(
-                  UnionConstruct(List(GroupConstruct(List(BnfLiteral("*", TERM))), GroupConstruct(List(BnfLiteral("/", TERM))))))
-                ),
-                BnfLiteral("term", NONTERM))))
-            ),
-            PrologTemplate("product_div(_, _, second_term(SecondTermSign, SecondTerm))")))))
-      ),
-      ProductionRule(
-        BnfLiteral("term", NONTERM),
-        SeqConstruct(List(
-          UnionConstruct(List(
-            GroupConstruct(List(
-              BnfLiteral("number", NONTERM), PrologTemplate("term(Number)"))
-            ),
-            GroupConstruct(List(
-              BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM)))))
-        ))
+      ProductionRule(BnfLiteral("term", NONTERM), SeqConstruct(List(
+        UnionConstruct(List(
+          GroupConstruct(List(BnfLiteral("number", NONTERM),
+            PrologFactsBuilder(PrologTemplate("term", List(PrologTemplate("Number", List())))))
+          ),
+          GroupConstruct(List(BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM)))))))
       ),
       ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM)))
   }

@@ -47,12 +47,18 @@ class PrologTemplateExtractor(functor: String):
 object PrologTemplateExtractor:
   private val logger = CreateLogger(classOf[PrologTemplateExtractor])
 
+  def isPrologTemplate(pTemplate: String): Option[String] =
+    if pTemplate.contains(Prolog_Template_Designator) then
+      val theSplit = pTemplate.trim.split(Prolog_Template_Designator)
+      //    only the functor name and the param string are expected after the split using the designator
+      if theSplit.length == 2 then Option(theSplit(1).trim) else None
+    else None
+  
   def apply(pTemplate: String): Option[PrologTemplate] =
-    val theSplit = pTemplate.trim.split(Prolog_Template_Designator)
-    //    only the functor name and the param string are expected after the split using the designator
-    if theSplit.length == 2 then
+    val template: Option[String] = isPrologTemplate(pTemplate)
+    if !template.isEmpty then
       //      and we're interested in the functor itself
-      new PrologTemplateExtractor(theSplit(1).trim).parseFunctor()
+      new PrologTemplateExtractor(template.get).parseFunctor()
     else
       logger.error(s"Incorrect specification of the prolog template is provided $pTemplate")
       None

@@ -29,4 +29,8 @@ class PrologTemplateExtractorTest extends AnyFlatSpec with Matchers {
     PrologTemplateExtractor("==>> product_div(_, _,") shouldBe None
   }
 
+  it should "extract a simple factor" in {
+    PrologTemplateExtractor("==>> term(Number)") shouldBe Some(PrologTemplate("term", List(PrologTemplate("Number", List()))))
+  }
+
 }
