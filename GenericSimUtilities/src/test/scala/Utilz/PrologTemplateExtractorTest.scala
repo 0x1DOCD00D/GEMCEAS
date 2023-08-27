@@ -24,4 +24,9 @@ class PrologTemplateExtractorTest extends AnyFlatSpec with Matchers {
       )
     )
   }
+
+  it should "issue errors for incorrect template syntax" in {
+    PrologTemplateExtractor("==>> product_div(_, _,") shouldBe None
+  }
+
 }
