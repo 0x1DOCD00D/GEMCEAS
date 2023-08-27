@@ -16,17 +16,5 @@ object RegExGenTest:
   import wolfendale.scalacheck.regexp.RegexpGen
 
   @main def runMain_RegExGenTest(): Unit =
-    val mainString = "==>> product_div(_, _, second_term(SecondTermSign, SecondTerm))"
-    val theSplit = mainString.trim.split("==>>")
-    if theSplit.length == 2 then
-      val prologterm = theSplit(1)
-      println(prologterm)
-      val ind = prologterm.indexOf("(")
-      val (fname, fparm) = (prologterm.substring(0, ind), prologterm.substring(ind+1, prologterm.length-1))
-      println(fname + " =======>> " + fparm)
-      val re = """\([^()]*\)""".r
-
-    else println("ouch!!")
-
     val generator: Gen[String] = RegexpGen.from("[-+]?[0-9]+(\\.[0-9]+)?")
       println(generator.sample)

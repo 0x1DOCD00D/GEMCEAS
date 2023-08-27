@@ -18,6 +18,11 @@ object Constants:
   case class EnumeratedLoopParameters(ps: List[Double])
   case class FromToWithStepParameters(from: Double, to: Double, step: Double)
 
+  final val Prolog_Template_Designator = "==>>"
+  final val OpenParen = '('
+  final val CloseParen = ')'
+  final val CommaSeparator = ','
+
   val SEED: String = "seed"
   val CONFIGENTRYNAME: String = "Gemceas"
   val MODELCONFIGENTRYNAME: String = "LangModel"

@@ -10,13 +10,13 @@ package Compiler
 
 import LexerParser.{Literal, MainRule, Nonterminal, NonterminalRegex, RegexString, Rule, RuleCollection, RuleContent, RuleGroup, RuleLiteral, RuleOpt, RuleOr, RuleRep, Terminal}
 import LiteralType.*
+import Utilz.Constants.Prolog_Template_Designator
 import Utilz.CreateLogger
 
 import scala.collection.mutable.ListBuffer
 
 object AstExtractors:
   private val logger = CreateLogger(classOf[AstExtractors.type])
-  private val Prolog_Template_Designator = "==>>"
 
   private def flattenTreeOfLists(l: List[BnFGrammarIR], union: Boolean = false): List[BnFGrammarIR] =
   //      SeqConstruct(List(BnfLiteral(aWord,TERM), List(BnfLiteral(mainRule,NONTERM))))
