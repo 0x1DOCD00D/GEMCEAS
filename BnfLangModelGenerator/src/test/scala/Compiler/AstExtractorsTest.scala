@@ -506,99 +506,114 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
 
   it should "extract an IR representation from an exp grammar with prolog templates" in {
     /*
-    expression ::=
-      sum_sub;
+expression ::=
+      sum_sub
+      "==>> expression(SumSub)";
 
     sum_sub ::=
       product_div {("+"|"-") product_div}
-      "==>> sum_sub(_, second_product_div(Sign, ProductDiv))";
+      "==>> sum_sub(_, product_div_repetition(Sign, ProductDiv))";
 
     product_div ::=
       ["+"|"-"] term {("*"|"/") term}
-      "==>> product_div(_, _, second_term(SecondTermSign, SecondTerm))";
+      "==>> product_div(_, term(NumberOrExpression), term_repetition(Sign, Term))";
 
     term ::=
       number
       "==>> term(Number)" |
-      "(" expression ")" ;
+      "(" expression ")"
+      "==>> term(Expression)";
 
     <number> ::=
       "(\+|\-)?[0-9]+(\.[0-9]+)?";
-    */
-
-    val expGrammar =  MainRule(List(
-      Rule(Nonterminal("expression"), RuleCollection(List(RuleLiteral(Nonterminal("sum_sub"))))),
-      Rule(Nonterminal("sum_sub"), RuleCollection(List(RuleLiteral(Nonterminal("product_div")),
+   */
+    val expGrammar = MainRule(List(
+      Rule(Nonterminal("expression"),
         RuleCollection(List(
+          RuleLiteral(Nonterminal("sum_sub")), RuleCollection(List(
+            RuleLiteral(Terminal("==>> expression(SumSub)"))))))
+      ),
+      Rule(Nonterminal("sum_sub"), RuleCollection(List(
+        RuleLiteral(Nonterminal("product_div")), RuleCollection(List(
           RuleRep(RuleCollection(List(
-            RuleGroup(RuleCollection(List(RuleLiteral(Terminal("+")),
-              RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))),
-            RuleCollection(List(RuleLiteral(Nonterminal("product_div"))))))
-          ),
-          RuleCollection(List(
-            RuleLiteral(Terminal("==>> sum_sub(_, second_product_div(Sign, ProductDiv))"))))))))
-      ),
-      Rule(Nonterminal("product_div"),
-        RuleCollection(List(
-          RuleOpt(RuleCollection(List(RuleLiteral(Terminal("+")),
-            RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))
-          ),
-          RuleCollection(List(RuleLiteral(Nonterminal("term")),
+            RuleGroup(RuleCollection(List(
+              RuleLiteral(Terminal("+")), RuleCollection(List(
+                RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))
+            ),
             RuleCollection(List(
-              RuleRep(RuleCollection(List(RuleGroup(RuleCollection(List(RuleLiteral(Terminal("*")),
-                RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("/")))))))))),
-                RuleCollection(List(RuleLiteral(Nonterminal("term"))))))
+              RuleLiteral(Nonterminal("product_div"))))))), RuleCollection(List(
+            RuleLiteral(Terminal("==>> sum_sub(_, product_div_repetition(Sign, ProductDiv))"))))))))
+      ),
+      Rule(Nonterminal("product_div"), RuleCollection(List(
+        RuleOpt(RuleCollection(List(
+          RuleLiteral(Terminal("+")), RuleCollection(List(
+            RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))
+        ),
+        RuleCollection(List(
+          RuleLiteral(Nonterminal("term")), RuleCollection(List(
+            RuleRep(RuleCollection(List(
+              RuleGroup(RuleCollection(List(
+                RuleLiteral(Terminal("*")), RuleCollection(List(
+                  RuleOr(RuleCollection(List(RuleLiteral(Terminal("/")))))))))
               ),
+              RuleCollection(List(RuleLiteral(Nonterminal("term"))))))
+            ),
+            RuleCollection(List(
+              RuleLiteral(Terminal("==>> product_div(_, term(NumberOrExpression), term_repetition(Sign, Term))"))))))))))
+      ),
+      Rule(Nonterminal("term"), RuleCollection(List(
+        RuleLiteral(Nonterminal("number")), RuleCollection(List(
+          RuleLiteral(Terminal("==>> term(Number)")), RuleCollection(List(
+            RuleOr(RuleCollection(List(RuleLiteral(Terminal("(")),
               RuleCollection(List(
-                RuleLiteral(Terminal("==>> product_div(_, _, second_term(SecondTermSign, SecondTerm))"))))))))))
+                RuleLiteral(Nonterminal("expression")), RuleCollection(List(RuleLiteral(Terminal(")")),
+                  RuleCollection(List(RuleLiteral(Terminal("==>> term(Expression)")))))))))))))))))
       ),
-      Rule(Nonterminal("term"), RuleCollection(List(RuleLiteral(Nonterminal("number")),
-        RuleCollection(List(RuleLiteral(Terminal("==>> term(Number)")),
-          RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("(")),
-            RuleCollection(List(RuleLiteral(Nonterminal("expression")), RuleCollection(List(RuleLiteral(Terminal(")")))))))))))))))
-      ),
-      Rule(NonterminalRegex("<number>"), RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?""")))))
+      Rule(NonterminalRegex("<number>"), RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?""")))
+    ))
     val res = AstExtractors(expGrammar)
     res shouldBe List(
-      ProductionRule(BnfLiteral("expression", NONTERM), SeqConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM)))))),
-      /*
-      sum_sub ::=
-        product_div {("+"|"-") product_div}
-        "==>> sum_sub(_, second_product_div(Sign, ProductDiv))";
-      * */
+      ProductionRule(BnfLiteral("expression", NONTERM), SeqConstruct(List(
+        GroupConstruct(List(BnfLiteral("sum_sub", NONTERM), PrologFactsBuilder(PrologTemplate("expression", List(PrologTemplate("SumSub", List()))))))
+      ))
+      ),
       ProductionRule(BnfLiteral("sum_sub", NONTERM), SeqConstruct(List(
         GroupConstruct(List(
-          BnfLiteral("product_div", NONTERM),
-          RepeatConstruct(List(
+          BnfLiteral("product_div", NONTERM), RepeatConstruct(List(
             GroupConstruct(List(
-              GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))),
+              GroupConstruct(List(
+                UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))
+                )
+              )),
               BnfLiteral("product_div", NONTERM))))
           ),
-          PrologFactsBuilder(PrologTemplate("sum_sub",
-            List(PrologTemplate("_", List()), PrologTemplate("second_product_div", List(PrologTemplate("Sign", List()), PrologTemplate("ProductDiv", List())))))
-          )
-        ))))
+          PrologFactsBuilder(PrologTemplate("sum_sub", List(PrologTemplate("_", List()), PrologTemplate("product_div_repetition", List(PrologTemplate("Sign", List()), PrologTemplate("ProductDiv", List()))))))))))
       ),
       ProductionRule(BnfLiteral("product_div", NONTERM), SeqConstruct(List(
-        GroupConstruct(List(OptionalConstruct(List(
-          UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))
-        ),
-          BnfLiteral("term", NONTERM),
-          RepeatConstruct(List(GroupConstruct(List(
-            GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("*", TERM))), GroupConstruct(List(BnfLiteral("/", TERM))))))),
-            BnfLiteral("term", NONTERM))))
+        GroupConstruct(List(
+          OptionalConstruct(List(
+            UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))
           ),
-          PrologFactsBuilder(PrologTemplate("product_div",
-            List(PrologTemplate("_", List()), PrologTemplate("_", List()),
-              PrologTemplate("second_term", List(PrologTemplate("SecondTermSign", List()), PrologTemplate("SecondTerm", List()))))))
-        ))))
+          BnfLiteral("term", NONTERM), RepeatConstruct(List(
+            GroupConstruct(List(
+              GroupConstruct(List(
+                UnionConstruct(List(GroupConstruct(List(BnfLiteral("*", TERM))), GroupConstruct(List(BnfLiteral("/", TERM))))))
+              ),
+              BnfLiteral("term", NONTERM))))
+          ),
+          PrologFactsBuilder(PrologTemplate("product_div", List(PrologTemplate("_", List()),
+            PrologTemplate("term", List(PrologTemplate("NumberOrExpression", List()))),
+            PrologTemplate("term_repetition", List(PrologTemplate("Sign", List()), PrologTemplate("Term", List()))))))))))
       ),
       ProductionRule(BnfLiteral("term", NONTERM), SeqConstruct(List(
         UnionConstruct(List(
-          GroupConstruct(List(BnfLiteral("number", NONTERM),
+          GroupConstruct(List(
+            BnfLiteral("number", NONTERM),
             PrologFactsBuilder(PrologTemplate("term", List(PrologTemplate("Number", List())))))
           ),
-          GroupConstruct(List(BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM)))))))
+          GroupConstruct(List(
+            BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM),
+            PrologFactsBuilder(PrologTemplate("term", List(PrologTemplate("Expression", List()))))))))))
       ),
       ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM)))
   }
