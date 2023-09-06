@@ -1,5 +1,7 @@
 expression ::=
-  sum_sub;
+  sum_sub
+  "==>> exp(s)"
+  ;
 
 sum_sub ::=
   product_div {("+"|"-") product_div}

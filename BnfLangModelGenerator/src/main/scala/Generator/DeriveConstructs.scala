@@ -8,8 +8,8 @@
 
 package Generator
 
-import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, IrError, IrLiteral, OptionalConstruct, ProductionRule, ProgramEntity, RepeatConstruct, SeqConstruct, UnionConstruct}
-import Utilz.CreateLogger
+import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, IrError, IrLiteral, OptionalConstruct, ProductionRule, ProgramEntity, PrologFactsBuilder, RepeatConstruct, SeqConstruct, UnionConstruct}
+import Utilz.{CreateLogger, PrologTemplate}
 import org.slf4j.Logger
 
 trait DeriveConstructs:
@@ -23,6 +23,7 @@ trait DeriveConstructs:
 
   def deriveElement(e: BnFGrammarIR, limit: Boolean = false): List[BnFGrammarIR] =
     e match
+      case pt @ PrologFactsBuilder(prt) => ???
       case ir @ OptionalConstruct(bnfObjects) => OptionalConstructProcessor(ir, limit)
       case ir @ RepeatConstruct(bnfObjects) => RepeatConstructProcessor(ir, limit)
       case ir @ GroupConstruct(bnfObjects) => GroupConstructProcessor(ir)

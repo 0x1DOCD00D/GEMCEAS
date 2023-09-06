@@ -8,7 +8,6 @@
 
 package Compiler
 
-import Compiler.BnfGrammarCompiler
 import LexerParser.{Nonterminal, *}
 import LiteralType.*
 import Utilz.PrologTemplate
@@ -562,16 +561,23 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
     val res = AstExtractors(expGrammar)
     res shouldBe List(
       ProductionRule(BnfLiteral("expression", NONTERM), SeqConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM)))))),
+      /*
+      sum_sub ::=
+        product_div {("+"|"-") product_div}
+        "==>> sum_sub(_, second_product_div(Sign, ProductDiv))";
+      * */
       ProductionRule(BnfLiteral("sum_sub", NONTERM), SeqConstruct(List(
-        GroupConstruct(List(BnfLiteral("product_div", NONTERM), RepeatConstruct(List(
-          GroupConstruct(List(GroupConstruct(List(
-            UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))),
-            BnfLiteral("product_div", NONTERM))))
-        ),
+        GroupConstruct(List(
+          BnfLiteral("product_div", NONTERM),
+          RepeatConstruct(List(
+            GroupConstruct(List(
+              GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))),
+              BnfLiteral("product_div", NONTERM))))
+          ),
           PrologFactsBuilder(PrologTemplate("sum_sub",
             List(PrologTemplate("_", List()), PrologTemplate("second_product_div", List(PrologTemplate("Sign", List()), PrologTemplate("ProductDiv", List())))))
-          ))))
-      )
+          )
+        ))))
       ),
       ProductionRule(BnfLiteral("product_div", NONTERM), SeqConstruct(List(
         GroupConstruct(List(OptionalConstruct(List(
@@ -584,7 +590,8 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
           ),
           PrologFactsBuilder(PrologTemplate("product_div",
             List(PrologTemplate("_", List()), PrologTemplate("_", List()),
-              PrologTemplate("second_term", List(PrologTemplate("SecondTermSign", List()), PrologTemplate("SecondTerm", List()))))))))))
+              PrologTemplate("second_term", List(PrologTemplate("SecondTermSign", List()), PrologTemplate("SecondTerm", List()))))))
+        ))))
       ),
       ProductionRule(BnfLiteral("term", NONTERM), SeqConstruct(List(
         UnionConstruct(List(
