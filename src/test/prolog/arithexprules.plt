@@ -7,8 +7,8 @@ test("if sum_sub's sign is '-' the first term of the product div should be > 100
     sum_sub(_, [product_div_repetition("-", product_div(_, term(120), _))]),
     sum_sub(_, [product_div_repetition("-", product_div(_, term(1024.424), _))]),
     sum_sub(_, [product_div_repetition("-", product_div(_, term(1603), [term_repetition("/", term(6.23))]))]),
-    sum_sub(_, [product_div_repetition("-", product_div(_, term(expression(sum_sub(_, 
-        [product_div_repetition("-", product_div(_, term(363), _))]))), [term_repetition("/", term(745))]))]),
+    sum_sub(_, [product_div_repetition("-", product_div(_, term(_, (sum_sub(_, 
+        [product_div_repetition("-", product_div(_, term(363), _))])), _), [term_repetition("/", term(745))]))]),
     % '+' shouldn't matter
     sum_sub(_, [product_div_repetition("+", product_div(_, term(1), _))]),
     % second item in the list shouldn't matter
@@ -22,10 +22,10 @@ test("sum_sub should fail if the sign is '-' and the first term of the product d
 test("number to the rhs of product_div must != 0 if the sign is '/'") :-
     product_div(_, _, [term_repetition("/", term(1.24))]),
     product_div(_, _, [term_repetition("/", term(1346))]),
-    product_div(_, _, [term_repetition("/", term(expression(sum_sub(_, [product_div_repetition("-", product_div(_, 
-        term(638), _))]))))]),
-    product_div(_, _, [term_repetition("/", term(expression(sum_sub(_, [product_div_repetition("-", product_div(_, 
-        term(expression(sum_sub(_, [product_div_repetition("-", product_div(_, term(120), _))]))), _))]))))]),
+    product_div(_, _, [term_repetition("/", term(_, (sum_sub(_, [product_div_repetition("-", product_div(_, 
+        term(638), _))])), _))]),
+    product_div(_, _, [term_repetition("/", term(_, (sum_sub(_, [product_div_repetition("-", product_div(_, 
+        term(_, (sum_sub(_, [product_div_repetition("-", product_div(_, term(120), _))])), _), _))])), _))]),
     % '*' shouldn't matter
     product_div(_, _, [term_repetition("*", term(63))]),
     % must hold for all items in the list
