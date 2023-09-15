@@ -10,14 +10,14 @@ sum_sub(_, SecondProductDivList) :-
 
 product_div_repetition(Sign, ProductDiv) :-
     arg(2, ProductDiv, Term),
-    arg(1, Term, NumberOrExpression),
-    (number(NumberOrExpression) ->
+    arg(1, Term, NumberMaybe),
+    (number(NumberMaybe) ->
         % term is a num. Ensure the num is > 100 if the sign is '-''
         (Sign == "-" -> 
-            NumberOrExpression > 100 ; 
+            NumberMaybe > 100 ; 
             true) ;
         % term is expression/1
-        NumberOrExpression).
+        Term).
 
 
 % number to the rhs must be > 0 if the sign is "/"
@@ -32,19 +32,18 @@ loop_over_list([H | T]) :-
     loop_over_list(T).
 
 term_repetition(Sign, Term) :-
-    arg(1, Term, NumberOrExpression), 
-    (number(NumberOrExpression) ->
+    arg(1, Term, NumberMaybe), 
+    (number(NumberMaybe) ->
         % term is a num. Ensure the num is not 0 if the sign is "/"
         (Sign == "/" ->
-            NumberOrExpression =\= 0 ;
+            NumberMaybe =\= 0 ;
             true) ;
         % term is expression/1
-        NumberOrExpression).
+        Term).
     
 
-term(NumberOrExpression) :-
-    (number(NumberOrExpression) ->
-        % all numbers must be > -5
-        NumberOrExpression > -5 ;
-        % call expression/1
-        NumberOrExpression).
+term(Number) :-
+    Number > -5.
+
+term(_, Expression, _) :-
+    Expression.
