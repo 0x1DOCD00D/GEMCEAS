@@ -89,11 +89,7 @@ class GrammarRewriter(ast: List[ProductionRule]):
     if filteredOutTerminals.length <= 0 then DIRECTTERMINATION
     else if filteredOutTermsAndUnions.length <= 0 && !processUnions then INPROGRESS(rhs.asInstanceOf)
     else
-      val expandedRHS = rhs.flatMap {
-        go =>
-         val rw = deriveFromGrammarObject(go, processUnions)
-         rw
-      }
+      val expandedRHS = rhs.flatMap(go => deriveFromGrammarObject(go, processUnions))
       logger.info(s"Expanded: ${expandedRHS.mkString("; ")}")
       val combined = if processUnions then removeAllTerminals(acc ::: expandedRHS) else removeAllTerminals(removeAllUnions(acc ::: expandedRHS))
       val infLoopCheck = combined.diff(combined.distinct)

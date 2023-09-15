@@ -601,9 +601,15 @@ expression ::=
               ),
               BnfLiteral("term", NONTERM))))
           ),
-          PrologFactsBuilder(PrologTemplate("product_div", List(PrologTemplate("_", List()),
-            PrologTemplate("term", List(PrologTemplate("NumberOrExpression", List()))),
-            PrologTemplate("term_repetition", List(PrologTemplate("Sign", List()), PrologTemplate("Term", List()))))))))))
+          PrologFactsBuilder(PrologTemplate("product_div",
+            List(
+              PrologTemplate("_", List()),
+              PrologTemplate("term", List(PrologTemplate("NumberOrExpression", List()))),
+              PrologTemplate("term_repetition", List(PrologTemplate("Sign", List()), PrologTemplate("Term", List())))
+          )
+          )
+          )))
+      ))
       ),
       ProductionRule(BnfLiteral("term", NONTERM), SeqConstruct(List(
         UnionConstruct(List(
@@ -615,6 +621,7 @@ expression ::=
             BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM),
             PrologFactsBuilder(PrologTemplate("term", List(PrologTemplate("Expression", List()))))))))))
       ),
-      ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM)))
+      ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM))
+    )
   }
 }

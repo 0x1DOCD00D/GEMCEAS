@@ -8,9 +8,10 @@
 
 package Generator
 
-import Compiler.{BnFGrammarIR, BnfLiteral, GrammarRewriter, GroupConstruct, LiteralType, OptionalConstruct, ProductionRule, ProgramEntity, RepeatConstruct, SeqConstruct, TerminationData, UnionConstruct}
+import Compiler.LiteralType.TERM
+import Compiler.{BnFGrammarIR, BnfLiteral, GrammarRewriter, GroupConstruct, LiteralType, OptionalConstruct, ProductionRule, ProgramEntity, PrologFactsBuilder, RepeatConstruct, SeqConstruct, TerminationData, UnionConstruct}
 import Utilz.ConfigDb.{debugProgramGeneration, grammarUnrollDepthTermination}
-import Utilz.CreateLogger
+import Utilz.{CreateLogger, PrologTemplate}
 
 import java.util.UUID
 import scala.annotation.tailrec
@@ -83,6 +84,97 @@ object ProgramGenerator:
           logger.error(errStr)
           Left(errStr)
 
+  @main def runProgGenWithTemplates(): Unit = {
+    /*
+    expression ::=
+      sum_sub
+      "==>> expression(SumSub)";
+
+    sum_sub ::=
+      product_div {("+"|"-") product_div}
+      "==>> sum_sub(_, product_div_repetition(Sign, ProductDiv))";
+
+    product_div ::=
+      ["+"|"-"] term {("*"|"/") term}
+      "==>> product_div(_, term(NumberOrExpression), term_repetition(Sign, Term))";
+
+    term ::=
+      number
+      "==>> term(Number)" |
+      "(" expression ")"
+      "==>> term(Expression)";
+
+    <number> ::=
+      "(\+|\-)?[0-9]+(\.[0-9]+)?";
+    */
+    import Compiler.LiteralType.*
+    val grammar = List(
+      ProductionRule(BnfLiteral("expression", NONTERM), SeqConstruct(List(
+        GroupConstruct(List(
+          BnfLiteral("sum_sub", NONTERM), 
+          PrologFactsBuilder(PrologTemplate("expression", List(PrologTemplate("SumSub", List())))))
+        )
+      ))
+      ),
+      ProductionRule(BnfLiteral("sum_sub", NONTERM), SeqConstruct(List(
+        GroupConstruct(List(
+          BnfLiteral("product_div", NONTERM), 
+          RepeatConstruct(List(
+            GroupConstruct(List(
+              GroupConstruct(List(
+                UnionConstruct(List(
+                  GroupConstruct(List(BnfLiteral("+", TERM))), 
+                  GroupConstruct(List(BnfLiteral("-", TERM))))
+                )
+              )),
+              BnfLiteral("product_div", NONTERM))))
+          ),
+          PrologFactsBuilder(
+            PrologTemplate("sum_sub", List(
+              PrologTemplate("_", List()), 
+              PrologTemplate("product_div_repetition", List(
+                PrologTemplate("Sign", List()), PrologTemplate("ProductDiv", List())))))))
+        )
+      ))
+      ),
+      ProductionRule(BnfLiteral("product_div", NONTERM), SeqConstruct(List(
+        GroupConstruct(List(
+          OptionalConstruct(List(
+            UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))
+          ),
+          BnfLiteral("term", NONTERM), RepeatConstruct(List(
+            GroupConstruct(List(
+              GroupConstruct(List(
+                UnionConstruct(List(GroupConstruct(List(BnfLiteral("*", TERM))), GroupConstruct(List(BnfLiteral("/", TERM))))))
+              ),
+              BnfLiteral("term", NONTERM))))
+          ),
+          PrologFactsBuilder(PrologTemplate("product_div",
+            List(
+              PrologTemplate("_", List()),
+              PrologTemplate("term", List(PrologTemplate("NumberOrExpression", List()))),
+              PrologTemplate("term_repetition", List(PrologTemplate("Sign", List()), PrologTemplate("Term", List())))
+            )
+          )
+          ))
+        )
+      ))
+      ),
+      ProductionRule(BnfLiteral("term", NONTERM), SeqConstruct(List(
+        UnionConstruct(List(
+          GroupConstruct(List(
+            BnfLiteral("number", NONTERM),
+            PrologFactsBuilder(PrologTemplate("term", List(PrologTemplate("Number", List())))))
+          ),
+          GroupConstruct(List(
+            BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM),
+            PrologFactsBuilder(PrologTemplate("term", List(PrologTemplate("Expression", List()))))))))))
+      ),
+      ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM))
+    )
+    val gen = ProgramGenerator(grammar, BnfLiteral("expression", NONTERM))
+    logger.info(s"${gen.toString}")
+  }
   @main def runMain_ProgramGenerator(): Unit =
     import Compiler.LiteralType.*
     /*

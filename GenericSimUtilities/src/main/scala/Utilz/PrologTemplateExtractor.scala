@@ -8,7 +8,7 @@
 
 package Utilz
 
-import Utilz.Constants.{CloseParen, CommaSeparator, OpenParen, Prolog_Template_Designator}
+import Utilz.Constants.{CloseParen, CommaSeparator, OpenParen, Prolog_Template_Assignment, Prolog_Template_Designator}
 
 /*
 "==>> product_div(_, _, second_term(SecondTermSign, SecondTerm))"
@@ -52,6 +52,9 @@ object PrologTemplateExtractor:
       val theSplit = pTemplate.trim.split(Prolog_Template_Designator)
       //    only the functor name and the param string are expected after the split using the designator
       if theSplit.length == 2 then Option(theSplit(1).trim) else None
+    else if pTemplate.contains(Prolog_Template_Assignment) then
+      val theSplit = pTemplate.trim.split(Prolog_Template_Assignment)
+      if theSplit.length == 2 then Option(theSplit(1).trim) else None
     else None
   
   def apply(pTemplate: String): Option[PrologTemplate] =
@@ -64,5 +67,6 @@ object PrologTemplateExtractor:
       None
 
   @main def runMain_PrologTemplateExtractor(): Unit =
+    logger.info(PrologTemplateExtractor("ClassIdentifier=:= NormalClassDeclaration.TypeIdentifier").toString)
     logger.info(PrologTemplateExtractor("==>> product_div(_, _, second_term(SecondTermSign, otherTerm(x)), final_term(n(m), y))").toString)
 

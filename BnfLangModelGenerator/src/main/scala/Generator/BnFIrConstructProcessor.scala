@@ -8,7 +8,7 @@
 
 package Generator
 
-import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, OptionalConstruct, ProductionRule, ProgramEntity, RepeatConstruct, SeqConstruct, UnionConstruct}
+import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, OptionalConstruct, ProductionRule, ProgramEntity, PrologFactsBuilder, RepeatConstruct, SeqConstruct, UnionConstruct}
 import Randomizer.SupplierOfRandomness
 
 object OptionalConstructProcessor extends ((OptionalConstruct, Boolean) => List[BnFGrammarIR]) with DeriveConstructs:
@@ -24,7 +24,19 @@ object RepeatConstructProcessor extends ((RepeatConstruct, Boolean) => List[BnFG
     List.fill(repeats)(v1.bnfObjects).flatten
 
 object GroupConstructProcessor extends (GroupConstruct => List[BnFGrammarIR]) with DeriveConstructs:
-  override def apply(v1: GroupConstruct): List[BnFGrammarIR] = v1.bnfObjects
+  override def apply(v1: GroupConstruct): List[BnFGrammarIR] =
+    if v1.bnfObjects.count(e => e.isInstanceOf[PrologFactsBuilder]) > 1 then
+      logger.error(s"More than one PrologFactsBuilder is present in the group construct ${v1.bnfObjects.mkString(",")}")
+      v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder])
+    else if v1.bnfObjects.count(e => e.isInstanceOf[PrologFactsBuilder]) == 1 then
+      v1.bnfObjects.find(e => e.isInstanceOf[PrologFactsBuilder]) match
+        case Some(prologTemplate) =>
+          val prologFacts: PrologFactsBuilder = prologTemplate.asInstanceOf[PrologFactsBuilder]
+          ???
+        case None =>
+          logger.error(s"This error shouldn't happen: PrologFactsBuilder is not present in the group construct ${v1.bnfObjects.mkString(",")}")
+          v1.bnfObjects
+    else v1.bnfObjects
 
 object SeqConstructProcessor extends (SeqConstruct => List[BnFGrammarIR]) with DeriveConstructs:
   override def apply(v1: SeqConstruct): List[BnFGrammarIR] = v1.bnfObjects

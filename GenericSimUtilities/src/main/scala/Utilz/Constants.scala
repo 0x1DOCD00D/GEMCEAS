@@ -19,6 +19,7 @@ object Constants:
   case class FromToWithStepParameters(from: Double, to: Double, step: Double)
 
   final val Prolog_Template_Designator = "==>>"
+  final val Prolog_Template_Assignment = "=:="
   final val OpenParen = '('
   final val CloseParen = ')'
   final val CommaSeparator = ','
