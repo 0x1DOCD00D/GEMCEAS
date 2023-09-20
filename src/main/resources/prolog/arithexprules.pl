@@ -2,9 +2,9 @@ expression(SumSub) :-
     % call sum_sub/2
     SumSub.
 
-sum_sub(_, SecondProductDivList) :-
-    nonvar(SecondProductDivList) ->
-        (nth1(1, SecondProductDivList, FirstItem),
+sum_sub(_, ProductDivRepetition) :-
+    nonvar(ProductDivRepetition) ->
+        (nth1(1, ProductDivRepetition, FirstItem),
         FirstItem) ;
         true.
 
@@ -21,9 +21,9 @@ product_div_repetition(Sign, ProductDiv) :-
 
 
 % number to the rhs must be > 0 if the sign is "/"
-product_div(_, _, SecondTermList) :-
-    (nonvar(SecondTermList) ->
-        loop_over_list(SecondTermList) ;
+product_div(_, _, TermRepetition) :-
+    (nonvar(TermRepetition) ->
+        loop_over_list(TermRepetition) ;
         true).
 
 loop_over_list([]).

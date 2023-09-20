@@ -3,12 +3,12 @@ expression ::=
   "==>> expression(SumSub)";
 
 sum_sub ::=
-  product_div {("+"|"-") product_div}
-  "==>> sum_sub(_, product_div_repetition(Sign, ProductDiv))";
+  product_div {("+"|"-") product_div "==>> product_div_repetition(Sign, ProductDiv)"}
+  "==>> sum_sub(_, ProductDivRepetition)";
 
 product_div ::=
-  ["+"|"-"] term {("*"|"/") term}
-  "==>> product_div(_, NumberOrExpression, term_repetition(Sign, Term))";
+  ["+"|"-"] term {("*"|"/") term "==>> term_repetition(Sign, Term)"}
+  "==>> product_div(_, NumberOrExpression, TermRepetition)";
 
 term ::=
   number
