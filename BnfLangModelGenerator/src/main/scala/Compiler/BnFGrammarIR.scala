@@ -30,8 +30,22 @@ case class RepeatConstruct(override val bnfObjects: List[BnFGrammarIR]) extends 
 case class GroupConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 case class SeqConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 case class UnionConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
+case class PrologFact(functorName: String, mapParams2GrammarElements: List[(String, BnFGrammarIR)]) extends BnFGrammarIR
 trait IrLiteral extends BnFGrammarIR
 case class BnfLiteral(token: String, literalType: LiteralType) extends IrLiteral
-case class PrologFactsBuilder(prt: PrologTemplate) extends IrLiteral
+case class PrologFactsBuilder(prt: PrologTemplate) extends IrLiteral {
+  private def zipParameters(params: List[PrologTemplate], bnfObjects: List[BnFGrammarIR]): List[(String, BnFGrammarIR)] =
+    params match
+      case ::(head, next) => ???
+/*
+        (if head.params.isEmpty then (head.functorName, bnfObjects.head)
+        else if bnfObjects.head.isInstanceOf[RepeatConstruct] || bnfObjects.head.isInstanceOf[OptionalConstruct] then (head.functorName, bnfObjects.head)) :: zipParameters(next, bnfObjects.tail)
+*/
+      case Nil => ???
+
+  def build(bnfObjects: List[BnFGrammarIR]): Either[String, PrologFact] =
+    if prt.params.length != bnfObjects.length then Left(s"Number of parameters in the Prolog template ${prt.params} does not match the number of BNF objects $bnfObjects")
+    else Right(PrologFact(prt.functorName, null))
+}
 case class ProgramEntity(code: String) extends IrLiteral
 case class IrError(err: String) extends BnFGrammarIR

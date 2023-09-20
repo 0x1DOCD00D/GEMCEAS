@@ -23,7 +23,6 @@ trait DeriveConstructs:
 
   def deriveElement(e: BnFGrammarIR, limit: Boolean = false): List[BnFGrammarIR] =
     e match
-      case pt @ PrologFactsBuilder(prt) => ???
       case ir @ OptionalConstruct(bnfObjects) => OptionalConstructProcessor(ir, limit)
       case ir @ RepeatConstruct(bnfObjects) => RepeatConstructProcessor(ir, limit)
       case ir @ GroupConstruct(bnfObjects) => GroupConstructProcessor(ir)
