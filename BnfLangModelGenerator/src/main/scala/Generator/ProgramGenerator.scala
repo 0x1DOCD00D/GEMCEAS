@@ -9,7 +9,7 @@
 package Generator
 
 import Compiler.LiteralType.TERM
-import Compiler.{BnFGrammarIR, BnfLiteral, GrammarRewriter, GroupConstruct, LiteralType, OptionalConstruct, ProductionRule, ProgramEntity, PrologFactsBuilder, RepeatConstruct, SeqConstruct, TerminationData, UnionConstruct}
+import Compiler.{BnFGrammarIR, BnfLiteral, GrammarRewriter, GroupConstruct, LiteralType, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, SeqConstruct, TerminationData, UnionConstruct}
 import Utilz.ConfigDb.{debugProgramGeneration, grammarUnrollDepthTermination}
 import Utilz.{CreateLogger, PrologTemplate}
 
@@ -25,16 +25,69 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
   @tailrec
   private def derivedProgramInstance(prState: GeneratedProgramState = progGenState, level: Int = 0): GeneratedProgramState =
     if !prState.elements.forall(_.isInstanceOf[ProgramEntity]) then
-      val accum = deriveProgram(List(), prState.elements, level > grammarUnrollDepthTermination)
+      val accum = deriveProgram(List(), prState.elements, level)
       derivedProgramInstance(GeneratedProgramState(accum), level+1)
     else prState
 
   @tailrec
-  private def deriveProgram(accumulatorProg: List[BnFGrammarIR], st: List[BnFGrammarIR], limit: Boolean): List[BnFGrammarIR] =
+  private def deriveProgram(accumulatorProg: List[BnFGrammarIR], st: List[BnFGrammarIR], level: Int): List[BnFGrammarIR] =
     st match
-      case ::(head, next) => deriveProgram(accumulatorProg ::: deriveElement(head, limit), next, limit)
+      case ::(head, Nil) if head.isInstanceOf[PrologFact] => verifyGeneratedProgramFragment(head.asInstanceOf[PrologFact], level) match
+        case Some(lst) => accumulatorProg ::: lst
+        case None => deriveProgram(accumulatorProg, st, level)
+      case ::(head, next) => deriveProgram(accumulatorProg ::: deriveElement(head, level > grammarUnrollDepthTermination), next, level)
       case Nil => accumulatorProg
   end deriveProgram
+
+  /*
+    The number of args in a template should be equal to the number of top level terminals + nonterminals + repetition/optional constructs (if any). For example, these rules
+    expression ::=
+      sum_sub
+      "==>> expression(SumSub)";
+      sum_sub ::=
+      product_div {("+"|"-") product_div "==>> product_div_repetition(Sign, ProductDiv)"}
+      "==>> sum_sub(_, ProductDivRepetition)";
+
+    illustrate how prolog templetization works. The first rule has one top level construct, the non terminal sum_sub with a prolog template expression(SumSub). It means that the non terminal sum_sub is replaced with the functor expression(SumSub) in the prolog template where SumSub is the param of the functor that contains all the elements of the non terminal sum_sub.
+
+    The second rule defines the nonterminal sum_sub as a production rule that is a sequence of the nonterminal product_div and a repetition construct{("+"|"-") product_div "==>> product_div_repetition(Sign, ProductDiv)"}. The repetition construct is a sequence of the union construct ("+"|"-") and the nonterminal product_div. The repetition construct is replaced with the functor product_div_repetition(Sign, ProductDiv) in the prolog template where Sign is the param of the functor that contains all the elements of the union construct ("+"|"-") and ProductDiv is the param of the functor that contains all the elements of the nonterminal product_div. Whatever code generator produces for (non) terminals of the repetition construct, it should be wrapped in the functor product_div_repetition(Sign, ProductDiv) in the prolog template where the variable, Sign represents a generated sign terminal and the variable, ProductDiv represents a generated nonterminal product_div, recursively.
+
+    Finally, the prolog rule for nonterminal sum_sub is defined as sum_sub(_, ProductDivRepetition) where the variable, ProductDivRepetition represents the functor product_div_repetition(Sign, ProductDiv) that is the result of the prolog template processing.
+
+    When processing a production rule with a prolog template the input parameters to the processor's apply method are the list of elements from the rhs of the production rule and an instance of PrologFactsBuilder that contains the prolog template. The processor's apply method returns the list of elements that are the result of the prolog template processing, which is accomplished by the recursive rewrite of the elements of the rule.
+
+    Suppose we have the following grammar.
+    nt ::= nt1 "==>>f(parm)"
+    nt1 :: "a" "b" "==>>g(p1, p2)
+    The result of this gemceas run is the following prolog template instance f([g("a", "b")]). Also, the generator submits this instance as a whole, not two separate instances of g, first and then, f.  Let’s modify this grammar a bit.
+
+    nt ::= nt1 "==>>f(parm)"
+    nt1 :: "a" "b"
+    The result of this gemceas run is the following prolog template instance f(["a", "b"]).
+
+    Finally, this grammar has both cases.
+    nt ::= nt1 "==>>f(parm)"
+    nt1 :: "a" {"b" "==>>g(p)"}
+    The result of this gemceas run is the following prolog template instance f(["a", [g("b")]])
+  * */
+
+  private def verifyGeneratedProgramFragment(pf: PrologFact, level: Int): Option[List[BnFGrammarIR]] =
+    def rewritePrologFact(fact: PrologFact): PrologFact =
+      val rewriteIteration = fact.mapParams2GrammarElements.toList.foldLeft(List[(String, List[BnFGrammarIR])]()) {
+        (acc, elem) => (elem._1, deriveProgram(List(), elem._2, level)) :: acc
+      }
+      fact.rewriteGrammarElement(rewriteIteration)
+    end rewritePrologFact
+
+    //TODO: a prolog fact is transmitted to the KBLS here and true/false is returned
+    def askPrologEngine2Verify(fact: String): Boolean = true
+
+    val rewrittenFact = rewritePrologFact(fact = pf)
+    val prologFact = rewrittenFact.generatePrologFact4KBLS(true)
+    if askPrologEngine2Verify(prologFact) then Some(rewritePrologFact(fact = pf).formListOfBnFGrammarElements)
+    else None
+
+  end verifyGeneratedProgramFragment
 
   private def generateSourceCode(st: GeneratedProgramState): GeneratedProgram =
     if !st.elements.forall(_.isInstanceOf[ProgramEntity]) then

@@ -257,7 +257,7 @@ EscapeSequence::=
   "\""   | // (double quote ", Unicode \u0022)
   "\'"   | // (single quote ', Unicode \u0027)
   "\\\\" | // (backslash \, Unicode \u005c)
-  OctalEscape //(octal value, Unicode \u0000 to \u00ff)
+  OctalEscape //(octal prologFact, Unicode \u0000 to \u00ff)
 
 OctalEscape::=
   "\\" OctalDigit |

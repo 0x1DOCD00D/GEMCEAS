@@ -74,10 +74,10 @@ test("Single field declaration", [cleanup(retract_fields_in_class("SomeClass"))]
 test("Multiple field declaration", [cleanup(retract_fields_in_class("SomeClass"))]) :-
     field_declaration([], "int", "x, y, z", "SomeClass").
 
-test("Single field declaration with value", [cleanup(retract_fields_in_class("SomeClass"))]) :-
+test("Single field declaration with prologFact", [cleanup(retract_fields_in_class("SomeClass"))]) :-
     field_declaration([], "int", "x=1", "SomeClass").
 
-test("Multiple field declaration with value", [cleanup(retract_fields_in_class("SomeClass"))]) :-
+test("Multiple field declaration with prologFact", [cleanup(retract_fields_in_class("SomeClass"))]) :-
     field_declaration([], "int", "x=1, y=2, z", "SomeClass").
 
 test("Multiple queries for same identifier", [fail, cleanup(retract_fields_in_class("SomeClass"))]) :-

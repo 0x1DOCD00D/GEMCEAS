@@ -8,7 +8,7 @@
 
 package Generator
 
-import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, OptionalConstruct, ProductionRule, ProgramEntity, PrologFactsBuilder, RepeatConstruct, SeqConstruct, UnionConstruct}
+import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, SeqConstruct, UnionConstruct}
 import Randomizer.SupplierOfRandomness
 
 object OptionalConstructProcessor extends ((OptionalConstruct, Boolean) => List[BnFGrammarIR]) with DeriveConstructs:
@@ -23,36 +23,28 @@ object RepeatConstructProcessor extends ((RepeatConstruct, Boolean) => List[BnFG
     val repeats = if v2 then 0 else SupplierOfRandomness.onDemandInt(pmaxv = 10)
     List.fill(repeats)(v1.bnfObjects).flatten
 
-/*
-  The number of args in a template should be equal to the number of top level terminals + nonterminals + repetition/optional constructs (if any). For example, this rule
-  product_div ::=
-    ["+"|"-"] term {("*"|"/") term}
-    "==>> product_div(_, NumberOrExpression, term_repetition(Sign, Term))";
-  has three top level constructs,
-  the optional construct["+"|"-"],
-  a non terminal / term and
-  a repetition construct{("*"|"/") term}
-  Each of these constructs must correspond to either an _, a variable, or a functor in the prolog template. Functors should be use for repetition/optional constructs as shown in the example above where the repetition construct{("*"|"/") term} corresponds to the functor term_repetition(Sign, Term) functor. The number of params in the functor must match the number of elements in the repetition/optional construct.
-  In cases where a union | is present in an repetition/optional construct and the number of elements on either side of the union differ, the number of params in the corresponding functor must be equal to the largest number of elements in all of those options. For example, in
-  product_div ::=
-    ["+"|("-" nt)] term {("*"|"/") term}
-    "==>> product_div(OptCons(Sign, SomeNt), NumberOrExpression, term_repetition(Sign, Term))";
-  the number of params in functor for the first optional construct in this rule ["+"|("-" nt)] must have 2 params since the option ("-" nt) has two elements.
-  Variables in the template need not match the name of the non terminals on the rhs of a rule.
-* */
-object PrologTemplateProcessor extends ((List[BnFGrammarIR], PrologFactsBuilder) => List[BnFGrammarIR]) with DeriveConstructs:
-  override def apply(elements: List[BnFGrammarIR], template: PrologFactsBuilder): List[BnFGrammarIR] =
+object PrologTemplateProcessor extends ((List[BnFGrammarIR], PrologFactsBuilder) => Option[PrologFact]) with DeriveConstructs:
+  override def apply(elements: List[BnFGrammarIR], template: PrologFactsBuilder): Option[PrologFact] =
     template.build(elements) match
       case Left(errorMsg) =>
         logger.error(errorMsg)
-        ???
-      case Right(prologFact) => ???
+        None
+      case Right(prologFact) => Option(prologFact)
 
+/*
+ All rhs elements are organized in groups, implicitly or explicitly. If a prolog template is added as a special
+ terminal then its instance should be created and populated with the derived elements of the rhs group.
+ First, check4PrologTemplate is called to determine if the group parameter contains a prolog template and if so
+ the PrologTemplateProcessor is applied to the elements of the group.
+* */
 object GroupConstructProcessor extends (GroupConstruct => List[BnFGrammarIR]) with DeriveConstructs:
   override def apply(v1: GroupConstruct): List[BnFGrammarIR] = {
     check4PrologTemplate(v1) match
-      case Some(prologTemplate) => PrologTemplateProcessor(v1.bnfObjects, prologTemplate)
-      case None => v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder])
+      case Some(prologTemplate) =>
+        PrologTemplateProcessor(v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]), prologTemplate) match
+          case Some(prologFact) => List(prologFact)
+          case None => v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]) //failed to process a prolog template but continue the rewriting process
+      case None => v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]) //more than one prolog template is not allowed
   }
   private def check4PrologTemplate(v1: GroupConstruct): Option[PrologFactsBuilder] =
     val prologTemplateExists: Int = v1.bnfObjects.count(e => e.isInstanceOf[PrologFactsBuilder])

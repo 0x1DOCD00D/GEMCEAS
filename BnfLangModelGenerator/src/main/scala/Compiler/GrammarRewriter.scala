@@ -103,6 +103,10 @@ class GrammarRewriter(ast: List[ProductionRule]):
   @tailrec
   private def deriveFromGrammarObject(go: BnFGrammarIR, processUnion: Boolean = false): List[BnFGrammarIR] = {
     go match
+      //this method is called to determine the convergence of the grammar
+      //the grammar is convergent if the rewriting of the grammar terminates
+      //optional and repeat constructs contribute to the convergence check only if they contain grammar elements
+      //by removing these constructs we assume that they terminate at some point since input programs are finite
       case container: OptionalConstruct => List()
       case container: RepeatConstruct => List()
       case container: GroupConstruct => container.bnfObjects

@@ -44,7 +44,7 @@ test("Private protected access modifiers", [fail]) :-
 test("Protected private access modifiers", [fail]) :-
     check_access_modifier(["protected", "private"]).
 
-test("Name value") :-
+test("Name prologFact") :-
     name_value("x=1", Name, Value),
     Name="x", Value="1".
 
