@@ -104,9 +104,10 @@ object BnfGrammarLexer extends JavaTokenParsers:
     }
 
   def regex_string: Parser[RegexString] =
+    //"[-+]?[0-9]+(\\.[0-9]+)?"
     positioned {
 //      "\"[^\n]+\"".r ^^ { strContent =>
-      """(\")(.|\n|\r)*?(\")""".r ^^ { strContent =>
+      """(\")(.|\+|\-|\n|\r|\\)*?(\")""".r ^^ { strContent =>
         if debugLexerTokens then logger.info(s"Lexed regex: ${removeFirstAndLastDoubleQuotes(strContent)}")
         RegexString(removeFirstAndLastDoubleQuotes(strContent))
       }

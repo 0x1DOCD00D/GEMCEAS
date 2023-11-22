@@ -544,7 +544,55 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
             RuleCollection(List(
               RuleLiteral(Nonterminal("product_div")), RuleCollection(List(
                 RuleLiteral(Terminal("==>> product_div_repetition(Sign, ProductDiv)"))))))))
-          ), RuleCollection(List(RuleLiteral(Terminal("==>> sum_sub(_, ProductDivRepetition)"))))))))), Rule(Nonterminal("product_div"), RuleCollection(List(RuleOpt(RuleCollection(List(RuleLiteral(Terminal("+")), RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))), RuleCollection(List(RuleLiteral(Nonterminal("term")), RuleCollection(List(RuleRep(RuleCollection(List(RuleGroup(RuleCollection(List(RuleLiteral(Terminal("*")), RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("/")))))))))), RuleCollection(List(RuleLiteral(Nonterminal("term")), RuleCollection(List(RuleLiteral(Terminal("==>> term_repetition(Sign, Term)"))))))))), RuleCollection(List(RuleLiteral(Terminal("==>> product_div(_, NumberOrExpression, TermRepetition)"))))))))))), Rule(Nonterminal("term"), RuleCollection(List(RuleLiteral(Nonterminal("number")), RuleCollection(List(RuleLiteral(Terminal("==>> term(Number)")), RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("(")), RuleCollection(List(RuleLiteral(Nonterminal("expression")), RuleCollection(List(RuleLiteral(Terminal(")")), RuleCollection(List(RuleLiteral(Terminal("==>> term(_, Expression, _)")))))))))))))))))), Rule(NonterminalRegex("<number>"), RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?""")))))
+          ),
+          RuleCollection(List(
+            RuleLiteral(Terminal("==>> sum_sub(_, ProductDivRepetition)")))
+          )))))
+      ),
+      Rule(Nonterminal("product_div"),
+        RuleCollection(List(
+          RuleOpt(RuleCollection(List(
+            RuleLiteral(Terminal("+")),
+            RuleCollection(List(
+              RuleOr(RuleCollection(List(
+                RuleLiteral(Terminal("-")))))))))
+          ),
+          RuleCollection(List(
+            RuleLiteral(Nonterminal("term")),
+            RuleCollection(List(
+              RuleRep(RuleCollection(List(
+                RuleGroup(RuleCollection(List(
+                  RuleLiteral(Terminal("*")),
+                  RuleCollection(List(
+                    RuleOr(RuleCollection(List(
+                      RuleLiteral(Terminal("/")))))))))
+                ),
+                RuleCollection(List(
+                  RuleLiteral(Nonterminal("term")),
+                  RuleCollection(List(
+                    RuleLiteral(Terminal("==>> term_repetition(Sign, Term)"))))))))
+              ),
+              RuleCollection(List(
+                RuleLiteral(Terminal("==>> product_div(_, NumberOrExpression, TermRepetition)"))))))))))
+      ),
+      Rule(Nonterminal("term"),
+        RuleCollection(List(
+          RuleLiteral(Nonterminal("number")),
+          RuleCollection(List(
+            RuleLiteral(Terminal("==>> term(Number)")),
+            RuleCollection(List(
+              RuleOr(RuleCollection(List(
+                RuleLiteral(Terminal("(")),
+                RuleCollection(List(
+                  RuleLiteral(Nonterminal("expression")),
+                  RuleCollection(List(
+                    RuleLiteral(Terminal(")")),
+                    RuleCollection(List(
+                      RuleLiteral(Terminal("==>> term(_, Expression, _)")))))))))))))))))
+      ),
+      Rule(NonterminalRegex("<number>"),
+        RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?""")))
+    ))
     val res = AstExtractors(expGrammar)
     res shouldBe List(
       /*

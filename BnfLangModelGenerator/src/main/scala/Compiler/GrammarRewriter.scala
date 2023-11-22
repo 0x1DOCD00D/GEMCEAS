@@ -9,6 +9,7 @@
 package Compiler
 
 import Compiler.GrammarRewriter.{logger, removeAllTerminals, removeAllUnions}
+import Generator.ProgramGenerator
 import Utilz.CreateLogger
 
 import java.util.UUID
@@ -94,8 +95,9 @@ class GrammarRewriter(ast: List[ProductionRule]):
       val combined = if processUnions then removeAllTerminals(acc ::: expandedRHS) else removeAllTerminals(removeAllUnions(acc ::: expandedRHS))
       val infLoopCheck = combined.diff(combined.distinct)
       logger.info(s"Inf loop check: ${infLoopCheck.mkString("; ")}")
-      if combined.map(_.uuid).diff(combined.map(_.uuid).distinct).nonEmpty then
-        logger.info(s"Reached infinite loop")
+      val infCheck = combined.map(_.uuid).diff(combined.map(_.uuid).distinct)
+      if infCheck.nonEmpty then
+        infCheck.foreach(e=> logger.warn(s"Reached infinite loop for the path $e"))
         INFINITELOOP
       else rewriteRuleContent(expandedRHS, combined, processUnions)
   }
@@ -109,6 +111,7 @@ class GrammarRewriter(ast: List[ProductionRule]):
       //by removing these constructs we assume that they terminate at some point since input programs are finite
       case container: OptionalConstruct => List()
       case container: RepeatConstruct => List()
+      case template: PrologFactsBuilder => List()
       case container: GroupConstruct => container.bnfObjects
       case container: SeqConstruct => container.bnfObjects
       case container: UnionConstruct => if processUnion then container.bnfObjects else List(container)

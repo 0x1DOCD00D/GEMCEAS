@@ -30,6 +30,7 @@ object ConfigDb:
   val edgeProbability: Double = getConfigEntry(Constants.configLangModel, EDGEPROBABILITY, DEFAULTEDGEPROBABILITY)
   val numberOfExperiments: Int = getConfigEntry(Constants.configLangModel, NUMBEROFEXPERIMENTS, NUMBEROFEXPERIMENTSDEFAULT)
   val grammarUnrollDepthTermination: Int = getConfigEntry(Constants.configLangModel, GRAMMARUNROLLDEPTHTERMINATION, GRAMMARUNROLLDEPTHTERMINATIONDEFAULT)
+  val grammarUnrollDepthTerminationWithError: Int = grammarUnrollDepthTermination*10
   val graphWalkNodeTerminationProbability: Double = getConfigEntry(Constants.configLangModel, GRAPHWALKNODETERMINATIONPROBABILITY, GRAPHWALKNODETERMINATIONPROBABILITYDEFAULT)
   val outputDirectory: String = {
     val defDir = new java.io.File(".").getCanonicalPath

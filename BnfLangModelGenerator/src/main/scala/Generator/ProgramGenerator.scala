@@ -23,18 +23,20 @@ type GeneratedProgram = List[String]
 class ProgramGenerator private (progGenState: GeneratedProgramState) extends DeriveConstructs:
 
   @tailrec
-  private def derivedProgramInstance(prState: GeneratedProgramState = progGenState, level: Int = 0): GeneratedProgramState =
+  private def generateProgramInstance(prState: GeneratedProgramState = progGenState, level: Int = 0): GeneratedProgramState =
     if !prState.elements.forall(_.isInstanceOf[ProgramEntity]) then
-      val accum = deriveProgram(List(), prState.elements, level)
-      derivedProgramInstance(GeneratedProgramState(accum), level+1)
+      val accum: List[BnFGrammarIR] = deriveProgram(List(), prState.elements, level)
+      generateProgramInstance(GeneratedProgramState(accum), level+1)
     else prState
 
   @tailrec
-  private def deriveProgram(accumulatorProg: List[BnFGrammarIR], st: List[BnFGrammarIR], level: Int): List[BnFGrammarIR] =
+  private def deriveProgram(accumulatorProg: List[BnFGrammarIR], st: List[BnFGrammarIR], level: Int, attempt: Int = 1): List[BnFGrammarIR] =
     st match
-      case ::(head, Nil) if head.isInstanceOf[PrologFact] => verifyGeneratedProgramFragment(head.asInstanceOf[PrologFact], level) match
-        case Some(lst) => accumulatorProg ::: lst
-        case None => deriveProgram(accumulatorProg, st, level)
+      case ::(head, next) if head.isInstanceOf[PrologFact] => verifyGeneratedProgramFragment(head.asInstanceOf[PrologFact], level) match
+        case Some(lst) => deriveProgram(accumulatorProg ::: lst, next, level)
+        case None =>
+          logger.warn(s"Attempt $attempt failed to obtained a verified derivation of the program fragment $head at level $level")
+          deriveProgram(accumulatorProg, next, level, attempt+1)
       case ::(head, next) => deriveProgram(accumulatorProg ::: deriveElement(head, level > grammarUnrollDepthTermination), next, level)
       case Nil => accumulatorProg
   end deriveProgram
@@ -72,21 +74,22 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
   * */
 
   private def verifyGeneratedProgramFragment(pf: PrologFact, level: Int): Option[List[BnFGrammarIR]] =
-    def rewritePrologFact(fact: PrologFact): PrologFact =
-      val rewriteIteration = fact.mapParams2GrammarElements.toList.foldLeft(List[(String, List[BnFGrammarIR])]()) {
-        (acc, elem) => (elem._1, deriveProgram(List(), elem._2, level)) :: acc
-      }
-      fact.rewriteGrammarElement(rewriteIteration)
-    end rewritePrologFact
-
     //TODO: a prolog fact is transmitted to the KBLS here and true/false is returned
-    def askPrologEngine2Verify(fact: String): Boolean = true
+    def askPrologEngine2Verify(fact: String): Boolean =
+      logger.info(s"Verified a rewritten prolog fact $fact")
+      true
 
-    val rewrittenFact = rewritePrologFact(fact = pf)
-    val prologFact = rewrittenFact.generatePrologFact4KBLS(true)
-    if askPrologEngine2Verify(prologFact) then Some(rewritePrologFact(fact = pf).formListOfBnFGrammarElements)
-    else None
-
+    logger.info(s"Verifying the prolog fact $pf at level $level")
+    pf.rewriteGrammarElements(level) match
+      case Some(fact) =>
+        if askPrologEngine2Verify(fact.generatePrologFact4KBLS(true)) then
+          val programInTokens = fact.formListOfBnFGrammarElements
+          logger.info(s"Formed a verified program fragment $programInTokens")
+          Some(programInTokens)
+        else None
+      case None =>
+        logger.error(s"Cannot rewrite the prolog fact $pf at level $level")
+        None
   end verifyGeneratedProgramFragment
 
   private def generateSourceCode(st: GeneratedProgramState): GeneratedProgram =
@@ -129,7 +132,7 @@ object ProgramGenerator:
         case Some(rl) =>
           val initState = GeneratedProgramState(List(rl.rhs))
           val gen = new ProgramGenerator(initState)
-          val programObject: GeneratedProgramState = gen.derivedProgramInstance()
+          val programObject: GeneratedProgramState = gen.generateProgramInstance()
           val code: GeneratedProgram = gen.generateSourceCode(programObject)
           Right(code)
         case None =>
@@ -144,91 +147,135 @@ object ProgramGenerator:
       "==>> expression(SumSub)";
 
     sum_sub ::=
-      product_div {("+"|"-") product_div}
-      "==>> sum_sub(_, product_div_repetition(Sign, ProductDiv))";
+      product_div {("+"|"-") product_div "==>> product_div_repetition(Sign, ProductDiv)"}
+      "==>> sum_sub(_, ProductDivRepetition)";
 
     product_div ::=
-      ["+"|"-"] term {("*"|"/") term}
-      "==>> product_div(_, term(NumberOrExpression), term_repetition(Sign, Term))";
+      ["+"|"-"] term {("*"|"/") term "==>> term_repetition(Sign, Term)"}
+      "==>> product_div(_, NumberOrExpression, TermRepetition)";
 
     term ::=
       number
       "==>> term(Number)" |
       "(" expression ")"
-      "==>> term(Expression)";
+      "==>> term(_, Expression, _)";
 
     <number> ::=
       "(\+|\-)?[0-9]+(\.[0-9]+)?";
     */
     import Compiler.LiteralType.*
     val grammar = List(
+      /*
+        expression ::=
+          sum_sub
+          "==>> expression(SumSub)";
+      * */
       ProductionRule(BnfLiteral("expression", NONTERM), SeqConstruct(List(
         GroupConstruct(List(
-          BnfLiteral("sum_sub", NONTERM), 
+          BnfLiteral("sum_sub", NONTERM),
           PrologFactsBuilder(PrologTemplate("expression", List(PrologTemplate("SumSub", List())))))
-        )
-      ))
+        )))
       ),
+      /*
+        sum_sub ::=
+        product_div {("+"|"-") product_div "==>> product_div_repetition(Sign, ProductDiv)"}
+        "==>> sum_sub(_, ProductDivRepetition)";
+      * */
       ProductionRule(BnfLiteral("sum_sub", NONTERM), SeqConstruct(List(
         GroupConstruct(List(
-          BnfLiteral("product_div", NONTERM), 
+          BnfLiteral("product_div", NONTERM),
           RepeatConstruct(List(
             GroupConstruct(List(
               GroupConstruct(List(
                 UnionConstruct(List(
-                  GroupConstruct(List(BnfLiteral("+", TERM))), 
-                  GroupConstruct(List(BnfLiteral("-", TERM))))
-                )
-              )),
-              BnfLiteral("product_div", NONTERM))))
+                  GroupConstruct(List(BnfLiteral("+", TERM))),
+                  GroupConstruct(List(BnfLiteral("-", TERM))))))
+              ),
+              BnfLiteral("product_div", NONTERM),
+              PrologFactsBuilder(PrologTemplate("product_div_repetition", List(
+                PrologTemplate("Sign", List()), PrologTemplate("ProductDiv", List())))
+              ))))
           ),
-          PrologFactsBuilder(
-            PrologTemplate("sum_sub", List(
-              PrologTemplate("_", List()), 
-              PrologTemplate("product_div_repetition", List(
-                PrologTemplate("Sign", List()), PrologTemplate("ProductDiv", List())))))))
-        )
-      ))
+          PrologFactsBuilder(PrologTemplate("sum_sub", List(
+            PrologTemplate("_", List()),
+            PrologTemplate("ProductDivRepetition", List())))
+          )))))
       ),
+      /*
+        product_div ::=
+          ["+"|"-"] term {("*"|"/") term "==>> term_repetition(Sign, Term)"}
+          "==>> product_div(_, NumberOrExpression, TermRepetition)";
+      * */
       ProductionRule(BnfLiteral("product_div", NONTERM), SeqConstruct(List(
         GroupConstruct(List(
           OptionalConstruct(List(
-            UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))
+            UnionConstruct(List(
+              GroupConstruct(List(BnfLiteral("+", TERM))),
+              GroupConstruct(List(BnfLiteral("-", TERM))))
+            ))
           ),
-          BnfLiteral("term", NONTERM), RepeatConstruct(List(
+          BnfLiteral("term", NONTERM),
+          RepeatConstruct(List(
             GroupConstruct(List(
               GroupConstruct(List(
-                UnionConstruct(List(GroupConstruct(List(BnfLiteral("*", TERM))), GroupConstruct(List(BnfLiteral("/", TERM))))))
+                UnionConstruct(List(
+                  GroupConstruct(List(BnfLiteral("*", TERM))),
+                  GroupConstruct(List(BnfLiteral("/", TERM))))
+                ))
               ),
-              BnfLiteral("term", NONTERM))))
+              BnfLiteral("term", NONTERM),
+              PrologFactsBuilder(PrologTemplate("term_repetition", List(
+                PrologTemplate("Sign", List()),
+                PrologTemplate("Term", List())))
+              ))))
           ),
-          PrologFactsBuilder(PrologTemplate("product_div",
-            List(
-              PrologTemplate("_", List()),
-              PrologTemplate("term", List(PrologTemplate("NumberOrExpression", List()))),
-              PrologTemplate("term_repetition", List(PrologTemplate("Sign", List()), PrologTemplate("Term", List())))
-            )
-          )
-          ))
-        )
-      ))
+          PrologFactsBuilder(PrologTemplate("product_div", List(
+            PrologTemplate("_", List()),
+            PrologTemplate("NumberOrExpression", List()),
+            PrologTemplate("TermRepetition", List())))
+          )))))
       ),
+      /*
+        term ::=
+          number
+          "==>> term(Number)" |
+          "(" expression ")"
+          "==>> term(_, Expression, _)";
+      * */
       ProductionRule(BnfLiteral("term", NONTERM), SeqConstruct(List(
         UnionConstruct(List(
           GroupConstruct(List(
             BnfLiteral("number", NONTERM),
-            PrologFactsBuilder(PrologTemplate("term", List(PrologTemplate("Number", List())))))
+            PrologFactsBuilder(PrologTemplate("term", List(
+              PrologTemplate("Number", List())))
+            ))
           ),
           GroupConstruct(List(
-            BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM),
-            PrologFactsBuilder(PrologTemplate("term", List(PrologTemplate("Expression", List()))))))))))
+            BnfLiteral("(", TERM),
+            BnfLiteral("expression", NONTERM),
+            BnfLiteral(")", TERM),
+            PrologFactsBuilder(PrologTemplate("term", List(
+              PrologTemplate("_", List()),
+              PrologTemplate("Expression", List()),
+              PrologTemplate("_", List())))
+            )))))))
       ),
-      ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM))
+      /*
+        <number> ::=
+          "(\+|\-)?[0-9]+(\.[0-9]+)?";
+      * */
+      ProductionRule(
+        BnfLiteral("number", NTREGEX),
+        BnfLiteral("""[\-\+]?[0-9]+(\.[0-9]+)?""", REGEXTERM)
+      )
     )
     val gen = ProgramGenerator(grammar, BnfLiteral("expression", NONTERM))
     logger.info(s"${gen.toString}")
+    gen match
+      case Left(err) => logger.error(s"Cannot generate a program: $err")
+      case Right(prg) => logger.info(prg.mkString(" "))
   }
-  @main def runMain_ProgramGenerator(): Unit =
+  @main def runMain_ProgramGeneratorNoPrologTemplates(): Unit =
     import Compiler.LiteralType.*
     /*
     expression ::= sum_sub;
@@ -326,7 +373,7 @@ object ProgramGenerator:
       ),
       ProductionRule(
         BnfLiteral("number", NTREGEX),
-        BnfLiteral("""([+]|[-])?[0-9]+(\.[0-9]+)?""", REGEXTERM)
+        BnfLiteral(""""[-+]?[0-9]+(\\.[0-9]+)?"""", REGEXTERM)
       )
     )
 

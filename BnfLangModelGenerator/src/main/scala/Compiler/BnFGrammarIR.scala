@@ -8,9 +8,12 @@
 
 package Compiler
 
+import Generator.DeriveConstructs
+import Utilz.ConfigDb.{grammarUnrollDepthTermination, grammarUnrollDepthTerminationWithError}
 import Utilz.PrologTemplate
 
 import java.util.UUID
+import scala.annotation.tailrec
 
 trait BnFGrammarIR:
   val uuid: UUID = UUID.randomUUID()
@@ -30,12 +33,40 @@ case class RepeatConstruct(override val bnfObjects: List[BnFGrammarIR]) extends 
 case class GroupConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 case class SeqConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 case class UnionConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
-case class PrologFact(functorName: String, mapParams2GrammarElements: Map[String, List[BnFGrammarIR]]) extends BnFGrammarIR {
-  def rewriteGrammarElement(entry: List[(String, List[BnFGrammarIR])]): PrologFact =
-    PrologFact(functorName, entry.toMap)
+case class PrologFact(functorName: String, mapParams2GrammarElements: List[(String, List[BnFGrammarIR])]) extends BnFGrammarIR with DeriveConstructs {
+  final def rewriteGrammarElements(level: Int): Option[PrologFact] =
+    @tailrec
+    def rewriteGrammarElement(acc: List[BnFGrammarIR], e: List[BnFGrammarIR]): List[BnFGrammarIR] =
+      e match
+        case ::(head, next) if head.isInstanceOf[PrologFact]  => rewriteGrammarElement(head.asInstanceOf[PrologFact].rewriteGrammarElements(level + 1).getOrElse(ErrorInRewritingGrammarElements(level)) :: acc, next)
+        case ::(head, next) if head.isInstanceOf[ProgramEntity] => rewriteGrammarElement(head :: acc, next)
+        case ::(head, next) => rewriteGrammarElement(deriveElement(head, level > grammarUnrollDepthTermination) ::: acc, next)
+        case Nil => acc
+    end rewriteGrammarElement
+
+    val rewritten: List[(String, List[BnFGrammarIR])] = mapParams2GrammarElements.foldLeft(List[(String, List[BnFGrammarIR])]()) {
+      (acc, e) => (e._1, rewriteGrammarElement(List(), e._2)) :: acc
+    }.map(e => (e._1, e._2.reverse))
+    val fact: PrologFact = PrologFact(functorName, rewritten)
+    logger.info(s"\n$this\n ===>> \n$fact")
+    if fact.isRewriteCompleted then Some(fact)
+    else
+      if level > grammarUnrollDepthTerminationWithError then
+        logger.error(s"Grammar unrolling has not been completed for the Prolog fact $fact")
+        None
+      else fact.rewriteGrammarElements(level + 1)
+  end rewriteGrammarElements
+
+  case class ErrorInRewritingGrammarElements(levelReached: Int) extends BnFGrammarIR
+  def isRewriteCompleted: Boolean =
+    mapParams2GrammarElements.flatMap(_._2).forall {
+      case fact: PrologFact => fact.isRewriteCompleted
+      case pe: ProgramEntity => true
+      case _ => false
+    }
 
   def formListOfBnFGrammarElements: List[BnFGrammarIR] =
-    mapParams2GrammarElements.values.toList.flatten.foldLeft(List[BnFGrammarIR]()) {
+    mapParams2GrammarElements.flatMap(_._2).foldLeft(List[BnFGrammarIR]()) {
       (acc, e) => acc ::: (e match {
         case fact: PrologFact => fact.formListOfBnFGrammarElements
         case _ => List(e)
@@ -45,14 +76,17 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: Map[String
   def generatePrologFact4KBLS(top: Boolean): String =
     val listWrapper: List[String] => List[String] = (x: List[String]) =>
       if top then x
+      else if x.isEmpty then List("")
+      else if x.length == 1 then List(x.head)
       else
         val first = List("[" + x.head)
         val last = List(x.reverse.head + "]")
-        first ::: x.slice(1, x.length - 1) ::: last
+        first ::: x.slice(1, x.length-2) ::: last
 
-    val params: List[String] = mapParams2GrammarElements.values.toList.flatten.foldLeft(List[String]()) {
+    val params: List[String] = mapParams2GrammarElements.flatMap(_._2).foldLeft(List[String]()) {
       (acc, e) => acc ::: listWrapper(List(e match
         case fact: PrologFact => fact.generatePrologFact4KBLS(false)
+        case pe: ProgramEntity => pe.code
         case _ => e.toString))
     }
     s"$functorName(${params.mkString(",")})"
@@ -61,10 +95,11 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: Map[String
 trait IrLiteral extends BnFGrammarIR
 case class BnfLiteral(token: String, literalType: LiteralType) extends IrLiteral
 case class PrologFactsBuilder(prt: PrologTemplate) extends IrLiteral {
+//  xform factbuilder into an instance of PrologTemplate(functorName: String, params: List[PrologTemplate])
   def build(bnfObjects: List[BnFGrammarIR]): Either[String, PrologFact] =
     if prt.params.length != bnfObjects.length then Left(s"Number of parameters in the Prolog template ${prt.params} does not match the number of BNF objects $bnfObjects")
-    else if prt.params.filter(_.params.nonEmpty).nonEmpty then Left(s"Prolog template ${prt.params} contains parameters with parameters")
-    else Right(PrologFact(prt.functorName, prt.params.map(_.functorName).lazyZip(bnfObjects).toList.groupMap(_._1)(_._2)))
+    else if prt.params.exists(_.params.nonEmpty) then Left(s"Prolog template ${prt.params} contains parameters with parameters")
+    else Right(PrologFact(prt.functorName, prt.params.map(_.functorName).lazyZip(bnfObjects).toList.map(e => (e._1, List(e._2)))))
 }
 case class ProgramEntity(code: String) extends IrLiteral
 case class IrError(err: String) extends BnFGrammarIR

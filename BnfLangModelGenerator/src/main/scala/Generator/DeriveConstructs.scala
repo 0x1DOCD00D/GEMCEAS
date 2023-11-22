@@ -14,13 +14,6 @@ import org.slf4j.Logger
 
 trait DeriveConstructs:
   val logger: Logger = CreateLogger(classOf[DeriveConstructs])
-
-  val funcContainedConstructs: BnFGrammarIR => List[BnFGrammarIR] =
-    {
-      case container1: BnFGrammarIRContainer => container1.bnfObjects.flatMap(construct => deriveElement(construct))
-      case _ => List()
-    }
-
   def deriveElement(e: BnFGrammarIR, limit: Boolean = false): List[BnFGrammarIR] =
     e match
       case ir @ OptionalConstruct(bnfObjects) => OptionalConstructProcessor(ir, limit)
@@ -31,11 +24,11 @@ trait DeriveConstructs:
       case literal if literal.isInstanceOf[BnfLiteral] =>
         val res = LiteralProcessor(literal.asInstanceOf[BnfLiteral])
         if res.isEmpty then
-          logger.error(s"IR structure contains a wrong element $literal.")
+          logger.error(s"Literal IR structure contains incorrect $literal.")
           List()
         else res
       case doneWithAlready if doneWithAlready.isInstanceOf[ProgramEntity] => List(doneWithAlready)
       case err =>
-        logger.error(s"IR structure contains a wrong element $err.")
+        logger.error(s"IR structure contains the wrong element $err.")
         List()
   end deriveElement
