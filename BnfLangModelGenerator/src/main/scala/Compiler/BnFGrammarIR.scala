@@ -9,7 +9,8 @@
 package Compiler
 
 import Generator.DeriveConstructs
-import Utilz.ConfigDb.{grammarUnrollDepthTermination, grammarUnrollDepthTerminationWithError}
+import Utilz.ConfigDb.{grammarMaxDepthRewriting, grammarMaxDepthRewritingWithError}
+import Utilz.Constants.{CloseKet, CommaSeparator, OpenBra}
 import Utilz.PrologTemplate
 
 import java.util.UUID
@@ -33,14 +34,17 @@ case class RepeatConstruct(override val bnfObjects: List[BnFGrammarIR]) extends 
 case class GroupConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 case class SeqConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 case class UnionConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
+case class RepeatPrologFact(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 case class PrologFact(functorName: String, mapParams2GrammarElements: List[(String, List[BnFGrammarIR])]) extends BnFGrammarIR with DeriveConstructs {
   final def rewriteGrammarElements(level: Int): Option[PrologFact] =
-    @tailrec
     def rewriteGrammarElement(acc: List[BnFGrammarIR], e: List[BnFGrammarIR]): List[BnFGrammarIR] =
       e match
         case ::(head, next) if head.isInstanceOf[PrologFact]  => rewriteGrammarElement(head.asInstanceOf[PrologFact].rewriteGrammarElements(level + 1).getOrElse(ErrorInRewritingGrammarElements(level)) :: acc, next)
+        case ::(head, next) if head.isInstanceOf[RepeatPrologFact]  =>
+          val repeatedFacts = head.asInstanceOf[RepeatPrologFact].bnfObjects
+          rewriteGrammarElement(RepeatPrologFact(rewriteGrammarElement(List(), repeatedFacts)) :: acc, next)
         case ::(head, next) if head.isInstanceOf[ProgramEntity] => rewriteGrammarElement(head :: acc, next)
-        case ::(head, next) => rewriteGrammarElement(deriveElement(head, level > grammarUnrollDepthTermination) ::: acc, next)
+        case ::(head, next) => rewriteGrammarElement(deriveElement(head, level > grammarMaxDepthRewriting) ::: acc, next)
         case Nil => acc
     end rewriteGrammarElement
 
@@ -51,7 +55,7 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
     logger.info(s"\n$this\n ===>> \n$fact")
     if fact.isRewriteCompleted then Some(fact)
     else
-      if level > grammarUnrollDepthTerminationWithError then
+      if level > grammarMaxDepthRewritingWithError then
         logger.error(s"Grammar unrolling has not been completed for the Prolog fact $fact")
         None
       else fact.rewriteGrammarElements(level + 1)
@@ -76,20 +80,20 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
   def generatePrologFact4KBLS(top: Boolean): String =
     val listWrapper: List[String] => List[String] = (x: List[String]) =>
       if top then x
-      else if x.isEmpty then List("")
+      else if x.isEmpty then List[String]().empty
       else if x.length == 1 then List(x.head)
       else
-        val first = List("[" + x.head)
-        val last = List(x.reverse.head + "]")
+        val first = List(OpenBra + x.head)
+        val last = List(x.reverse.head + CloseKet)
         first ::: x.slice(1, x.length-2) ::: last
 
     val params: List[String] = mapParams2GrammarElements.flatMap(_._2).foldLeft(List[String]()) {
       (acc, e) => acc ::: listWrapper(List(e match
-        case fact: PrologFact => fact.generatePrologFact4KBLS(false)
+        case fact: PrologFact => OpenBra + fact.generatePrologFact4KBLS(false) + CloseKet
         case pe: ProgramEntity => pe.code
         case _ => e.toString))
     }
-    s"$functorName(${params.mkString(",")})"
+    s"$functorName(${params.mkString(CommaSeparator.toString)})"
 }
 
 trait IrLiteral extends BnFGrammarIR

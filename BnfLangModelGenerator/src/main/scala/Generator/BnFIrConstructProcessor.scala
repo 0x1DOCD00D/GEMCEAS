@@ -8,8 +8,9 @@
 
 package Generator
 
-import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, SeqConstruct, UnionConstruct}
+import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, RepeatPrologFact, SeqConstruct, UnionConstruct}
 import Randomizer.SupplierOfRandomness
+import Utilz.ConfigDb.maxRepeatConstruct
 
 object OptionalConstructProcessor extends ((OptionalConstruct, Boolean) => List[BnFGrammarIR]) with DeriveConstructs:
   override def apply(v1: OptionalConstruct, v2: Boolean): List[BnFGrammarIR] =
@@ -26,8 +27,7 @@ object RepeatConstructProcessor extends ((RepeatConstruct, Boolean) => List[BnFG
     else if v1.bnfObjects.length ==  1 then
       v1.bnfObjects.head match
         case groupConstruct: GroupConstruct =>
-          val gc = GroupConstructProcessor(groupConstruct, if v2 then 0 else SupplierOfRandomness.onDemandInt(pmaxv = 10))
-          gc
+          GroupConstructProcessor(groupConstruct, if v2 then 0 else SupplierOfRandomness.onDemandInt(pmaxv = maxRepeatConstruct))
         case _ =>
           logger.error(s"Repeat construct ${v1.bnfObjects.mkString(",")} is not a group construct")
           List()
@@ -51,15 +51,18 @@ object PrologTemplateProcessor extends ((List[BnFGrammarIR], PrologFactsBuilder)
 * */
 object GroupConstructProcessor extends ((GroupConstruct, Int) => List[BnFGrammarIR]) with DeriveConstructs:
   override def apply(v1: GroupConstruct, repeat: Int = 1): List[BnFGrammarIR] = {
-    val res = check4PrologTemplate(v1) match
+    check4PrologTemplate(v1) match
       case Some(prologTemplate) =>
-        PrologTemplateProcessor(v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]), prologTemplate) match
-          case Some(prologFact) => List(prologFact)
-          case None => v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]) //failed to process a prolog template but continue the rewriting process
-      case None => v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]) //more than one prolog template is not allowed
-    if repeat <= 1 then res
-    else
-      List.fill(repeat)(res).flatten
+        val res = PrologTemplateProcessor(v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]), prologTemplate) match
+            case Some(prologFact) => List(prologFact)
+            case None => v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]) //failed to process a prolog template but continue the rewriting process
+        if repeat <= 1 then res
+        else List(RepeatPrologFact(List.fill(repeat)(res).flatten))
+      case None =>
+        val res = v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]) //more than one prolog template is not allowed
+        if repeat <= 1 then res
+        else
+          List.fill(repeat)(res).flatten
   }
   private def check4PrologTemplate(v1: GroupConstruct): Option[PrologFactsBuilder] =
     val prologTemplateExists: Int = v1.bnfObjects.count(e => e.isInstanceOf[PrologFactsBuilder])

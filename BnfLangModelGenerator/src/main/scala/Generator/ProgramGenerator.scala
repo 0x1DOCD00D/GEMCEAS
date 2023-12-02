@@ -10,7 +10,7 @@ package Generator
 
 import Compiler.LiteralType.TERM
 import Compiler.{BnFGrammarIR, BnfLiteral, GrammarRewriter, GroupConstruct, LiteralType, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, SeqConstruct, TerminationData, UnionConstruct}
-import Utilz.ConfigDb.{debugProgramGeneration, grammarUnrollDepthTermination}
+import Utilz.ConfigDb.{debugProgramGeneration, grammarMaxDepthRewritingWithError}
 import Utilz.{CreateLogger, PrologTemplate}
 
 import java.util.UUID
@@ -37,7 +37,7 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
         case None =>
           logger.warn(s"Attempt $attempt failed to obtained a verified derivation of the program fragment $head at level $level")
           deriveProgram(accumulatorProg, next, level, attempt+1)
-      case ::(head, next) => deriveProgram(accumulatorProg ::: deriveElement(head, level > grammarUnrollDepthTermination), next, level)
+      case ::(head, next) => deriveProgram(accumulatorProg ::: deriveElement(head, level > grammarMaxDepthRewritingWithError), next, level)
       case Nil => accumulatorProg
   end deriveProgram
 
@@ -266,7 +266,7 @@ object ProgramGenerator:
       * */
       ProductionRule(
         BnfLiteral("number", NTREGEX),
-        BnfLiteral("""[\-\+]?[0-9]+(\.[0-9]+)?""", REGEXTERM)
+        BnfLiteral("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""", REGEXTERM)
       )
     )
     val gen = ProgramGenerator(grammar, BnfLiteral("expression", NONTERM))
