@@ -1,8 +1,7 @@
 package Randomizer
 
 import Randomizer.SupplierOfRandomness.logger
-import Utilz.Constants.SEED
-import Utilz.{CreateLogger, Constants}
+import Utilz.{ConfigDb, Constants, CreateLogger}
 import org.slf4j.Logger
 
 import java.lang.annotation.Repeatable
@@ -11,13 +10,11 @@ import scala.util.{Random, Try}
 import scala.collection.parallel.*
 import scala.collection.parallel.CollectionConverters.*
 
-trait Randomizer(seed: Option[Long]):
-  protected val generator: Random = seed match
-    case Some(s) => Random(s)
-    case None => Random()
+trait Randomizer(seed: Long):
+  protected val generator: Random = if seed < 0 then Random() else Random(seed)
 
 
-class UniformProbGenerator(val seed: Option[Long] = None) extends Randomizer(seed):
+class UniformProbGenerator(val seed: Long) extends Randomizer(seed):
   val logger: Logger = CreateLogger(this.getClass)
   type GeneratedValues = Double | Int
 
@@ -54,15 +51,10 @@ class UniformProbGenerator(val seed: Option[Long] = None) extends Randomizer(see
       if intsOrDouble then generateInts(howMany,repeatable,minv,maxv) else generateUniformProbabilities(howMany,repeatable)
 
 object UniformProbGenerator:
-  private val seed: Option[Long] = Try(Constants.globalConfig.getLong(SEED)) match {
-    case scala.util.Success(value) => Some(value)
-    case scala.util.Failure(fail) =>
-      logger.error(s"Error while reading seed from config file: ${fail.getMessage}")
-      None
-  }
+  private val seed:Long = ConfigDb.`Gemceas.seed`.toLong
   private [this] val gen:Option[UniformProbGenerator] = Try(new UniformProbGenerator(seed)) match {
     case scala.util.Success(value) =>
-      logger.info(s"Random value generator created with ${if seed.isEmpty then "no seed" else s"the seed $seed"}")
+      logger.info(s"Random value generator created with ${if seed < 0 then "no seed" else s"the seed $seed"}")
       Some(value)
     case scala.util.Failure(fail) =>
       logger.error(s"Failed to create a random value generator: ${fail.getMessage}")

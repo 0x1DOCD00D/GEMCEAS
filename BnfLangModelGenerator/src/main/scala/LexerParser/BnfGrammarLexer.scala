@@ -11,7 +11,7 @@ package LexerParser
 import java.util.regex.Pattern
 import scala.util.parsing.combinator.{JavaTokenParsers, PackratParsers}
 import GrammarCompilationError.*
-import Utilz.ConfigDb.debugLexerTokens
+import Utilz.ConfigDb.*
 import Utilz.CreateLogger
 
 object BnfGrammarLexer extends JavaTokenParsers:
@@ -29,67 +29,67 @@ object BnfGrammarLexer extends JavaTokenParsers:
 
   def isDefinedAs:Parser[ISDEFINEDAS] = positioned {
     "::=" ^^ (_ =>
-      if debugLexerTokens then logger.info("Lexed ::=")
+      if `Gemceas.Generator.debugLexerTokens` then logger.info("Lexed ::=")
       ISDEFINEDAS())
   }
 
   def endOfRule: Parser[SEMICOLON] = positioned {
     ";" ^^ (_ =>
-      if debugLexerTokens then logger.info("Lexed ;")
+      if `Gemceas.Generator.debugLexerTokens` then logger.info("Lexed ;")
       SEMICOLON())
   }
 
   def verticalBar: Parser[VERTICALBAR] = positioned {
     "|" ^^ (_ =>
-      if debugLexerTokens then logger.info("Lexed |")
+      if `Gemceas.Generator.debugLexerTokens` then logger.info("Lexed |")
       VERTICALBAR())
   }
 
   def bra: Parser[BRA] = positioned {
     "[" ^^ (_ =>
-      if debugLexerTokens then logger.info("Lexed [")
+      if `Gemceas.Generator.debugLexerTokens` then logger.info("Lexed [")
       BRA())
   }
 
   def ket: Parser[KET] = positioned {
     "]" ^^ (_ =>
-      if debugLexerTokens then logger.info("Lexed ]")
+      if `Gemceas.Generator.debugLexerTokens` then logger.info("Lexed ]")
       KET())
   }
 
   def curlybra: Parser[CURLYBRA] = positioned {
     "{" ^^ (_ =>
-      if debugLexerTokens then logger.info("Lexed {")
+      if `Gemceas.Generator.debugLexerTokens` then logger.info("Lexed {")
       CURLYBRA())
   }
 
   def curlyket: Parser[CURLYKET] = positioned {
     "}" ^^ (_ =>
-      if debugLexerTokens then logger.info("Lexed }")
+      if `Gemceas.Generator.debugLexerTokens` then logger.info("Lexed }")
       CURLYKET())
   }
 
   def leftParen: Parser[LEFTPAREN] = positioned {
     "(" ^^ (_ =>
-      if debugLexerTokens then logger.info("Lexed (")
+      if `Gemceas.Generator.debugLexerTokens` then logger.info("Lexed (")
       LEFTPAREN())
   }
 
   def rightParen: Parser[RIGHTPAREN] = positioned {
     ")" ^^ (_ =>
-      if debugLexerTokens then logger.info("Lexed )")
+      if `Gemceas.Generator.debugLexerTokens` then logger.info("Lexed )")
       RIGHTPAREN())
   }
 
   def nonterminal: Parser[Nonterminal] = positioned {
     "[_a-zA-Z][-#$\\.:_a-zA-Z0-9]*".r ^^ { id =>
-      if debugLexerTokens then logger.info(s"Lexed nt: $id")
+      if `Gemceas.Generator.debugLexerTokens` then logger.info(s"Lexed nt: $id")
       Nonterminal(id) }
   }
 
   def nonterminalRegex: Parser[NonterminalRegex] = positioned {
     "<[_a-zA-Z][-#$\\.:_a-zA-Z0-9]*>".r ^^ { nt =>
-      if debugLexerTokens then logger.info(s"Lexed nt regex: $nt")
+      if `Gemceas.Generator.debugLexerTokens` then logger.info(s"Lexed nt regex: $nt")
       NonterminalRegex(removeFirstAndLastDoubleQuotes(nt)) }
   }
 
@@ -98,7 +98,7 @@ object BnfGrammarLexer extends JavaTokenParsers:
   def terminal: Parser[Terminal] =
     positioned{
       stringLiteral ^^ { strContent =>
-        if debugLexerTokens then logger.info(s"Lexed terminal: $strContent")
+        if `Gemceas.Generator.debugLexerTokens` then logger.info(s"Lexed terminal: $strContent")
         Terminal(removeFirstAndLastDoubleQuotes(strContent))
       }
     }
@@ -108,19 +108,19 @@ object BnfGrammarLexer extends JavaTokenParsers:
     positioned {
 //      "\"[^\n]+\"".r ^^ { strContent =>
       """(\")(.|\+|\-|\n|\r|\\)*?(\")""".r ^^ { strContent =>
-        if debugLexerTokens then logger.info(s"Lexed regex: ${removeFirstAndLastDoubleQuotes(strContent)}")
+        if `Gemceas.Generator.debugLexerTokens` then logger.info(s"Lexed regex: ${removeFirstAndLastDoubleQuotes(strContent)}")
         RegexString(removeFirstAndLastDoubleQuotes(strContent))
       }
     }
 
 
   def singleLineComment: Parser[COMMENT] = """(//)(.*[\n\r])""".r ^^ { comment =>
-    if debugLexerTokens then logger.info(s"Parsed comment: $comment")
+    if `Gemceas.Generator.debugLexerTokens` then logger.info(s"Parsed comment: $comment")
     COMMENT()
   }
 
   def multiLineComment: Parser[COMMENT] =
     """(/\\*)(.|\n|\r)*?(\\*/)""".r ^^ { comment =>
-      if debugLexerTokens then logger.info(s"Parsed multiline comment: $comment")
+      if `Gemceas.Generator.debugLexerTokens` then logger.info(s"Parsed multiline comment: $comment")
       COMMENT()
     }

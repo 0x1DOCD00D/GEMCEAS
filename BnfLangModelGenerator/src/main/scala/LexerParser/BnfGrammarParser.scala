@@ -12,7 +12,7 @@ import scala.util.parsing.combinator.{PackratParsers, Parsers}
 import scala.util.parsing.input.{NoPosition, Position, Reader}
 import LexerParser.BnfGrammarLexer.*
 import LexerParser.GrammarCompilationError.BnfLexerError
-import Utilz.ConfigDb.{debugLexerTokens, debugProductionRules}
+import Utilz.ConfigDb.*
 import Utilz.CreateLogger
 import org.slf4j.Logger
 
@@ -31,9 +31,9 @@ object BnfGrammarParser extends Parsers with PackratParsers with DebugParserUtil
   override type Elem = LexerToken
 
   case class BnfGrammarTokenReader(bnfTokens: Seq[LexerToken]) extends Reader[LexerToken]:
-    if debugLexerTokens then logger.info(s"Tokens:\n${bnfTokens.mkString(", ")}")
+    if `Gemceas.Generator.debugLexerTokens` then logger.info(s"Tokens:\n${bnfTokens.mkString(", ")}")
     override def first: LexerToken = bnfTokens.headOption match
-      case Some(value) => if debugLexerTokens then logger.info(s"Token: $value}")
+      case Some(value) => if `Gemceas.Generator.debugLexerTokens` then logger.info(s"Token: $value}")
         value
       case None => UNKNOWNTOKEN()
 

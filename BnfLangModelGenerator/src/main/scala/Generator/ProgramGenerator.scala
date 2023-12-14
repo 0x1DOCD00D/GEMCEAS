@@ -10,9 +10,10 @@ package Generator
 
 import Compiler.LiteralType.TERM
 import Compiler.{BnFGrammarIR, BnfLiteral, GrammarRewriter, GroupConstruct, LiteralType, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, SeqConstruct, TerminationData, UnionConstruct}
-import Utilz.ConfigDb.{debugProgramGeneration, grammarMaxDepthRewritingWithError}
-import Utilz.{CreateLogger, PrologTemplate}
+import Utilz.ConfigDb.grammarMaxDepthRewritingWithError
+import Utilz.{ConfigDb, CreateLogger, PrologTemplate}
 
+import java.nio.charset.Charset
 import java.util.UUID
 import scala.annotation.tailrec
 
@@ -127,7 +128,7 @@ object ProgramGenerator:
           nt => logger.error(s"Divergent NT: ${nt.uuid} -> ${nt.toString}")
         }
 
-      if debugProgramGeneration then logger.info(s"ProgramGenerator obtains the following reachability map: \n\n${reachabilityMap.mkString("\n\n")}")
+      if ConfigDb.`Gemceas.Generator.debugProgramGeneration` then logger.info(s"ProgramGenerator obtains the following reachability map: \n\n${reachabilityMap.mkString("\n\n")}")
       expandNT(startRuleId) match
         case Some(rl) =>
           val initState = GeneratedProgramState(List(rl.rhs))
@@ -164,6 +165,7 @@ object ProgramGenerator:
       "(\+|\-)?[0-9]+(\.[0-9]+)?";
     */
     import Compiler.LiteralType.*
+    ConfigDb().foreach((k,v) => logger.info(s"Config key $k => $v"))
     val grammar = List(
       /*
         expression ::=

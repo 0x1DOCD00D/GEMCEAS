@@ -9,9 +9,9 @@
 package Compiler
 
 import Generator.DeriveConstructs
-import Utilz.ConfigDb.{grammarMaxDepthRewriting, grammarMaxDepthRewritingWithError}
+import Utilz.ConfigDb.*
 import Utilz.Constants.{CloseKet, CommaSeparator, OpenBra}
-import Utilz.PrologTemplate
+import Utilz.{ConfigDb, PrologTemplate}
 
 import java.util.UUID
 import scala.annotation.tailrec
@@ -44,7 +44,7 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
           val repeatedFacts = head.asInstanceOf[RepeatPrologFact].bnfObjects
           rewriteGrammarElement(RepeatPrologFact(rewriteGrammarElement(List(), repeatedFacts)) :: acc, next)
         case ::(head, next) if head.isInstanceOf[ProgramEntity] => rewriteGrammarElement(head :: acc, next)
-        case ::(head, next) => rewriteGrammarElement(deriveElement(head, level > grammarMaxDepthRewriting) ::: acc, next)
+        case ::(head, next) => rewriteGrammarElement(deriveElement(head, level > ConfigDb.`Gemceas.Generator.grammarMaxDepthRewriting`) ::: acc, next)
         case Nil => acc
     end rewriteGrammarElement
 

@@ -10,9 +10,9 @@ package LexerParser
 
 import scala.util.parsing.combinator.{PackratParsers, Parsers}
 import scala.util.parsing.input.{NoPosition, Position, Reader}
-import Utilz.ConfigDb.debugProductionRules
+import Utilz.ConfigDb.*
 
 trait DebugParserUtil:
   self: PackratParsers =>
     def show[T](p: => PackratParser[T])(name: String): Parser[T] =
-      if (!debugProductionRules) p else log(p)(name)
+      if (!`Gemceas.Generator.debugProductionRules`) p else log(p)(name)

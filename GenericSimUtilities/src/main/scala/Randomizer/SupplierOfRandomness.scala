@@ -1,7 +1,6 @@
 package Randomizer
 
 import Utilz.{CreateLogger, Constants}
-import Utilz.Constants.SEED
 import com.typesafe.config.ConfigFactory
 import org.slf4j.Logger
 

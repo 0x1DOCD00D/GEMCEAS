@@ -10,7 +10,7 @@ package Generator
 
 import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, RepeatPrologFact, SeqConstruct, UnionConstruct}
 import Randomizer.SupplierOfRandomness
-import Utilz.ConfigDb.maxRepeatConstruct
+import Utilz.ConfigDb
 
 object OptionalConstructProcessor extends ((OptionalConstruct, Boolean) => List[BnFGrammarIR]) with DeriveConstructs:
   override def apply(v1: OptionalConstruct, v2: Boolean): List[BnFGrammarIR] =
@@ -27,7 +27,7 @@ object RepeatConstructProcessor extends ((RepeatConstruct, Boolean) => List[BnFG
     else if v1.bnfObjects.length ==  1 then
       v1.bnfObjects.head match
         case groupConstruct: GroupConstruct =>
-          GroupConstructProcessor(groupConstruct, if v2 then 0 else SupplierOfRandomness.onDemandInt(pmaxv = maxRepeatConstruct))
+          GroupConstructProcessor(groupConstruct, if v2 then 0 else SupplierOfRandomness.onDemandInt(pmaxv = ConfigDb.`Gemceas.Generator.maxRepeatConstruct`))
         case _ =>
           logger.error(s"Repeat construct ${v1.bnfObjects.mkString(",")} is not a group construct")
           List()

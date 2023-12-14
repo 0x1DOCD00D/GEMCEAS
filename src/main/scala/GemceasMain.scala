@@ -67,10 +67,22 @@ object GemceasMain:
     ))
 
   @main def runMain_GemceasMain(): Unit =
+    object A:
+      object B:
+        val xx = 2
+
+    import com.github.dwickern.macros.NameOf.*
+    val interestingVariable: (String, Int) = nameOf(interestingVariable) -> nameOf(interestingVariable).length
+    logger.info(interestingVariable.toString())
+    logger.info(qualifiedNameOfType[A.B.type])
+
+    val `This is a somewhat. unusual var name. yeah!`: (String, Int) = nameOf(`This is a somewhat. unusual var name. yeah!`) -> nameOf(`This is a somewhat. unusual var name. yeah!`).length
+    logger.info(`This is a somewhat. unusual var name. yeah!`.toString())
     val grammarFilePath = "/Grammars/ArithmeticExpressions.bnf"
+    logger.info(nameOf(grammarFilePath))
     val srcGrammar:String = LoadGrammarFile(grammarFilePath)
     if srcGrammar.isEmpty then logger.error("Failed to load a grammar, terminating Gemceas.")
     else logger.info(srcGrammar)
-    logger.info(List.fill(0)("a").flatten.mkString)
+//    logger.info(List.fill(0)("a").flatten.mkString)
 /*    val ast = BnfGrammarCompiler(srcGrammar)
     logger.info(ast)*/

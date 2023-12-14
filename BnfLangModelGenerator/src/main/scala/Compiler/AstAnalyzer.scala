@@ -8,7 +8,7 @@
 
 package Compiler
 
-import Utilz.CreateLogger
+import Utilz.{ConfigDb, CreateLogger}
 
 import java.util.UUID
 import scala.annotation.tailrec
@@ -103,7 +103,7 @@ object AstAnalyzer:
     val rM = aStAn.extractLhs2RhsMappings()
     val dims = aStAn.obtainDims(rM)
     val matrix = aStAn.usageMatrix(rM.flatten, dims)
-    aStAn.logger.info(dims._2.map(_.token).mkString(","))
+    if ConfigDb.`Gemceas.Generator.debugProgramGeneration` then aStAn.logger.info(dims._2.map(_.token).mkString(","))
     aStAn.toCsv(dims, matrix).foreach {
       l =>
         aStAn.logger.info(l)
