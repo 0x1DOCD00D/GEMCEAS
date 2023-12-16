@@ -14,7 +14,7 @@ import org.slf4j.Logger
 
 trait DeriveConstructs:
   val logger: Logger = CreateLogger(classOf[DeriveConstructs])
-  def deriveElement(e: BnFGrammarIR, limit: Boolean = false): List[BnFGrammarIR] =
+  def deriveElement(e: BnFGrammarIR, limit: Boolean): List[BnFGrammarIR] =
     e match
       case ir @ OptionalConstruct(bnfObjects) => OptionalConstructProcessor(ir, limit)
       case ir @ RepeatConstruct(bnfObjects) => RepeatConstructProcessor(ir, limit)

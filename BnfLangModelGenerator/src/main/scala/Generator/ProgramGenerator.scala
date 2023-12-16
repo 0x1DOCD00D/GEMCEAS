@@ -9,15 +9,22 @@
 package Generator
 
 import Compiler.LiteralType.TERM
-import Compiler.{BnFGrammarIR, BnfLiteral, GrammarRewriter, GroupConstruct, LiteralType, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, SeqConstruct, TerminationData, UnionConstruct}
-import Utilz.ConfigDb.grammarMaxDepthRewritingWithError
+import Compiler.{BnFGrammarIR, BnfLiteral, GrammarRewriter, GroupConstruct, LiteralType, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, RepeatPrologFact, SeqConstruct, TerminationData, UnionConstruct}
+import Utilz.ConfigDb.{`Gemceas.Generator.grammarMaxDepthRewriting`, grammarMaxDepthRewritingWithError}
 import Utilz.{ConfigDb, CreateLogger, PrologTemplate}
 
 import java.nio.charset.Charset
 import java.util.UUID
 import scala.annotation.tailrec
 
-case class GeneratedProgramState(elements: List[BnFGrammarIR])
+case class GeneratedProgramState(elements: List[BnFGrammarIR]):
+  def convertPrologFactsIntoBnFElements(): GeneratedProgramState =
+    val newElements = elements.flatMap {
+      case pf: PrologFact => pf.formListOfBnFGrammarElements
+      case repeatPrologFact: RepeatPrologFact => repeatPrologFact.formListOfBnFGrammarElements
+      case _ => List()
+    }
+    GeneratedProgramState(newElements)
 
 type GeneratedProgram = List[String]
 
@@ -38,7 +45,7 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
         case None =>
           logger.warn(s"Attempt $attempt failed to obtained a verified derivation of the program fragment $head at level $level")
           deriveProgram(accumulatorProg, next, level, attempt+1)
-      case ::(head, next) => deriveProgram(accumulatorProg ::: deriveElement(head, level > grammarMaxDepthRewritingWithError), next, level)
+      case ::(head, next) => deriveProgram(accumulatorProg ::: deriveElement(head, level > `Gemceas.Generator.grammarMaxDepthRewriting`), next, level)
       case Nil => accumulatorProg
   end deriveProgram
 
@@ -80,17 +87,19 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
       logger.info(s"Verified a rewritten prolog fact $fact")
       true
 
-    logger.info(s"Verifying the prolog fact $pf at level $level")
-    pf.rewriteGrammarElements(level) match
-      case Some(fact) =>
-        if askPrologEngine2Verify(fact.generatePrologFact4KBLS(true)) then
-          val programInTokens = fact.formListOfBnFGrammarElements
-          logger.info(s"Formed a verified program fragment $programInTokens")
-          Some(programInTokens)
-        else None
-      case None =>
-        logger.error(s"Cannot rewrite the prolog fact $pf at level $level")
-        None
+    if pf.isRewriteCompleted then Some(pf.formListOfBnFGrammarElements)
+    else
+      logger.info(s"Verifying the prolog fact $pf at level $level")
+      pf.rewriteGrammarElements(level) match
+        case Some(fact) =>
+          if askPrologEngine2Verify(fact.generatePrologFact4KBLS(true)) then
+            val programInTokens = fact.formListOfBnFGrammarElements
+            logger.info(s"Formed a verified program fragment $programInTokens")
+            Some(programInTokens)
+          else None
+        case None =>
+          logger.error(s"Cannot rewrite the prolog fact $pf at level $level")
+          None
   end verifyGeneratedProgramFragment
 
   private def generateSourceCode(st: GeneratedProgramState): GeneratedProgram =
@@ -141,6 +150,31 @@ object ProgramGenerator:
           logger.error(errStr)
           Left(errStr)
 
+  @main def quickGenerationTest(): Unit = {
+    val res = GeneratedProgramState(List(ProgramEntity("-8.11"), ProgramEntity("*"), ProgramEntity("-47"),
+      RepeatPrologFact(List(
+        PrologFact("product_div_repetition", List(("Sign", List(ProgramEntity("+"))),
+          ("ProductDiv", List(PrologFact("product_div", List(("_", List()),
+            ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("84.00"))))))),
+            ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
+              ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("+93.97"))))))))))))))))),
+        PrologFact("product_div_repetition", List(("Sign", List(ProgramEntity("+"))),
+          ("ProductDiv", List(PrologFact("product_div", List(("_", List()),
+            ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("50"))))))),
+            ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
+              ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("+421"))))))))))))))))),
+        PrologFact("product_div_repetition", List(("Sign", List(ProgramEntity("+"))), ("ProductDiv", List(PrologFact("product_div", List(("_", List()),
+          ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("0"))))))),
+          ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
+            ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("24"))))))))))))))))
+        )
+      )
+      )
+    ))
+    val codeBnF = res.convertPrologFactsIntoBnFElements()
+    val code = new ProgramGenerator(codeBnF).generateSourceCode(codeBnF)
+    logger.info(s"Generated program: ${code.mkString(" ")}")
+  }
   @main def runProgGenWithTemplates(): Unit = {
     /*
     expression ::=

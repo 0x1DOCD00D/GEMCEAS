@@ -34,45 +34,74 @@ case class RepeatConstruct(override val bnfObjects: List[BnFGrammarIR]) extends 
 case class GroupConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 case class SeqConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 case class UnionConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
-case class RepeatPrologFact(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
-case class PrologFact(functorName: String, mapParams2GrammarElements: List[(String, List[BnFGrammarIR])]) extends BnFGrammarIR with DeriveConstructs {
+case class RepeatPrologFact(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer with CheckUpRewrite:
+  def isRewriteCompleted: Boolean =
+    bnfObjects.forall {
+      case rfact: RepeatPrologFact => rfact.isRewriteCompleted
+      case fact: PrologFact => fact.isRewriteCompleted
+      case pe: ProgramEntity => true
+      case _ => false
+    }
+  end isRewriteCompleted
+
+  def formListOfBnFGrammarElements: List[BnFGrammarIR] = bnfObjects.flatMap {
+    case rfact: RepeatPrologFact => rfact.formListOfBnFGrammarElements
+    case fact: PrologFact => fact.formListOfBnFGrammarElements
+    case pe: ProgramEntity => List(pe)
+    case _ => List()
+  }
+  end formListOfBnFGrammarElements
+
+
+case class PrologFact(functorName: String, mapParams2GrammarElements: List[(String, List[BnFGrammarIR])]) extends BnFGrammarIR with DeriveConstructs with CheckUpRewrite {
   final def rewriteGrammarElements(level: Int): Option[PrologFact] =
     def rewriteGrammarElement(acc: List[BnFGrammarIR], e: List[BnFGrammarIR]): List[BnFGrammarIR] =
       e match
-        case ::(head, next) if head.isInstanceOf[PrologFact]  => rewriteGrammarElement(head.asInstanceOf[PrologFact].rewriteGrammarElements(level + 1).getOrElse(ErrorInRewritingGrammarElements(level)) :: acc, next)
+        case ::(head, next) if head.isInstanceOf[PrologFact]  =>
+          val headFact = head.asInstanceOf[PrologFact]
+          if headFact.isRewriteCompleted then rewriteGrammarElement(head :: acc, next)
+          else rewriteGrammarElement(head.asInstanceOf[PrologFact].rewriteGrammarElements(level + 1).getOrElse(ErrorInRewritingGrammarElements(level)) :: acc, next)
         case ::(head, next) if head.isInstanceOf[RepeatPrologFact]  =>
-          val repeatedFacts = head.asInstanceOf[RepeatPrologFact].bnfObjects
-          rewriteGrammarElement(RepeatPrologFact(rewriteGrammarElement(List(), repeatedFacts)) :: acc, next)
+          val headFact = head.asInstanceOf[RepeatPrologFact]
+          if headFact.isRewriteCompleted then rewriteGrammarElement(head :: acc, next)
+          else
+            val repeatedFacts = head.asInstanceOf[RepeatPrologFact].bnfObjects
+            rewriteGrammarElement(RepeatPrologFact(rewriteGrammarElement(List(), repeatedFacts)) :: acc, next)
         case ::(head, next) if head.isInstanceOf[ProgramEntity] => rewriteGrammarElement(head :: acc, next)
         case ::(head, next) => rewriteGrammarElement(deriveElement(head, level > ConfigDb.`Gemceas.Generator.grammarMaxDepthRewriting`) ::: acc, next)
         case Nil => acc
     end rewriteGrammarElement
 
-    val rewritten: List[(String, List[BnFGrammarIR])] = mapParams2GrammarElements.foldLeft(List[(String, List[BnFGrammarIR])]()) {
-      (acc, e) => (e._1, rewriteGrammarElement(List(), e._2)) :: acc
-    }.map(e => (e._1, e._2.reverse))
-    val fact: PrologFact = PrologFact(functorName, rewritten)
-    logger.info(s"\n$this\n ===>> \n$fact")
-    if fact.isRewriteCompleted then Some(fact)
+    if isRewriteCompleted then Some(this)
     else
+      val rewritten: List[(String, List[BnFGrammarIR])] = mapParams2GrammarElements.foldLeft(List[(String, List[BnFGrammarIR])]()) {
+        (acc, e) => (e._1, rewriteGrammarElement(List(), e._2)) :: acc
+      }.map(e => (e._1, e._2.reverse))
+      val fact: PrologFact = PrologFact(functorName, rewritten)
+
+      if `Gemceas.Generator.debugProgramGeneration` then logger.info(s"Rewriting the Prolog fact $this at the level $level into new fact $fact")
+
       if level > grammarMaxDepthRewritingWithError then
-        logger.error(s"Grammar unrolling has not been completed for the Prolog fact $fact")
+        logger.error(s"Grammar unrolling has not been completed for the Prolog fact $fact at the level $level")
         None
       else fact.rewriteGrammarElements(level + 1)
   end rewriteGrammarElements
 
+  //PrologFact(term,List((Number,List(ProgramEntity(-307)))))
   case class ErrorInRewritingGrammarElements(levelReached: Int) extends BnFGrammarIR
   def isRewriteCompleted: Boolean =
     mapParams2GrammarElements.flatMap(_._2).forall {
       case fact: PrologFact => fact.isRewriteCompleted
+      case rfact: RepeatPrologFact => rfact.isRewriteCompleted
       case pe: ProgramEntity => true
-      case _ => false
+      case err => false
     }
 
   def formListOfBnFGrammarElements: List[BnFGrammarIR] =
     mapParams2GrammarElements.flatMap(_._2).foldLeft(List[BnFGrammarIR]()) {
       (acc, e) => acc ::: (e match {
         case fact: PrologFact => fact.formListOfBnFGrammarElements
+        case rfact: RepeatPrologFact => rfact.formListOfBnFGrammarElements
         case _ => List(e)
       })
     }
@@ -107,3 +136,28 @@ case class PrologFactsBuilder(prt: PrologTemplate) extends IrLiteral {
 }
 case class ProgramEntity(code: String) extends IrLiteral
 case class IrError(err: String) extends BnFGrammarIR
+
+object LocalTest:
+  @main def runLocalTest(): Unit =
+    val pf = PrologFact("sum_sub", List(("ProductDivRepetition",
+      List(RepeatPrologFact(List(
+        PrologFact("product_div_repetition", List(("Sign", List(ProgramEntity("+"))),
+          ("ProductDiv", List(PrologFact("product_div", List(("_", List()),
+            ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("049.21"))))))),
+            ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
+              ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("-78.30"))))))))))))))))),
+        PrologFact("product_div_repetition", List(("Sign", List(ProgramEntity("+"))),
+          ("ProductDiv", List(PrologFact("product_div", List(("_", List()),
+            ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("8.28"))))))),
+            ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
+              ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("1.44"))))))))))))))))),
+        PrologFact("product_div_repetition", List(("Sign", List(ProgramEntity("+"))),
+          ("ProductDiv", List(PrologFact("product_div", List(("_", List()),
+            ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("+464.33"))))))),
+            ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
+              ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("+3"))))))))))))))))))))),
+      ("_", List(PrologFact("product_div", List(("_", List()),
+        ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("-33.56"))))))),
+        ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
+          ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("-44")))))))))))))))))
+    println(pf.isRewriteCompleted)

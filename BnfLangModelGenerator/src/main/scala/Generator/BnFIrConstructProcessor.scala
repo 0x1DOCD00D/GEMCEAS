@@ -94,14 +94,14 @@ object UnionConstructProcessor extends ((UnionConstruct, Boolean) => List[BnFGra
     else
       if v2 then
         v1.bnfObjects.find(e => findTermination(e)) match
-          case Some(value) => deriveElement(value)
+          case Some(value) => deriveElement(value, v2)
           case None =>
             logger.error(s"Union construct ${v1.bnfObjects.mkString(",")} has no terminating element")
             List()
       else
         val ind = SupplierOfRandomness.onDemandInt(pmaxv = sz)
         v1.bnfObjects.lift(ind) match
-          case Some(value) => deriveElement(value)
+          case Some(value) => deriveElement(value, v2)
           case None =>
             logger.error(s"Union construct ${v1.bnfObjects.mkString(",")} has no element with the index $ind")
             List()
