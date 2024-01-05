@@ -35,15 +35,6 @@ case class GroupConstruct(override val bnfObjects: List[BnFGrammarIR]) extends B
 case class SeqConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 case class UnionConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 case class RepeatPrologFact(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer with CheckUpRewrite:
-  def isRewriteCompleted: Boolean =
-    bnfObjects.forall {
-      case rfact: RepeatPrologFact => rfact.isRewriteCompleted
-      case fact: PrologFact => fact.isRewriteCompleted
-      case pe: ProgramEntity => true
-      case _ => false
-    }
-  end isRewriteCompleted
-
   def formListOfBnFGrammarElements: List[BnFGrammarIR] = bnfObjects.flatMap {
     case rfact: RepeatPrologFact => rfact.formListOfBnFGrammarElements
     case fact: PrologFact => fact.formListOfBnFGrammarElements
@@ -59,11 +50,11 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
       e match
         case ::(head, next) if head.isInstanceOf[PrologFact]  =>
           val headFact = head.asInstanceOf[PrologFact]
-          if headFact.isRewriteCompleted then rewriteGrammarElement(head :: acc, next)
+          if headFact.isRewriteCompleted(headFact.mapParams2GrammarElements.flatMap(_._2)) then rewriteGrammarElement(head :: acc, next)
           else rewriteGrammarElement(head.asInstanceOf[PrologFact].rewriteGrammarElements(level + 1).getOrElse(ErrorInRewritingGrammarElements(level)) :: acc, next)
         case ::(head, next) if head.isInstanceOf[RepeatPrologFact]  =>
           val headFact = head.asInstanceOf[RepeatPrologFact]
-          if headFact.isRewriteCompleted then rewriteGrammarElement(head :: acc, next)
+          if headFact.isRewriteCompleted(headFact.bnfObjects) then rewriteGrammarElement(head :: acc, next)
           else
             val repeatedFacts = head.asInstanceOf[RepeatPrologFact].bnfObjects
             rewriteGrammarElement(RepeatPrologFact(rewriteGrammarElement(List(), repeatedFacts)) :: acc, next)
@@ -72,7 +63,7 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
         case Nil => acc
     end rewriteGrammarElement
 
-    if isRewriteCompleted then Some(this)
+    if isRewriteCompleted(mapParams2GrammarElements.flatMap(_._2)) then Some(this)
     else
       val rewritten: List[(String, List[BnFGrammarIR])] = mapParams2GrammarElements.foldLeft(List[(String, List[BnFGrammarIR])]()) {
         (acc, e) => (e._1, rewriteGrammarElement(List(), e._2)) :: acc
@@ -89,14 +80,6 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
 
   //PrologFact(term,List((Number,List(ProgramEntity(-307)))))
   case class ErrorInRewritingGrammarElements(levelReached: Int) extends BnFGrammarIR
-  def isRewriteCompleted: Boolean =
-    mapParams2GrammarElements.flatMap(_._2).forall {
-      case fact: PrologFact => fact.isRewriteCompleted
-      case rfact: RepeatPrologFact => rfact.isRewriteCompleted
-      case pe: ProgramEntity => true
-      case err => false
-    }
-
   def formListOfBnFGrammarElements: List[BnFGrammarIR] =
     mapParams2GrammarElements.flatMap(_._2).foldLeft(List[BnFGrammarIR]()) {
       (acc, e) => acc ::: (e match {
