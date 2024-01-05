@@ -50,11 +50,11 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
       e match
         case ::(head, next) if head.isInstanceOf[PrologFact]  =>
           val headFact = head.asInstanceOf[PrologFact]
-          if headFact.isRewriteCompleted(headFact.mapParams2GrammarElements.flatMap(_._2)) then rewriteGrammarElement(head :: acc, next)
+          if headFact.isRewriteCompleted() then rewriteGrammarElement(head :: acc, next)
           else rewriteGrammarElement(head.asInstanceOf[PrologFact].rewriteGrammarElements(level + 1).getOrElse(ErrorInRewritingGrammarElements(level)) :: acc, next)
         case ::(head, next) if head.isInstanceOf[RepeatPrologFact]  =>
           val headFact = head.asInstanceOf[RepeatPrologFact]
-          if headFact.isRewriteCompleted(headFact.bnfObjects) then rewriteGrammarElement(head :: acc, next)
+          if headFact.isRewriteCompleted() then rewriteGrammarElement(head :: acc, next)
           else
             val repeatedFacts = head.asInstanceOf[RepeatPrologFact].bnfObjects
             rewriteGrammarElement(RepeatPrologFact(rewriteGrammarElement(List(), repeatedFacts)) :: acc, next)
@@ -63,7 +63,7 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
         case Nil => acc
     end rewriteGrammarElement
 
-    if isRewriteCompleted(mapParams2GrammarElements.flatMap(_._2)) then Some(this)
+    if isRewriteCompleted() then Some(this)
     else
       val rewritten: List[(String, List[BnFGrammarIR])] = mapParams2GrammarElements.foldLeft(List[(String, List[BnFGrammarIR])]()) {
         (acc, e) => (e._1, rewriteGrammarElement(List(), e._2)) :: acc
@@ -143,4 +143,4 @@ object LocalTest:
         ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("-33.56"))))))),
         ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
           ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("-44")))))))))))))))))
-    println(pf.isRewriteCompleted)
+    println(pf.isRewriteCompleted())

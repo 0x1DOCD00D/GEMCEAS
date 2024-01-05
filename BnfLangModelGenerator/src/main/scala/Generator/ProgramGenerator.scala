@@ -87,7 +87,7 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
       logger.info(s"Verified a rewritten prolog fact $fact")
       true
 
-    if pf.isRewriteCompleted(pf.mapParams2GrammarElements.flatMap(_._2)) then Some(pf.formListOfBnFGrammarElements)
+    if pf.isRewriteCompleted() then Some(pf.formListOfBnFGrammarElements)
     else
       logger.info(s"Verifying the prolog fact $pf at level $level")
       pf.rewriteGrammarElements(level) match
