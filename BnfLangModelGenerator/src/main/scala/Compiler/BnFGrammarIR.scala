@@ -34,7 +34,7 @@ case class RepeatConstruct(override val bnfObjects: List[BnFGrammarIR]) extends 
 case class GroupConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 case class SeqConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
 case class UnionConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
-case class RepeatPrologFact(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer with CheckUpRewrite:
+case class RepeatPrologFact(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer with CheckUpRewrite with GeneratePrologFact:
   def formListOfBnFGrammarElements: List[BnFGrammarIR] = bnfObjects.flatMap {
     case rfact: RepeatPrologFact => rfact.formListOfBnFGrammarElements
     case fact: PrologFact => fact.formListOfBnFGrammarElements
@@ -44,7 +44,7 @@ case class RepeatPrologFact(override val bnfObjects: List[BnFGrammarIR]) extends
   end formListOfBnFGrammarElements
 
 
-case class PrologFact(functorName: String, mapParams2GrammarElements: List[(String, List[BnFGrammarIR])]) extends BnFGrammarIR with DeriveConstructs with CheckUpRewrite {
+case class PrologFact(functorName: String, mapParams2GrammarElements: List[(String, List[BnFGrammarIR])]) extends BnFGrammarIR with DeriveConstructs with CheckUpRewrite with GeneratePrologFact {
   final def rewriteGrammarElements(level: Int): Option[PrologFact] =
     def rewriteGrammarElement(acc: List[BnFGrammarIR], e: List[BnFGrammarIR]): List[BnFGrammarIR] =
       e match
@@ -88,24 +88,6 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
         case _ => List(e)
       })
     }
-
-  def generatePrologFact4KBLS(top: Boolean): String =
-    val listWrapper: List[String] => List[String] = (x: List[String]) =>
-      if top then x
-      else if x.isEmpty then List[String]().empty
-      else if x.length == 1 then List(x.head)
-      else
-        val first = List(OpenBra + x.head)
-        val last = List(x.reverse.head + CloseKet)
-        first ::: x.slice(1, x.length-2) ::: last
-
-    val params: List[String] = mapParams2GrammarElements.flatMap(_._2).foldLeft(List[String]()) {
-      (acc, e) => acc ::: listWrapper(List(e match
-        case fact: PrologFact => OpenBra + fact.generatePrologFact4KBLS(false) + CloseKet
-        case pe: ProgramEntity => pe.code
-        case _ => e.toString))
-    }
-    s"$functorName(${params.mkString(CommaSeparator.toString)})"
 }
 
 trait IrLiteral extends BnFGrammarIR

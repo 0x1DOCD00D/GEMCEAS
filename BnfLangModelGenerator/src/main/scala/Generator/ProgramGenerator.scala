@@ -10,7 +10,7 @@ package Generator
 
 import Compiler.LiteralType.TERM
 import Compiler.{BnFGrammarIR, BnfLiteral, GrammarRewriter, GroupConstruct, LiteralType, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, RepeatPrologFact, SeqConstruct, TerminationData, UnionConstruct}
-import Utilz.ConfigDb.{`Gemceas.Generator.grammarMaxDepthRewriting`, grammarMaxDepthRewritingWithError}
+import Utilz.ConfigDb.{`Gemceas.Generator.debugProgramGeneration`, `Gemceas.Generator.grammarMaxDepthRewriting`, grammarMaxDepthRewritingWithError}
 import Utilz.{ConfigDb, CreateLogger, PrologTemplate}
 
 import java.nio.charset.Charset
@@ -84,17 +84,17 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
   private def verifyGeneratedProgramFragment(pf: PrologFact, level: Int): Option[List[BnFGrammarIR]] =
     //TODO: a prolog fact is transmitted to the KBLS here and true/false is returned
     def askPrologEngine2Verify(fact: String): Boolean =
-      logger.info(s"Verified a rewritten prolog fact $fact")
+      if `Gemceas.Generator.debugProgramGeneration` then logger.info(s"Verified a rewritten prolog fact $fact")
       true
 
     if pf.isRewriteCompleted() then Some(pf.formListOfBnFGrammarElements)
     else
-      logger.info(s"Verifying the prolog fact $pf at level $level")
+      if `Gemceas.Generator.debugProgramGeneration` then logger.info(s"Verifying the prolog fact $pf at level $level")
       pf.rewriteGrammarElements(level) match
         case Some(fact) =>
           if askPrologEngine2Verify(fact.generatePrologFact4KBLS(true)) then
             val programInTokens = fact.formListOfBnFGrammarElements
-            logger.info(s"Formed a verified program fragment $programInTokens")
+            if `Gemceas.Generator.debugProgramGeneration` then logger.info(s"Formed a verified program fragment $programInTokens")
             Some(programInTokens)
           else None
         case None =>

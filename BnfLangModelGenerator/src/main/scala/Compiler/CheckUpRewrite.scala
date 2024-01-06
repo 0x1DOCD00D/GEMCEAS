@@ -1,7 +1,7 @@
 package Compiler
 
 trait CheckUpRewrite:
-  this: PrologFact | RepeatPrologFact =>
+  this: PrologFact| RepeatPrologFact =>
   def isRewriteCompleted(): Boolean =
     val bnfElements: List[BnFGrammarIR] = this match {
       case fact: PrologFact => fact.mapParams2GrammarElements.flatMap(_._2)
