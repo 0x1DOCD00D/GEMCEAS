@@ -1,7 +1,7 @@
 package Compiler
 
 import Utilz.CheckIfStringIsNumber.*
-import Utilz.Constants.{CloseKet, CommaSeparator, OpenBra}
+import Utilz.Constants.{ArgumentUnderscore, CloseKet, CommaSeparator, OpenBra}
 
 trait GeneratePrologFact:
   this: PrologFact | RepeatPrologFact =>
@@ -15,7 +15,7 @@ trait GeneratePrologFact:
       first ::: x.slice(1, x.length - 2) ::: last
 
   val bnfElements: List[BnFGrammarIR] = this match {
-    case fact: PrologFact => fact.mapParams2GrammarElements.flatMap(_._2)
+    case fact: PrologFact => fact.mapParams2GrammarElements.flatMap(e => if e._1 == ArgumentUnderscore then List(ParameterSkipped) else e._2)
     case rfact: RepeatPrologFact => rfact.bnfObjects
   }
 
@@ -29,6 +29,7 @@ trait GeneratePrologFact:
           case fact: PrologFact => fact.generatePrologFact4KBLS(false)
           case rfact: RepeatPrologFact => OpenBra + rfact.generatePrologFact4KBLS(false) + CloseKet
           case pe: ProgramEntity => if pe.code.IsNumber then pe.code else s""""${pe.code}"""".stripMargin
+          case sp: ParameterSkipped.type => ArgumentUnderscore
           case _ => e.toString), top)
     }
     if functorName.isEmpty then params.mkString(CommaSeparator.toString)

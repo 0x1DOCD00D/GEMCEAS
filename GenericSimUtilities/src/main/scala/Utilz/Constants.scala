@@ -20,6 +20,7 @@ object Constants:
   final val OpenBra = "["
   final val CloseKet = "]"
   final val CommaSeparator = ','
+  final val ArgumentUnderscore = "_"
 
   val OUTPUTDIRECTORY = "outputDirectory"
   def OUTPUTFILENAME: String =
