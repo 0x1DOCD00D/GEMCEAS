@@ -1,0 +1,22 @@
+expression ::=
+  sum_sub
+  "==>> expression(SumSub)";
+
+sum_sub ::=
+  product_div {("+"|"-") product_div "==>> product_div_repetition(Sign, ProductDiv)"}
+  "==>> sum_sub(_, ProductDivRepetition)";
+
+product_div ::=
+  ["+"|"-"] term {("*"|"/") term "==>> term_repetition(Sign, Term)"}
+  "PrevProductDiv =:= sum_sub.product_div._1"
+  "==>> product_div(PrevProductDiv, _, NumberOrExpression, TermRepetition)";
+
+term ::=
+  number
+  "PrevTerm =:= product_div.term._2"
+  "==>> term(PrevTerm, Number)" |
+  "(" expression ")"
+  "==>> term(_, Expression, _)";
+
+<number> ::=
+  "[\-\+]?[0-9]+(\.[0-9]+)?";

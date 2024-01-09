@@ -1,0 +1,68 @@
+expression(SumSub) :-
+    % call sum_sub/2
+    SumSub.
+
+sum_sub(_, ProductDivRepetition) :-
+    nonvar(ProductDivRepetition) ->
+        (nth1(1, ProductDivRepetition, FirstItem),
+        FirstItem) ;
+        true.
+
+product_div_repetition(Sign, ProductDiv) :-
+    arg(3, ProductDiv, Term),
+    arg(1, Term, NumberMaybe),
+    (number(NumberMaybe) ->
+        % term is a num. Ensure the num is > 100 if the sign is '-''
+        (Sign == "-" -> 
+            NumberMaybe > 100 ; 
+            true) ;
+        % term is expression/1
+        Term).
+
+
+% % number to the rhs must be > 0 if the sign is "/"
+% product_div(_, _, TermRepetition) :-
+%     (nonvar(TermRepetition) ->
+%         loop_over_list(TermRepetition) ;
+%         true).
+
+product_div(PrevProductDiv, _, NumberOrExpression, TermRepetition) :-
+    (nonvar(PrevProductDiv) ->
+        % first term in product_div was generated. Evaluate the term
+        (arg(3, PrevProductDiv, Term), 
+         Term) ;
+        true),
+    (nonvar(TermRepetition) ->
+        loop_over_list(TermRepetition) ;
+        true).
+
+
+loop_over_list([]).
+loop_over_list([H | T]) :-
+    H,
+    loop_over_list(T).
+
+term_repetition(Sign, Term) :-
+    arg(1, Term, NumberMaybe), 
+    (number(NumberMaybe) ->
+        % term is a num. Ensure the num is not 0 if the sign is "/"
+        (Sign == "/" ->
+            NumberMaybe =\= 0 ;
+            true) ;
+        % term is expression/1
+        Term).
+    
+
+% term(Number) :-
+%     Number > -5.
+
+term(PrevTerm, Number) :-
+    (nonvar(PrevTerm) ->
+        % some terms in the repetition construct were generated.
+        % Ensure all generated terms are in a list
+        is_list(PrevTerm) ;
+        true),
+    Number > -5.
+
+term(_, Expression, _) :-
+    Expression.
