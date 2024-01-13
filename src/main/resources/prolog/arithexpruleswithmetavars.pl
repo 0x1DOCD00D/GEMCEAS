@@ -26,7 +26,7 @@ product_div_repetition(Sign, ProductDiv) :-
 %         loop_over_list(TermRepetition) ;
 %         true).
 
-product_div(PrevProductDiv, _, NumberOrExpression, TermRepetition) :-
+product_div(PrevProductDiv, _, _, TermRepetition) :-
     (nonvar(PrevProductDiv) ->
         % first term in product_div was generated. Evaluate the term
         (arg(3, PrevProductDiv, Term), 
