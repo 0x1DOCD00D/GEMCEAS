@@ -739,4 +739,121 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
       Rule(NonterminalRegex("<number>"),
         RuleLiteral(RegexString("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""")))))
   }
+
+  it should "parse an expression grammar with prolog templates and metavariables from resources" in {
+    /*
+   expression ::=
+    sum_sub
+    "==>> expression(SumSub)";
+
+    sum_sub ::=
+      product_div {("+"|"-") product_div "==>> product_div_repetition(Sign, ProductDiv)"}
+      "==>> sum_sub(_, ProductDivRepetition)";
+
+    product_div ::=
+      ["+"|"-"] term {("*"|"/") term "==>> term_repetition(Sign, Term)"}
+      "PrevProductDiv =:= sum_sub.product_div._1"
+      "==>> product_div(PrevProductDiv, _, NumberOrExpression, TermRepetition)";
+
+    term ::=
+      number
+      "PrevTerm =:= product_div.term._2"
+      "==>> term(PrevTerm, Number)" |
+      "(" expression ")"
+      "==>> term(_, Expression, _)";
+
+    <number> ::=
+      "[\-\+]?[0-9]{1,3}(\.[0-9]{2})?";
+   * */
+    val grammarFilePath = System.getProperty("user.dir") + "/src/main/resources/Grammars/ArithmeticExpressionsWithMetavars.bnf"
+    val source = scala.io.Source.fromFile(grammarFilePath)
+
+    val srcGrammar: String = try source.mkString finally source.close()
+    if srcGrammar.isEmpty then
+      logger.error("Failed to load a grammar, terminating Gemceas.")
+      System.exit(1)
+    else logger.info(srcGrammar)
+    srcGrammar.isEmpty shouldBe false
+    val ast = BnfGrammarCompiler.parseGrammar(srcGrammar).getOrElse(MainRule(List()))
+    ast shouldBe MainRule(List(
+      Rule(Nonterminal("expression"),
+        RuleCollection(List(
+          RuleLiteral(Nonterminal("sum_sub")),
+          RuleCollection(List(
+            RuleLiteral(Terminal("==>> expression(SumSub)"))))))
+      ),
+      Rule(Nonterminal("sum_sub"),
+        RuleCollection(List(
+          RuleLiteral(Nonterminal("product_div")),
+          RuleCollection(List(
+            RuleRep(
+              RuleCollection(List(
+                RuleGroup(
+                  RuleCollection(List(
+                    RuleLiteral(Terminal("+")),
+                    RuleCollection(List(
+                      RuleOr(
+                        RuleCollection(List(
+                          RuleLiteral(Terminal("-")))))))))
+                ),
+                RuleCollection(List(
+                  RuleLiteral(Nonterminal("product_div")),
+                  RuleCollection(List(
+                    RuleLiteral(
+                      Terminal("==>> product_div_repetition(Sign, ProductDiv)")
+                    )))))))
+            ),
+            RuleCollection(List(
+              RuleLiteral(Terminal("==>> sum_sub(_, ProductDivRepetition)")))
+            )))))
+      ),
+      Rule(Nonterminal("product_div"),
+        RuleCollection(List(
+          RuleOpt(RuleCollection(List(RuleLiteral(Terminal("+")), RuleCollection(List(RuleOr(RuleCollection(List(RuleLiteral(Terminal("-")))))))))),
+          RuleCollection(List(
+            RuleLiteral(Nonterminal("term")),
+            RuleCollection(List(
+              RuleRep(
+                RuleCollection(List(
+                  RuleGroup(
+                    RuleCollection(List(
+                      RuleLiteral(Terminal("*")),
+                      RuleCollection(List(
+                        RuleOr(
+                          RuleCollection(List(
+                            RuleLiteral(Terminal("/")))))))))
+                  ),
+                  RuleCollection(List(
+                    RuleLiteral(Nonterminal("term")),
+                    RuleCollection(List(
+                      RuleLiteral(Terminal("==>> term_repetition(Sign, Term)")))))
+                  )))
+              ),
+              RuleCollection(List(
+                RuleLiteral(Terminal("PrevProductDiv =:= sum_sub.product_div._1")),
+                RuleCollection(List(
+                  RuleLiteral(Terminal("==>> product_div(PrevProductDiv, _, NumberOrExpression, TermRepetition)")))))
+              )))))))
+      ),
+      Rule(Nonterminal("term"),
+        RuleCollection(List(
+          RuleLiteral(Nonterminal("number")),
+          RuleCollection(List(
+            RuleLiteral(Terminal("PrevTerm =:= product_div.term._2")),
+            RuleCollection(List(
+              RuleLiteral(Terminal("==>> term(PrevTerm, Number)")),
+              RuleCollection(List(
+                RuleOr(
+                  RuleCollection(List(
+                    RuleLiteral(Terminal("(")),
+                    RuleCollection(List(
+                      RuleLiteral(Nonterminal("expression")),
+                      RuleCollection(List(
+                        RuleLiteral(Terminal(")")),
+                        RuleCollection(List(
+                          RuleLiteral(Terminal("==>> term(_, Expression, _)")))))))))))))))))))
+      ),
+      Rule(NonterminalRegex("<number>"), RuleLiteral(RegexString("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?"""))))
+    )
+  }
 }
