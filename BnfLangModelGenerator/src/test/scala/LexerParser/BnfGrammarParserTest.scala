@@ -737,6 +737,6 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
         )))
       ),
       Rule(NonterminalRegex("<number>"),
-        RuleLiteral(RegexString("""[\-\+]?[0-9]+(\.[0-9]+)?""")))))
+        RuleLiteral(RegexString("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""")))))
   }
 }

@@ -14,12 +14,14 @@ import com.github.dwickern.macros.NameOf.*
 
 object Constants:
   final val Prolog_Template_Designator = "==>>"
-  final val Prolog_Template_Assignment = "=:="
+  final val MetaVariable_Assignment_Designator = "=:="
   final val OpenParen = '('
   final val CloseParen = ')'
   final val OpenBra = "["
   final val CloseKet = "]"
   final val CommaSeparator = ','
+  final val DotSeparator = "\\."
+  final val Dot = "."
   final val ArgumentUnderscore = "_"
 
   val OUTPUTDIRECTORY = "outputDirectory"

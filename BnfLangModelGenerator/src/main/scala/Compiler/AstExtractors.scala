@@ -10,8 +10,8 @@ package Compiler
 
 import LexerParser.{Literal, MainRule, Nonterminal, NonterminalRegex, RegexString, Rule, RuleCollection, RuleContent, RuleGroup, RuleLiteral, RuleOpt, RuleOr, RuleRep, Terminal}
 import LiteralType.*
-import Utilz.Constants.Prolog_Template_Designator
-import Utilz.{CreateLogger, PrologTemplateExtractor}
+import Utilz.Constants.{MetaVariable_Assignment_Designator, Prolog_Template_Designator}
+import Utilz.{CreateLogger, MetaVariableManager, PrologTemplateExtractor}
 
 import scala.collection.mutable.ListBuffer
 
@@ -142,6 +142,18 @@ object AstExtractors:
                 logger.error(s"Failed to extract a prolog template from ${l.token}")
                 IrError(s"Failed to extract a prolog template from ${l.token}")
               else PrologFactsBuilder(prologterm.get)
+          else if MetaVariableManager.isMetaVariable(l.token).isDefined then
+            val metaVar = MetaVariableManager(l.token)
+            if metaVar.isEmpty then
+              logger.error(s"Failed to extract a meta variable from ${l.token}")
+              IrError(s"Failed to extract a meta variable from ${l.token}")
+            else MetaVariable(metaVar.get._1, metaVar.get._2)
+          else if l.token == MetaVariable_Assignment_Designator then
+            logger.error(s"Failed to extract a meta variable assignment designator from ${l.token}")
+            IrError(s"Failed to extract a meta variable assignment designator from ${l.token}")
+          else if l.token == Prolog_Template_Designator then
+            logger.error(s"Failed to extract a prolog template designator from ${l.token}")
+            IrError(s"Failed to extract a prolog template designator from ${l.token}")
           else l
         case ro @ RuleOpt(rc) =>
           val OptExtractor(o) = ro : @unchecked

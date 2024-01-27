@@ -24,6 +24,7 @@ trait BnFGrammarIRContainer extends BnFGrammarIR:
 end BnFGrammarIRContainer
 
 type BnFGrammarIrMap = Map[String, List[BnFGrammarIR]]
+type MetaVarMap = Map[String, List[BnFGrammarIR]]
 
 enum LiteralType:
   case TERM, NONTERM, NTREGEX, REGEXTERM
@@ -93,6 +94,8 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
 trait IrLiteral extends BnFGrammarIR
 
 case object ParameterSkipped extends IrLiteral
+
+case class MetaVariable(name: String, path: List[String]) extends IrLiteral
 case class BnfLiteral(token: String, literalType: LiteralType) extends IrLiteral
 case class PrologFactsBuilder(prt: PrologTemplate) extends IrLiteral {
 //  xform factbuilder into an instance of PrologTemplate(functorName: String, params: List[PrologTemplate])
