@@ -853,7 +853,8 @@ class BnfGrammarParserTest extends AnyFlatSpec with Matchers {
                         RuleCollection(List(
                           RuleLiteral(Terminal("==>> term(_, Expression, _)")))))))))))))))))))
       ),
-      Rule(NonterminalRegex("<number>"), RuleLiteral(RegexString("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?"""))))
+      Rule(NonterminalRegex("<number>"), RuleLiteral(RegexString("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""")))
+    )
     )
   }
 }
