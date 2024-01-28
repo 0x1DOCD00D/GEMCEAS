@@ -142,7 +142,7 @@ object AstExtractors:
                 logger.error(s"Failed to extract a prolog template from ${l.token}")
                 IrError(s"Failed to extract a prolog template from ${l.token}")
               else PrologFactsBuilder(prologterm.get)
-          else if MetaVariableManager.isMetaVariable(l.token).isDefined then
+          else if MetaVariableManager.isMetaVariable(l.token) then
             val metaVar = MetaVariableManager(l.token)
             if metaVar.isEmpty then
               logger.error(s"Failed to extract a meta variable from ${l.token}")
