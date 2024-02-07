@@ -7,17 +7,23 @@ import LiteralType.*
 import Utilz.{CreateLogger, PrologTemplate}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import org.slf4j.Logger
 
 class GeneratedProgramStateTest extends AnyFlatSpec with Matchers {
   behavior of "the IR extractors"
 
-  val logger = CreateLogger(classOf[GeneratedProgramStateTest])
-  val expGrammarFull = List(
-    ProductionRule(BnfLiteral("expression", NONTERM),
-      SeqConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM),
-        PrologFactsBuilder(PrologTemplate("expression", List(PrologTemplate("SumSub", List()))))))))
+  val logger: Logger = CreateLogger(classOf[GeneratedProgramStateTest])
+  val expGrammarFull: List[ProductionRule] = List(
+    ProductionRule(
+      BnfLiteral("expression", NONTERM),
+      SeqConstruct(List(
+        GroupConstruct(List(
+          BnfLiteral("sum_sub", NONTERM),
+          PrologFactsBuilder(PrologTemplate("expression", List(PrologTemplate("SumSub", List())))))))
+      )
     ),
-    ProductionRule(BnfLiteral("sum_sub", NONTERM),
+    ProductionRule(
+      BnfLiteral("sum_sub", NONTERM),
       SeqConstruct(List(
         GroupConstruct(List(
           BnfLiteral("product_div", NONTERM),
@@ -29,15 +35,13 @@ class GeneratedProgramStateTest extends AnyFlatSpec with Matchers {
                   GroupConstruct(List(BnfLiteral("-", TERM))))))
               ),
               BnfLiteral("product_div", NONTERM),
-              PrologFactsBuilder(PrologTemplate("product_div_repetition",
-                List(
-                  PrologTemplate("Sign", List()), PrologTemplate("ProductDiv", List())
-                ))))))
+              PrologFactsBuilder(PrologTemplate("product_div_repetition", List(PrologTemplate("Sign", List()), PrologTemplate("ProductDiv", List())))))))
           ),
-          PrologFactsBuilder(PrologTemplate("sum_sub", List(PrologTemplate("_", List()), PrologTemplate("ProductDivRepetition", List()))))
-        ))))
+          PrologFactsBuilder(PrologTemplate("sum_sub", List(PrologTemplate("_", List()), PrologTemplate("ProductDivRepetition", List())))))))
+      )
     ),
-    ProductionRule(BnfLiteral("product_div", NONTERM),
+    ProductionRule(
+      BnfLiteral("product_div", NONTERM),
       SeqConstruct(List(
         GroupConstruct(List(
           OptionalConstruct(List(
@@ -58,23 +62,24 @@ class GeneratedProgramStateTest extends AnyFlatSpec with Matchers {
                   GroupConstruct(List(BnfLiteral("/", TERM))))))
               ),
               BnfLiteral("term", NONTERM),
-              PrologFactsBuilder(PrologTemplate("term_repetition", List(PrologTemplate("Sign", List()), PrologTemplate("Term", List()))))
-            )))
+              PrologFactsBuilder(PrologTemplate("term_repetition", List(
+                PrologTemplate("Sign", List()),
+                PrologTemplate("Term", List())))))))
           ),
-          BnfLiteral("PrevProductDiv =:= sum_sub.product_div._1", TERM),
+          MetaVariable("PrevProductDiv", List("sum_sub", "product_div", "_1")),
           PrologFactsBuilder(PrologTemplate("product_div", List(
             PrologTemplate("PrevProductDiv", List()),
             PrologTemplate("_", List()),
             PrologTemplate("NumberOrExpression", List()),
-            PrologTemplate("TermRepetition", List())))
-          )))))
+            PrologTemplate("TermRepetition", List()))))))))
     ),
-    ProductionRule(BnfLiteral("term", NONTERM),
+    ProductionRule(
+      BnfLiteral("term", NONTERM),
       SeqConstruct(List(
         UnionConstruct(List(
           GroupConstruct(List(
             BnfLiteral("number", NONTERM),
-            BnfLiteral("PrevTerm =:= product_div.term._2", TERM),
+            MetaVariable("PrevTerm", List("product_div", "term", "_2")),
             PrologFactsBuilder(PrologTemplate("term", List(PrologTemplate("PrevTerm", List()), PrologTemplate("Number", List())))))
           ),
           GroupConstruct(List(
@@ -91,10 +96,10 @@ class GeneratedProgramStateTest extends AnyFlatSpec with Matchers {
   it should "extract an IR representation from a union rule with a collection of elements" in {
     val gen = ProgramGenerator(expGrammarFull, BnfLiteral("expression", NONTERM))
     gen match
-      case Left(err) => 
+      case Left(err) =>
         logger.error(s"Cannot generate a program: $err")
         fail()
-      case Right(prg) => 
+      case Right(prg) =>
         logger.info(prg.mkString(" "))
         prg shouldBe List()
 

@@ -40,27 +40,7 @@ class GrammarRewriter(ast: List[ProductionRule]):
             if !rewriteUnion(path) then path else List()
     }
   }
-
-  def findBnFObject(id: UUID): List[BnFGrammarIR] = {
-    def findGrammarObject(go: BnFGrammarIR): List[BnFGrammarIR] = go match
-      case container: BnFGrammarIRContainer => if container.uuid == id then List(container) else container.bnfObjects.flatMap(findGrammarObject)
-      case literal: IrLiteral => if literal.uuid == id then List(literal) else List()
-      case ProductionRule(lhs, rhs) => findGrammarObject(lhs) ::: findGrammarObject(rhs)
-      case err =>
-        logger.error(s"findGrammarObject run into a wrong object: $err")
-        List()
-    end findGrammarObject
-    ast.flatMap(findGrammarObject(_))
-  }
-
-  def findGrammarObject(id: UUID, go: BnFGrammarIR): List[BnFGrammarIR] = go match
-    case container: BnFGrammarIRContainer => if container.uuid == id then List(container) else container.bnfObjects.flatMap(findGrammarObject(id, _))
-    case literal: IrLiteral => if literal.uuid == id then List(literal) else List()
-    case ProductionRule(lhs, rhs) => findGrammarObject(id, lhs) ::: findGrammarObject(id, rhs)
-    case err =>
-      logger.error(s"findGrammarObject run into a wrong object: $err")
-      List()
-
+  
   private def rewriteUnion(ucl: List[UnionConstruct]): Boolean = {
     def checkUnion4Convergence(uc: UnionConstruct): Boolean = {
       uc.bnfObjects.foldLeft(false) {
