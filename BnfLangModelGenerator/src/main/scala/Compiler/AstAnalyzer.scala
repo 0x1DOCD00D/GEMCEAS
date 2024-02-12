@@ -27,6 +27,9 @@ class AstAnalyzer private (ast: List[ProductionRule]):
           case ::(head, next) => (head match
             case container: BnFGrammarIRContainer => prRhsProcessor(container)
             case literal: BnfLiteral => List(literal)
+            case _ =>
+              logger.error(s"The rhs of the prod rule cannot be processed: ${head.toString}")
+              List()
             ) ::: next.foldLeft(List[BnfLiteral]())((acc,e)=> prRhsProcessor(e):::acc)
           case Nil => List()
           )

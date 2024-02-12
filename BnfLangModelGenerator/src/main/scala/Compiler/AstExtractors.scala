@@ -54,10 +54,10 @@ object AstExtractors:
     def unapply(r: Rule): Option[ProductionRule] =
       val LiteralExtractor(ntid) = r.id : @unchecked
       ntid match
-        case BnfLiteral(t, TERM) =>
+        case BnfLiteral(t, TERM, _) =>
           logger.error(s"Terminal $t cannot be used to define a rule")
           None
-        case BnfLiteral(t, _) =>
+        case BnfLiteral(t, _, _) =>
           Some(t)
           r.rhs match
             case RuleLiteral(lit) =>

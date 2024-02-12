@@ -8,7 +8,7 @@
 
 package Compiler
 
-import Generator.DeriveConstructs
+import Generator.{DeriveConstructs, RewritingTree}
 import Utilz.ConfigDb.*
 import Utilz.Constants.{CloseKet, CommaSeparator, OpenBra}
 import Utilz.{ConfigDb, PrologTemplate}
@@ -16,8 +16,22 @@ import Utilz.{ConfigDb, PrologTemplate}
 import java.util.UUID
 import scala.annotation.tailrec
 
-trait BnFGrammarIR:
+sealed trait BnFGrammarIR:
   val uuid: UUID = UUID.randomUUID()
+  def replicaWithUniqueID: BnFGrammarIR = this match
+    case pr: ProductionRule => pr.copy(uuid = UUID.randomUUID())
+    case oc: OptionalConstruct => oc.copy(uuid = UUID.randomUUID())
+    case rc: RepeatConstruct => rc.copy(uuid = UUID.randomUUID())
+    case gc: GroupConstruct => gc.copy(uuid = UUID.randomUUID())
+    case sc: SeqConstruct => sc.copy(uuid = UUID.randomUUID())
+    case uc: UnionConstruct => uc.copy(uuid = UUID.randomUUID())
+    case rp: RepeatPrologFact => rp.copy(uuid = UUID.randomUUID())
+    case pf: PrologFact => pf.copy(uuid = UUID.randomUUID())
+    case ml: MetaVariable => MetaVariable(ml.name, ml.path)
+    case bl: BnfLiteral => bl.copy(uuid = UUID.randomUUID())
+    case pe: ProgramEntity => pe.copy(uuid = UUID.randomUUID())
+    case ir: IrError => IrError(ir.err)
+    case _ => throw new RuntimeException("Unknown BNF grammar element")
 
 trait BnFGrammarIRContainer extends BnFGrammarIR:
   val bnfObjects: List[BnFGrammarIR]
@@ -29,13 +43,13 @@ type MetaVarMap = Map[String, List[BnFGrammarIR]]
 enum LiteralType:
   case TERM, NONTERM, NTREGEX, REGEXTERM
 
-case class ProductionRule(lhs: BnFGrammarIR, rhs: BnFGrammarIR) extends BnFGrammarIR
-case class OptionalConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
-case class RepeatConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
-case class GroupConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
-case class SeqConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
-case class UnionConstruct(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer
-case class RepeatPrologFact(override val bnfObjects: List[BnFGrammarIR]) extends BnFGrammarIRContainer with CheckUpRewrite with GeneratePrologFact:
+case class ProductionRule(lhs: BnFGrammarIR, rhs: BnFGrammarIR, override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIR
+case class OptionalConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer
+case class RepeatConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer
+case class GroupConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer
+case class SeqConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer
+case class UnionConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer
+case class RepeatPrologFact(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer with CheckUpRewrite with GeneratePrologFact:
   def formListOfBnFGrammarElements: List[BnFGrammarIR] = bnfObjects.flatMap {
     case rfact: RepeatPrologFact => rfact.formListOfBnFGrammarElements
     case fact: PrologFact => fact.formListOfBnFGrammarElements
@@ -44,8 +58,7 @@ case class RepeatPrologFact(override val bnfObjects: List[BnFGrammarIR]) extends
   }
   end formListOfBnFGrammarElements
 
-
-case class PrologFact(functorName: String, mapParams2GrammarElements: List[(String, List[BnFGrammarIR])]) extends BnFGrammarIR with DeriveConstructs with CheckUpRewrite with GeneratePrologFact {
+case class PrologFact(functorName: String, mapParams2GrammarElements: List[(String, List[BnFGrammarIR])], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIR with DeriveConstructs with CheckUpRewrite with GeneratePrologFact {
   final def rewriteGrammarElements(level: Int): Option[PrologFact] =
     def rewriteGrammarElement(acc: List[BnFGrammarIR], e: List[BnFGrammarIR]): List[BnFGrammarIR] =
       e match
@@ -59,8 +72,13 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
           else
             val repeatedFacts = head.asInstanceOf[RepeatPrologFact].bnfObjects
             rewriteGrammarElement(RepeatPrologFact(rewriteGrammarElement(List(), repeatedFacts)) :: acc, next)
-        case ::(head, next) if head.isInstanceOf[ProgramEntity] => rewriteGrammarElement(head :: acc, next)
-        case ::(head, next) => rewriteGrammarElement(deriveElement(head, level > ConfigDb.`Gemceas.Generator.grammarMaxDepthRewriting`) ::: acc, next)
+        case ::(head, next) if head.isInstanceOf[ProgramEntity] =>
+          RewritingTree.addGrammarElements(List(), RewritingTree(head), 1)
+          rewriteGrammarElement(head :: acc, next)
+        case ::(head, next) =>
+          val gels = deriveElement(head, level > `Gemceas.Generator.grammarMaxDepthRewriting`)
+          RewritingTree.addGrammarElements(gels, RewritingTree(head), 1)
+          rewriteGrammarElement(gels ::: acc, next)
         case Nil => acc
     end rewriteGrammarElement
 
@@ -95,8 +113,8 @@ trait IrLiteral extends BnFGrammarIR
 
 case object ParameterSkipped extends IrLiteral
 
-case class MetaVariable(name: String, path: List[String]) extends IrLiteral
-case class BnfLiteral(token: String, literalType: LiteralType) extends IrLiteral
+case class MetaVariable(name: String, path: List[String], override val uuid: UUID = UUID.randomUUID()) extends IrLiteral
+case class BnfLiteral(token: String, literalType: LiteralType, override val uuid: UUID = UUID.randomUUID()) extends IrLiteral
 case class PrologFactsBuilder(prt: PrologTemplate) extends IrLiteral {
 //  xform factbuilder into an instance of PrologTemplate(functorName: String, params: List[PrologTemplate])
   def build(bnfObjects: List[BnFGrammarIR]): Either[String, PrologFact] =
@@ -104,7 +122,7 @@ case class PrologFactsBuilder(prt: PrologTemplate) extends IrLiteral {
     else if prt.params.exists(_.params.nonEmpty) then Left(s"Prolog template ${prt.params} contains parameters with parameters")
     else Right(PrologFact(prt.functorName, prt.params.map(_.functorName).lazyZip(bnfObjects).toList.map(e => (e._1, List(e._2)))))
 }
-case class ProgramEntity(code: String) extends IrLiteral
+case class ProgramEntity(code: String, override val uuid: UUID = UUID.randomUUID()) extends IrLiteral
 case class IrError(err: String) extends BnFGrammarIR
 
 object LocalTest:

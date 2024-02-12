@@ -9,16 +9,15 @@
 package Generator
 
 import Compiler.LiteralType.TERM
-import Compiler.{BnFGrammarIR, BnfLiteral, GrammarRewriter, GroupConstruct, LiteralType, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, RepeatPrologFact, SeqConstruct, TerminationData, UnionConstruct}
-import Utilz.ConfigDb.{`Gemceas.Generator.debugProgramGeneration`, `Gemceas.Generator.grammarMaxDepthRewriting`, grammarMaxDepthRewritingWithError}
+import Compiler.*
+import Utilz.ConfigDb.{`Gemceas.Generator.debugProgramGeneration`, `Gemceas.Generator.grammarMaxDepthRewriting`}
 import Utilz.{ConfigDb, CreateLogger, PrologTemplate}
 
-import java.nio.charset.Charset
 import java.util.UUID
 import scala.annotation.tailrec
 
 class ProgramGenerator private (progGenState: GeneratedProgramState) extends DeriveConstructs:
-
+  private val logger = CreateLogger(classOf[ProgramGenerator])
   @tailrec
   private def generateProgramInstance(prState: GeneratedProgramState = progGenState, level: Int = 0): GeneratedProgramState =
     if !prState.elements.forall(_.isInstanceOf[ProgramEntity]) then
@@ -29,12 +28,18 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
   @tailrec
   private def deriveProgram(accumulatorProg: List[BnFGrammarIR], st: List[BnFGrammarIR], level: Int, attempt: Int = 1): List[BnFGrammarIR] =
     st match
-      case ::(head, next) if head.isInstanceOf[PrologFact] => verifyGeneratedProgramFragment(head.asInstanceOf[PrologFact], level) match
-        case Some(lst) => deriveProgram(accumulatorProg ::: lst, next, level)
-        case None =>
-          logger.warn(s"Attempt $attempt failed to obtained a verified derivation of the program fragment $head at level $level")
-          deriveProgram(accumulatorProg, next, level, attempt+1)
-      case ::(head, next) => deriveProgram(accumulatorProg ::: deriveElement(head, level > `Gemceas.Generator.grammarMaxDepthRewriting`), next, level)
+      case ::(head, next) if head.isInstanceOf[PrologFact] =>
+        RewritingTree.resetPrologFact()
+        verifyGeneratedProgramFragment(head.asInstanceOf[PrologFact], level) match
+          case Some(lst) =>
+            deriveProgram(accumulatorProg ::: lst, next, level)
+          case None =>
+            logger.warn(s"Attempt $attempt failed to obtained a verified derivation of the program fragment $head at level $level")
+            deriveProgram(accumulatorProg, next, level, attempt+1)
+      case ::(head, next) =>
+        val gels = deriveElement(head, level > `Gemceas.Generator.grammarMaxDepthRewriting`)
+        RewritingTree.addGrammarElements(gels, RewritingTree(head), 0)
+        deriveProgram(accumulatorProg ::: gels, next, level)
       case Nil => accumulatorProg
   end deriveProgram
 
@@ -103,7 +108,7 @@ end ProgramGenerator
 object ProgramGenerator:
   private val logger = CreateLogger(classOf[ProgramGenerator.type])
   private var _grammar: List[ProductionRule] = _
-  private var reachabilityMap: Map[UUID, TerminationData] = Map()
+  private val reachabilityMap: Map[UUID, TerminationData] = Map()
   val expandNT: BnfLiteral => Option[ProductionRule] =
     (nt: BnfLiteral) =>
       if nt.literalType == LiteralType.TERM || nt.literalType == LiteralType.REGEXTERM then
@@ -127,17 +132,18 @@ object ProgramGenerator:
         }
 
       if ConfigDb.`Gemceas.Generator.debugProgramGeneration` then logger.info(s"ProgramGenerator obtains the following reachability map: \n\n${reachabilityMap.mkString("\n\n")}")
-      expandNT(startRuleId) match
-        case Some(rl) =>
-          val initState = GeneratedProgramState(List(rl.rhs))
+      RewritingTree.resetAll()
+      RewritingTree.setTheRoot(startRuleId) match
+        case Left(err) =>
+          logger.error(err)
+          Left(err)
+        case Right(theRoot) =>
+          logger.info(s"Rewriting tree root is set: $theRoot")
+          val initState = GeneratedProgramState(List(startRuleId))
           val gen = new ProgramGenerator(initState)
           val programObject: GeneratedProgramState = gen.generateProgramInstance()
           val code: GeneratedProgram = gen.generateSourceCode(programObject)
           Right(code)
-        case None =>
-          val errStr = s"Cannot find a rule defined by nonterminal $startRuleId, choosing the first rule ${g.head} instead"
-          logger.error(errStr)
-          Left(errStr)
 
   @main def quickGenerationTest(): Unit = {
     val res = GeneratedProgramState(List(ProgramEntity("-8.11"), ProgramEntity("*"), ProgramEntity("-47"),

@@ -8,7 +8,7 @@
 
 package Generator
 
-import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, IrError, IrLiteral, OptionalConstruct, ProductionRule, ProgramEntity, PrologFactsBuilder, RepeatConstruct, SeqConstruct, UnionConstruct}
+import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, OptionalConstruct, ProgramEntity, RepeatConstruct, SeqConstruct, UnionConstruct}
 import Utilz.{CreateLogger, PrologTemplate}
 import org.slf4j.Logger
 
@@ -16,11 +16,11 @@ trait DeriveConstructs:
   val logger: Logger = CreateLogger(classOf[DeriveConstructs])
   def deriveElement(e: BnFGrammarIR, limit: Boolean): List[BnFGrammarIR] =
     e match
-      case ir @ OptionalConstruct(bnfObjects) => OptionalConstructProcessor(ir, limit)
-      case ir @ RepeatConstruct(bnfObjects) => RepeatConstructProcessor(ir, limit)
-      case ir @ GroupConstruct(bnfObjects) => GroupConstructProcessor(ir)
-      case ir @ SeqConstruct(bnfObjects) => SeqConstructProcessor(ir)
-      case ir @ UnionConstruct(bnfObjects) => UnionConstructProcessor(ir, limit)
+      case ir @ OptionalConstruct(bnfObjects, _) => OptionalConstructProcessor(ir, limit)
+      case ir @ RepeatConstruct(bnfObjects, _) => RepeatConstructProcessor(ir, limit)
+      case ir @ GroupConstruct(bnfObjects, _) => GroupConstructProcessor(ir)
+      case ir @ SeqConstruct(bnfObjects, _) => SeqConstructProcessor(ir)
+      case ir @ UnionConstruct(bnfObjects, _) => UnionConstructProcessor(ir, limit)
       case literal if literal.isInstanceOf[BnfLiteral] =>
         val res = LiteralProcessor(literal.asInstanceOf[BnfLiteral])
         if res.isEmpty then

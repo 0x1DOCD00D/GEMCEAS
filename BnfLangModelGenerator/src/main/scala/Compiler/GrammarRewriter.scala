@@ -95,8 +95,8 @@ class GrammarRewriter(ast: List[ProductionRule]):
       case container: GroupConstruct => container.bnfObjects
       case container: SeqConstruct => container.bnfObjects
       case container: UnionConstruct => if processUnion then container.bnfObjects else List(container)
-      case lit @ BnfLiteral(token, ltype) if ltype == LiteralType.TERM || ltype == LiteralType.REGEXTERM || ltype == LiteralType.NTREGEX => List()
-      case lit @ BnfLiteral(token, ltype) if ltype == LiteralType.NONTERM =>
+      case lit @ BnfLiteral(token, ltype, _) if ltype == LiteralType.TERM || ltype == LiteralType.REGEXTERM || ltype == LiteralType.NTREGEX => List()
+      case lit @ BnfLiteral(token, ltype, _) if ltype == LiteralType.NONTERM =>
         ast.find(_.lhs.asInstanceOf[BnfLiteral].token == lit.token) match
           case Some(rule) => deriveFromGrammarObject(rule.rhs)
           case None =>
@@ -110,10 +110,10 @@ class GrammarRewriter(ast: List[ProductionRule]):
 object GrammarRewriter:
   private val logger = CreateLogger(classOf[GrammarRewriter])
   private val removeAllTerminals: List[BnFGrammarIR] => List[BnFGrammarIR] = (lst: List[BnFGrammarIR]) => lst
-    .filterNot(cond(_) { case BnfLiteral(_, LiteralType.NTREGEX) => true })
-    .filterNot(cond(_) { case BnfLiteral(_, LiteralType.TERM) => true })
-    .filterNot(cond(_) { case BnfLiteral(_, LiteralType.REGEXTERM) => true })
-  val removeAllUnions: List[BnFGrammarIR] => List[BnFGrammarIR] = (lst: List[BnFGrammarIR]) => lst.filterNot(cond(_) { case UnionConstruct(_) => true } )
+    .filterNot(cond(_) { case BnfLiteral(_, LiteralType.NTREGEX, _) => true })
+    .filterNot(cond(_) { case BnfLiteral(_, LiteralType.TERM, _) => true })
+    .filterNot(cond(_) { case BnfLiteral(_, LiteralType.REGEXTERM, _) => true })
+  val removeAllUnions: List[BnFGrammarIR] => List[BnFGrammarIR] = (lst: List[BnFGrammarIR]) => lst.filterNot(cond(_) { case UnionConstruct(_,_) => true } )
 
   @main def runMain_GrammarRewriter(): Unit =
     import Compiler.LiteralType.*
