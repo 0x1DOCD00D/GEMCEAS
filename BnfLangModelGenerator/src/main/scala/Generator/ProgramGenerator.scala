@@ -27,10 +27,10 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
 
   @tailrec
   private def deriveProgram(accumulatorProg: List[BnFGrammarIR], st: List[BnFGrammarIR], level: Int, attempt: Int = 1): List[BnFGrammarIR] =
-    import RewritingTree.MainRewritingTree
+    import DerivationTree.MainRewritingTree
     st match
       case ::(head, next) if head.isInstanceOf[PrologFact] =>
-        RewritingTree.resetPrologFact()
+        DerivationTree.resetPrologFact()
         verifyGeneratedProgramFragment(head.asInstanceOf[PrologFact], level) match
           case Some(lst) =>
             deriveProgram(accumulatorProg ::: lst, next, level)
@@ -39,7 +39,7 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
             deriveProgram(accumulatorProg, next, level, attempt+1)
       case ::(head, next) =>
         val gels = deriveElement(head, level > `Gemceas.Generator.grammarMaxDepthRewriting`)
-        RewritingTree.addGrammarElements(gels, head, 0)
+        DerivationTree.addGrammarElements(gels, head, 0)
         deriveProgram(accumulatorProg ::: gels, next, level)
       case Nil => accumulatorProg
   end deriveProgram
@@ -136,8 +136,8 @@ object ProgramGenerator:
         }
 
       if ConfigDb.`Gemceas.Generator.debugProgramGeneration` then logger.info(s"ProgramGenerator obtains the following reachability map: \n\n${reachabilityMap.mkString("\n\n")}")
-      RewritingTree.resetAll()
-      RewritingTree.setTheRoot(startRuleId) match
+      DerivationTree.resetAll()
+      DerivationTree.setTheRoot(startRuleId) match
         case Left(err) =>
           logger.error(err)
           Left(err)

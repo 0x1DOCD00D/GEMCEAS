@@ -8,7 +8,7 @@
 
 package Compiler
 
-import Generator.{DeriveConstructs, RewritingTree}
+import Generator.{DeriveConstructs, DerivationTree}
 import Utilz.ConfigDb.*
 import Utilz.Constants.{CloseKet, CommaSeparator, OpenBra}
 import Utilz.{ConfigDb, PrologTemplate}
@@ -82,11 +82,11 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
             val repeatedFacts = head.asInstanceOf[RepeatPrologFact].bnfObjects
             rewriteGrammarElement(RepeatPrologFact(rewriteGrammarElement(List(), repeatedFacts)) :: acc, next)
         case ::(head, next) if head.isInstanceOf[ProgramEntity] =>
-          RewritingTree.addGrammarElements(List(), head, 1)
+          DerivationTree.addGrammarElements(List(), head, 1)
           rewriteGrammarElement(head :: acc, next)
         case ::(head, next) =>
           val gels = deriveElement(head, level > `Gemceas.Generator.grammarMaxDepthRewriting`)
-          RewritingTree.addGrammarElements(gels, head, 1)
+          DerivationTree.addGrammarElements(gels, head, 1)
           rewriteGrammarElement(gels ::: acc, next)
         case Nil => acc
     end rewriteGrammarElement

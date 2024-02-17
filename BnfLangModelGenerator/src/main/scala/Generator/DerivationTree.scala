@@ -8,11 +8,11 @@ import scala.collection.mutable
 import scala.collection.mutable.Map
 import scala.collection.mutable.ListBuffer
 
-object RewritingTree:
+object DerivationTree:
   type MainRewritingTree = 0
   type TempPrologFactRewritingTree = 1
 
-  private val logger = CreateLogger(classOf[RewritingTree.type])
+  private val logger = CreateLogger(classOf[DerivationTree.type])
   private [this] var theRoot: BnFGrammarIR = NonExistentElement
   private [this] val parentChildMap: Array[mutable.Map[UUID, List[UUID]]] = Array(mutable.Map(), mutable.Map())
   private [this] val theTree: Array[ListBuffer[BnFGrammarIR]] = Array(ListBuffer(), ListBuffer())
