@@ -14,7 +14,8 @@ import Utilz.Constants.{CloseParen, CommaSeparator, OpenParen, Prolog_Template_D
 "==>> product_div(_, _, second_term(SecondTermSign, SecondTerm))"
 */
 
-case class PrologTemplate(functorName: String, params: List[PrologTemplate])
+case class PrologTemplate(functorName: String, params: List[PrologTemplate]):
+  override def toString: String = s"PrologTemplate($functorName, ${params.toString()}"
 class PrologTemplateExtractor(functor: String):
   import PrologTemplateExtractor.logger
   def parseFunctor(): Option[PrologTemplate] =

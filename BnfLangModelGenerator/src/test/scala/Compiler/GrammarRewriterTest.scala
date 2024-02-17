@@ -139,7 +139,7 @@ class GrammarRewriterTest extends AnyFlatSpec with Matchers {
       divergentNTs.foreach {
         nt => logger.error(s"Divergent NT: ${nt.uuid} -> ${nt.toString}")
       }
-    divergentNTs shouldBe List(
+    divergentNTs.toString() shouldBe List(
       UnionConstruct(List(
         GroupConstruct(List(BnfLiteral("sum_sub", NONTERM))),
         GroupConstruct(List(BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM))))
@@ -155,7 +155,7 @@ class GrammarRewriterTest extends AnyFlatSpec with Matchers {
       UnionConstruct(List(
         GroupConstruct(List(BnfLiteral("sum_sub", NONTERM))),
         GroupConstruct(List(BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM)))))
-    )
+    ).toString()
   }
 
 }

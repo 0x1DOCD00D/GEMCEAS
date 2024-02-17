@@ -60,7 +60,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
 
     val res = AstExtractors(parsedGrammar)
     //      mainRule ::= a b | c d e | f g | z
-    res shouldBe List(ProductionRule(
+    res.toString() shouldBe List(ProductionRule(
       BnfLiteral("mainRule", NONTERM),
       SeqConstruct(List(
         UnionConstruct(List(
@@ -78,7 +78,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
           ))
         ))
       ))
-    )
+    ).toString()
   }
 
   it should "extract an IR representation from an optional rule with a collection of elements" in {
@@ -94,7 +94,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
     )
 
     val res = AstExtractors(parsedGrammar)
-    res shouldBe List(ProductionRule(
+    res.toString() shouldBe List(ProductionRule(
       BnfLiteral("nt2", NONTERM),
       SeqConstruct(List(
         GroupConstruct(List(
@@ -105,7 +105,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
           ))
         ))
       ))
-    )
+    ).toString()
   }
 
   it should "extract an IR representation from a repeat rule with a collection of elements" in {
@@ -123,7 +123,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
     )
 
     val res = AstExtractors(parsedGrammar)
-    res shouldBe List(ProductionRule(
+    res.toString() shouldBe List(ProductionRule(
       BnfLiteral("mainRule", NONTERM),
       SeqConstruct(List(
         GroupConstruct(List(
@@ -132,7 +132,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
           ))
         )))
       ))
-    )
+    ).toString()
   }
 
   it should "extract an IR representation from a repeat rule with a single terminal" in {
@@ -147,7 +147,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
       ))
     )
     val res = AstExtractors(parsedGrammar)
-    res shouldBe List(ProductionRule(BnfLiteral("mainRule", NONTERM),
+    res.toString shouldBe List(ProductionRule(BnfLiteral("mainRule", NONTERM),
       SeqConstruct(List(
         GroupConstruct(List(
           RepeatConstruct(List(
@@ -157,7 +157,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
           ))
         ))
       ))
-    )
+    ).toString()
   }
 
   it should "extract an IR representation from a sequence rule" in {
@@ -173,7 +173,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
       )
     ))
     val res = AstExtractors(parsedGrammar)
-    res shouldBe List(
+    res.toString() shouldBe List(
       ProductionRule(
         BnfLiteral("mainRule", NONTERM),
         SeqConstruct(List(
@@ -183,7 +183,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
           ))
         )
       )
-    )
+    ).toString()
   }
 
   it should "extract an IR representation from a unionized rule" in {
@@ -227,7 +227,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
     )
     val res = AstExtractors(parsedGrammar)
     //    mainRule ::= x | ["y" z] | {v w} | theRestOfIt
-    res shouldBe List[ProductionRule](
+    res.toString() shouldBe List[ProductionRule](
       ProductionRule(
         BnfLiteral("mainRule", NONTERM),
         SeqConstruct(List(
@@ -254,7 +254,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
             ))
           )))
       )
-    )
+    ).toString()
   }
 
   it should "extract an IR representation from a nested unionized rule" in {
@@ -293,7 +293,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
 
     val res = AstExtractors(parsedGrammar)
     //     mainRule ::= [{a} (b | c)] | d | e f;
-    res shouldBe List(ProductionRule(
+    res.toString() shouldBe List(ProductionRule(
       BnfLiteral("mainRule", NONTERM),
       SeqConstruct(List(
         UnionConstruct(List(
@@ -325,7 +325,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
           ))
         ))
       ))
-    )
+    ).toString()
   }
 
   it should "extract an IR representation from the expression grammar" in {
@@ -383,7 +383,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
     term ::= number | "(" expression ")";
     <number> ::= "(\+|\-)?[0-9]+(\.[0-9]+)?";
     */
-    res shouldBe List(
+    res.toString() shouldBe List(
       ProductionRule(BnfLiteral("expression", NONTERM),
         SeqConstruct(List(
           GroupConstruct(List(
@@ -474,7 +474,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
         BnfLiteral("number", NTREGEX),
         BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM)
       )
-    )
+    ).toString()
   }
 
   it should "extract an IR representation from an incorrect expression grammar" in {
@@ -501,7 +501,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
         RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?""")))))
 
     val res = AstExtractors(parsedGrammar)
-    res shouldBe List(ProductionRule(BnfLiteral("expression", NONTERM), SeqConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM)))))), ProductionRule(BnfLiteral("sum_sub", NONTERM), SeqConstruct(List(GroupConstruct(List(BnfLiteral("product_div", NONTERM), RepeatConstruct(List(GroupConstruct(List(GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))), BnfLiteral("product_div", NONTERM)))))))))), ProductionRule(BnfLiteral("product_div", NONTERM), SeqConstruct(List(GroupConstruct(List(OptionalConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))), BnfLiteral("term", NONTERM), RepeatConstruct(List(GroupConstruct(List(GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("*", TERM))), GroupConstruct(List(BnfLiteral("/", TERM))))))), BnfLiteral("number", NONTERM)))))))))), ProductionRule(BnfLiteral("term", NONTERM), SeqConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM))), GroupConstruct(List(BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM)))))))), ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM)))
+    res.toString() shouldBe List(ProductionRule(BnfLiteral("expression", NONTERM), SeqConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM)))))), ProductionRule(BnfLiteral("sum_sub", NONTERM), SeqConstruct(List(GroupConstruct(List(BnfLiteral("product_div", NONTERM), RepeatConstruct(List(GroupConstruct(List(GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))), BnfLiteral("product_div", NONTERM)))))))))), ProductionRule(BnfLiteral("product_div", NONTERM), SeqConstruct(List(GroupConstruct(List(OptionalConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("+", TERM))), GroupConstruct(List(BnfLiteral("-", TERM))))))), BnfLiteral("term", NONTERM), RepeatConstruct(List(GroupConstruct(List(GroupConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("*", TERM))), GroupConstruct(List(BnfLiteral("/", TERM))))))), BnfLiteral("number", NONTERM)))))))))), ProductionRule(BnfLiteral("term", NONTERM), SeqConstruct(List(UnionConstruct(List(GroupConstruct(List(BnfLiteral("sum_sub", NONTERM))), GroupConstruct(List(BnfLiteral("(", TERM), BnfLiteral("expression", NONTERM), BnfLiteral(")", TERM)))))))), ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM))).toString()
   }
 
   it should "extract an IR representation from an exp grammar with prolog templates" in {
@@ -594,7 +594,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
         RuleLiteral(RegexString("""(\+|\-)?[0-9]+(\.[0-9]+)?""")))
     ))
     val res = AstExtractors(expGrammar)
-    res shouldBe List(
+    res.toString() shouldBe List(
       /*
         expression ::=
           sum_sub
@@ -698,7 +698,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
         BnfLiteral("number", NTREGEX),
         BnfLiteral("""(\+|\-)?[0-9]+(\.[0-9]+)?""", REGEXTERM)
       )
-    )
+    ).toString()
   }
 
   it should "extract an IR representation from an exp grammar with prolog templates and metavariables" in {
@@ -784,7 +784,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
     )
     )
     val res = AstExtractors(expGrammar)
-    res shouldBe List(
+    res.toString() shouldBe List(
       ProductionRule(
         BnfLiteral("expression", NONTERM),
         SeqConstruct(List(
@@ -862,6 +862,6 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
                 PrologTemplate("Expression", List()),
                 PrologTemplate("_", List()))))))))))
       ),
-      ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""", REGEXTERM)))
+      ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""", REGEXTERM))).toString()
   }
 }

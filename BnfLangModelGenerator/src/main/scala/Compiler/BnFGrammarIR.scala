@@ -30,8 +30,10 @@ sealed trait BnFGrammarIR:
     case ml: MetaVariable => MetaVariable(ml.name, ml.path)
     case bl: BnfLiteral => bl.copy(uuid = UUID.randomUUID())
     case pe: ProgramEntity => pe.copy(uuid = UUID.randomUUID())
-    case ir: IrError => IrError(ir.err)
-    case _ => throw new RuntimeException("Unknown BNF grammar element")
+    case ir: IrError => ir
+    case unknownError =>
+      logger.error(s"Unknown BNF grammar element $unknownError")
+      unknownError
 
 trait BnFGrammarIRContainer extends BnFGrammarIR:
   val bnfObjects: List[BnFGrammarIR]
@@ -43,13 +45,20 @@ type MetaVarMap = Map[String, List[BnFGrammarIR]]
 enum LiteralType:
   case TERM, NONTERM, NTREGEX, REGEXTERM
 
-case class ProductionRule(lhs: BnFGrammarIR, rhs: BnFGrammarIR, override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIR
-case class OptionalConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer
-case class RepeatConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer
-case class GroupConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer
-case class SeqConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer
-case class UnionConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer
+case class ProductionRule(lhs: BnFGrammarIR, rhs: BnFGrammarIR, override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIR:
+  override def toString: String = s"ProductionRule($lhs, $rhs)"
+case class OptionalConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer:
+  override def toString: String = s"OptionalConstruct($bnfObjects)"
+case class RepeatConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer:
+  override def toString: String = s"RepeatConstruct($bnfObjects)"
+case class GroupConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer:
+  override def toString: String = s"GroupConstruct($bnfObjects)"
+case class SeqConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer:
+  override def toString: String = s"SeqConstruct($bnfObjects)"
+case class UnionConstruct(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer:
+  override def toString: String = s"UnionConstruct($bnfObjects)"
 case class RepeatPrologFact(override val bnfObjects: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIRContainer with CheckUpRewrite with GeneratePrologFact:
+  override def toString: String = s"RepeatPrologFact($bnfObjects)"
   def formListOfBnFGrammarElements: List[BnFGrammarIR] = bnfObjects.flatMap {
     case rfact: RepeatPrologFact => rfact.formListOfBnFGrammarElements
     case fact: PrologFact => fact.formListOfBnFGrammarElements
@@ -73,11 +82,11 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
             val repeatedFacts = head.asInstanceOf[RepeatPrologFact].bnfObjects
             rewriteGrammarElement(RepeatPrologFact(rewriteGrammarElement(List(), repeatedFacts)) :: acc, next)
         case ::(head, next) if head.isInstanceOf[ProgramEntity] =>
-          RewritingTree.addGrammarElements(List(), RewritingTree(head), 1)
+          RewritingTree.addGrammarElements(List(), head, 1)
           rewriteGrammarElement(head :: acc, next)
         case ::(head, next) =>
           val gels = deriveElement(head, level > `Gemceas.Generator.grammarMaxDepthRewriting`)
-          RewritingTree.addGrammarElements(gels, RewritingTree(head), 1)
+          RewritingTree.addGrammarElements(gels, head, 1)
           rewriteGrammarElement(gels ::: acc, next)
         case Nil => acc
     end rewriteGrammarElement
@@ -112,17 +121,21 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
 trait IrLiteral extends BnFGrammarIR
 
 case object ParameterSkipped extends IrLiteral
+case object NonExistentElement extends BnFGrammarIR
 
-case class MetaVariable(name: String, path: List[String], override val uuid: UUID = UUID.randomUUID()) extends IrLiteral
-case class BnfLiteral(token: String, literalType: LiteralType, override val uuid: UUID = UUID.randomUUID()) extends IrLiteral
+case class MetaVariable(name: String, path: List[String], override val uuid: UUID = UUID.randomUUID()) extends IrLiteral:
+  override def toString: String = s"MetaVariable($name, $path)"
+case class BnfLiteral(token: String, literalType: LiteralType, override val uuid: UUID = UUID.randomUUID()) extends IrLiteral:
+  override def toString: String = s"BnfLiteral($token, $literalType)"
 case class PrologFactsBuilder(prt: PrologTemplate) extends IrLiteral {
 //  xform factbuilder into an instance of PrologTemplate(functorName: String, params: List[PrologTemplate])
+  override def toString: String = s"PrologFactsBuilder($PrologTemplate)"
   def build(bnfObjects: List[BnFGrammarIR]): Either[String, PrologFact] =
     if prt.params.length != bnfObjects.length then Left(s"Number of parameters in the Prolog template ${prt.params} does not match the number of BNF objects $bnfObjects")
     else if prt.params.exists(_.params.nonEmpty) then Left(s"Prolog template ${prt.params} contains parameters with parameters")
     else Right(PrologFact(prt.functorName, prt.params.map(_.functorName).lazyZip(bnfObjects).toList.map(e => (e._1, List(e._2)))))
 }
-case class ProgramEntity(code: String, override val uuid: UUID = UUID.randomUUID()) extends IrLiteral
+case class ProgramEntity(code: String, @transient override val uuid: UUID = UUID.randomUUID()) extends IrLiteral
 case class IrError(err: String) extends BnFGrammarIR
 
 object LocalTest:

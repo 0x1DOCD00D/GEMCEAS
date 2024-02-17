@@ -1,8 +1,7 @@
 package Generator
 
-import org.scalatest.funsuite.AnyFunSuiteLike
-import LexerParser.{Nonterminal, *}
 import Compiler.*
+import Generator.ProgramGenerator.logger
 import LiteralType.*
 import Utilz.{CreateLogger, PrologTemplate}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -93,7 +92,7 @@ class GeneratedProgramStateTest extends AnyFlatSpec with Matchers {
     ),
     ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""", REGEXTERM)))
 
-  it should "extract an IR representation from a union rule with a collection of elements" in {
+  it should "generate an expression for the provided grammar" in {
     val gen = ProgramGenerator(expGrammarFull, BnfLiteral("expression", NONTERM))
     gen match
       case Left(err) =>
@@ -101,7 +100,35 @@ class GeneratedProgramStateTest extends AnyFlatSpec with Matchers {
         fail()
       case Right(prg) =>
         logger.info(prg.mkString(" "))
-        prg shouldBe List()
+        prg.count(e => if e == "+" || e == "*" then true else false) should be >= 2
 
   }
+
+  it should "create an expression given its parsed grammar" in {
+    val progstate = GeneratedProgramState(List(ProgramEntity("-8.11"), ProgramEntity("*"), ProgramEntity("-47"),
+      RepeatPrologFact(List(
+        PrologFact("product_div_repetition", List(("Sign", List(ProgramEntity("+"))),
+          ("ProductDiv", List(PrologFact("product_div", List(("_", List()),
+            ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("84.00"))))))),
+            ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
+              ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("+93.97"))))))))))))))))),
+        PrologFact("product_div_repetition", List(("Sign", List(ProgramEntity("+"))),
+          ("ProductDiv", List(PrologFact("product_div", List(("_", List()),
+            ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("50"))))))),
+            ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
+              ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("+421"))))))))))))))))),
+        PrologFact("product_div_repetition", List(("Sign", List(ProgramEntity("+"))), ("ProductDiv", List(PrologFact("product_div", List(("_", List()),
+          ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("0"))))))),
+          ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
+            ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("24"))))))))))))))))
+        )
+      )
+      )
+    ))
+    val codeBnF = progstate.convertPrologFactsIntoBnFElements()
+    val code = ProgramGenerator.forTesting(codeBnF)
+    logger.info(s"Generated program: ${code.mkString(" ")}")
+    code.mkString(" ") should be ("+ 84.00 * +93.97 + 50 * +421 + 0 * 24")
+  }
+
 }
