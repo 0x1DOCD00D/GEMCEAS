@@ -27,7 +27,7 @@ sealed trait BnFGrammarIR:
     case uc: UnionConstruct => uc.copy(uuid = UUID.randomUUID())
     case rp: RepeatPrologFact => rp.copy(uuid = UUID.randomUUID())
     case pf: PrologFact => pf.copy(uuid = UUID.randomUUID())
-    case ml: MetaVariable => MetaVariable(ml.name, ml.path)
+    case ml: MetaVariable => MetaVariable(ml.name, ml.path, ml.index)
     case bl: BnfLiteral => bl.copy(uuid = UUID.randomUUID())
     case pe: ProgramEntity => pe.copy(uuid = UUID.randomUUID())
     case ir: IrError => ir
@@ -123,8 +123,8 @@ trait IrLiteral extends BnFGrammarIR
 case object ParameterSkipped extends IrLiteral
 case object NonExistentElement extends BnFGrammarIR
 
-case class MetaVariable(name: String, path: List[String], override val uuid: UUID = UUID.randomUUID()) extends IrLiteral:
-  override def toString: String = s"MetaVariable($name, $path)"
+case class MetaVariable(name: String, path: List[String], index: Option[Int], override val uuid: UUID = UUID.randomUUID()) extends IrLiteral:
+  override def toString: String = s"MetaVariable($name, $path, $index)"
 case class BnfLiteral(token: String, literalType: LiteralType, override val uuid: UUID = UUID.randomUUID()) extends IrLiteral:
   override def toString: String = s"BnfLiteral($token, $literalType)"
 case class PrologFactsBuilder(prt: PrologTemplate) extends IrLiteral {

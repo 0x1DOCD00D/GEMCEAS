@@ -19,7 +19,7 @@ object MetaVariableManager:
         else
           val indexPattern = """(_\d+)""".r
           mvPath.reverse.head match
-            case indexPattern(ind) => Option(mvName, mvPath.tail.reverse, Some(ind.substring(1).toInt))
+            case indexPattern(ind) => Option(mvName, mvPath.reverse.tail.reverse, Some(ind.substring(1).toInt))
             case _ => Option(mvName, mvPath, None)
 
       else

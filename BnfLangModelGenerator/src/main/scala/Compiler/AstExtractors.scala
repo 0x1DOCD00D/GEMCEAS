@@ -147,7 +147,7 @@ object AstExtractors:
             if metaVar.isEmpty then
               logger.error(s"Failed to extract a meta variable from ${l.token}")
               IrError(s"Failed to extract a meta variable from ${l.token}")
-            else MetaVariable(metaVar.get._1, metaVar.get._2)
+            else MetaVariable(metaVar.get._1, metaVar.get._2, metaVar.get._3)
           else if l.token == MetaVariable_Assignment_Designator then
             logger.error(s"Failed to extract a meta variable assignment designator from ${l.token}")
             IrError(s"Failed to extract a meta variable assignment designator from ${l.token}")

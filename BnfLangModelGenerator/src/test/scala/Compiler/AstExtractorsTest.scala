@@ -837,7 +837,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
                   PrologTemplate("Sign", List()),
                   PrologTemplate("Term", List())))))))
             ),
-            MetaVariable("PrevProductDiv", List("sum_sub", "product_div", "_1")),
+            MetaVariable("PrevProductDiv", List("sum_sub", "product_div"), Some(1)),
             PrologFactsBuilder(PrologTemplate("product_div", List(
               PrologTemplate("PrevProductDiv", List()),
               PrologTemplate("_", List()),
@@ -850,7 +850,7 @@ class AstExtractorsTest extends AnyFlatSpec with Matchers {
           UnionConstruct(List(
             GroupConstruct(List(
               BnfLiteral("number", NONTERM),
-              MetaVariable("PrevTerm", List("product_div", "term", "_2")),
+              MetaVariable("PrevTerm", List("product_div", "term"), Some(2)),
               PrologFactsBuilder(PrologTemplate("term", List(PrologTemplate("PrevTerm", List()), PrologTemplate("Number", List())))))
             ),
             GroupConstruct(List(
