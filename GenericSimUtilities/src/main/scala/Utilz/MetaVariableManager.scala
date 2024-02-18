@@ -6,12 +6,22 @@ object MetaVariableManager:
 
   def isMetaVariable(mVarDef: String): Boolean = if mVarDef.trim.contains(MetaVariable_Assignment_Designator) then true else false
 
-  def apply(mVarDef: String): Option[(String,List[String])] =
+  def apply(mVarDef: String): Option[(String, List[String], Option[Int])] =
     if isMetaVariable(mVarDef) then
       val theSplit = mVarDef.trim.split(MetaVariable_Assignment_Designator)
       if theSplit.length == 2 then
         val ntPath = theSplit(1).trim
-        Option(theSplit(0).trim, if ntPath.contains(Dot) then ntPath.split(DotSeparator).toList.map(_.trim) else List(ntPath))
+        val mvName = theSplit(0).trim
+        val mvPath = if ntPath.contains(Dot) then ntPath.split(DotSeparator).toList.map(_.trim) else List(ntPath)
+        if mvName.isEmpty || mvPath.isEmpty then
+          logger.error(s"MetaVariableManager:apply: Invalid MetaVariable Definition: $mVarDef")
+          None
+        else
+          val indexPattern = """(_\d+)""".r
+          mvPath.reverse.head match
+            case indexPattern(ind) => Option(mvName, mvPath.tail.reverse, Some(ind.substring(1).toInt))
+            case _ => Option(mvName, mvPath, None)
+
       else
         logger.error(s"MetaVariableManager:apply: Invalid MetaVariable Definition: $mVarDef")
         None
@@ -19,5 +29,8 @@ object MetaVariableManager:
 
   @main def runMain_MetaVarExtractor(): Unit =
     logger.info(MetaVariableManager("ClassIdentifier=:= NormalClassDeclaration.TypeIdentifier").toString)
+    logger.info(MetaVariableManager("ClassIdentifier=:= NormalClassDeclaration.TypeIdentifier._3").toString)
+    logger.info(MetaVariableManager("ClassIdentifier=:= NormalClassDeclaration.TypeIdentifier.__3").toString)
+    logger.info(MetaVariableManager("ClassIdentifier=:= NormalClassDeclaration.TypeIdentifier._").toString)
     logger.info(MetaVariableManager("ClassIdentifier=:= ").toString)
     logger.info(MetaVariableManager("=:= ").toString)

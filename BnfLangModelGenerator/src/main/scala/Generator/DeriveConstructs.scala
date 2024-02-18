@@ -8,8 +8,8 @@
 
 package Generator
 
-import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, OptionalConstruct, ProgramEntity, RepeatConstruct, SeqConstruct, UnionConstruct}
-import Utilz.{CreateLogger, PrologTemplate}
+import Compiler.{BnFGrammarIR, BnfLiteral, GroupConstruct, OptionalConstruct, ProgramEntity, RepeatConstruct, SeqConstruct, UnionConstruct}
+import Utilz.CreateLogger
 import org.slf4j.Logger
 
 trait DeriveConstructs:
