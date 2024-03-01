@@ -1,5 +1,5 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / scalaVersion := "3.3.0"
+ThisBuild / scalaVersion := "3.3.3"
 
 val scalaTestVersion = "3.2.17"
 val scalaMockitoTestVersion = "3.2.12.0-RC2"
@@ -8,25 +8,18 @@ val logbackVersion = "1.4.14"
 val sfl4sVersion = "2.0.0-alpha5"
 val catsVersion = "2.10.0"
 val apacheCommonsVersion = "2.15.1"
-val jplVersion = "7.4.0"
 val parserCombinatorsVersion = "2.3.0"
 val scalaParCollVersion = "1.0.4"
 val scalaCheckVersion = "1.17.0"
 val regExGeneratorVersion = "1.1.0"
 val scalaToolkitVersion = "0.2.1"
-val scalaReflectVersion = "2.13.12"
 
 lazy val commonDependencies = Seq(
   "org.scala-lang.modules" %% "scala-parallel-collections" % scalaParCollVersion,
   "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
   "org.scalatestplus" %% "mockito-4-2" % scalaMockitoTestVersion % Test,
-  "org.scalatest" %% "scalatest-flatspec" % scalaTestVersion % Test,
   "com.typesafe" % "config" % typeSafeConfigVersion,
   "ch.qos.logback" % "logback-classic" % logbackVersion,
-  "jpl" % "jpl" % jplVersion,
-  "org.scala-lang" %% "toolkit" % scalaToolkitVersion,
-  "org.scala-lang" %% "toolkit-test" % scalaToolkitVersion % Test,
-  "org.scala-lang" % "scala-reflect" % scalaReflectVersion,
   "com.github.dwickern" %% "scala-nameof" % "4.0.0" % "provided"
 )
 
@@ -34,7 +27,13 @@ lazy val root = (project in file("."))
   .settings(
     name := "gemceas",
     libraryDependencies ++= commonDependencies
-  ).aggregate(BnfLangModelGenerator,GenericSimUtilities).dependsOn(BnfLangModelGenerator)
+  ).aggregate(BnfLangModelGenerator,GenericSimUtilities)
+  .dependsOn(Jpl)
+  .dependsOn(BnfLangModelGenerator)
+
+lazy val Jpl = RootProject(uri("https://github.com/SWI-Prolog/packages-jpl.git#V9.3.1"))
+Jpl / scalaVersion := "3.2.2"
+Jpl / javacOptions ++= Seq("-source", "17", "-target", "17")
 
 lazy val BnfLangModelGenerator = (project in file("BnfLangModelGenerator"))
   .settings(
@@ -55,6 +54,7 @@ lazy val GenericSimUtilities = (project in file("GenericSimUtilities"))
   )
 
 scalacOptions ++= Seq(
+  "-deprecation", // emit warning and location for usages of deprecated APIs
   "-explain-types", // explain type errors in more detail
   "-feature", // emit warning and location for usages of features that should be imported explicitly
   "-verbose", // Output messages about what the compiler is doing.
@@ -65,8 +65,7 @@ scalacOptions ++= Seq(
   "-Ysafe-init" //Ensure safe initialization of objects.
 )
 
-Global / scalacOptions ++= Seq("-unchecked", "-deprecation", "-color:always")
-Global / excludeLintKeys += test / fork
+ThisBuild / scalacOptions ++= Seq("-unchecked", "-color:always")
 
 compileOrder := CompileOrder.JavaThenScala
 test / fork := true
@@ -86,10 +85,3 @@ ThisBuild / assemblyMergeStrategy := {
   case "reference.conf" => MergeStrategy.concat
   case _ => MergeStrategy.first
 }
-
-BnfLangModelGenerator / libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "3.2.17" % Test
-)
-GenericSimUtilities / libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "3.2.17" % Test
-)
