@@ -1,20 +1,20 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.3.0"
 
-val scalaTestVersion = "3.2.16"
+val scalaTestVersion = "3.2.17"
 val scalaMockitoTestVersion = "3.2.12.0-RC2"
-val typeSafeConfigVersion = "1.4.2"
-val logbackVersion = "1.4.7"
+val typeSafeConfigVersion = "1.4.3"
+val logbackVersion = "1.4.14"
 val sfl4sVersion = "2.0.0-alpha5"
-val catsVersion = "2.9.0"
-val apacheCommonsVersion = "2.13.0"
+val catsVersion = "2.10.0"
+val apacheCommonsVersion = "2.15.1"
 val jplVersion = "7.4.0"
 val parserCombinatorsVersion = "2.3.0"
 val scalaParCollVersion = "1.0.4"
 val scalaCheckVersion = "1.17.0"
 val regExGeneratorVersion = "1.1.0"
-val scalaToolkitVersion = "0.2.0"
-val scalaReflectVersion = "2.13.10"
+val scalaToolkitVersion = "0.2.1"
+val scalaReflectVersion = "2.13.12"
 
 lazy val commonDependencies = Seq(
   "org.scala-lang.modules" %% "scala-parallel-collections" % scalaParCollVersion,
@@ -88,8 +88,8 @@ ThisBuild / assemblyMergeStrategy := {
 }
 
 BnfLangModelGenerator / libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "latest.integration" % Test
+  "org.scalatest" %% "scalatest" % "3.2.17" % Test
 )
 GenericSimUtilities / libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "latest.integration" % Test
+  "org.scalatest" %% "scalatest" % "3.2.17" % Test
 )
