@@ -1,7 +1,7 @@
 package Generator
 
 import Compiler.{BnFGrammarIR, BnfLiteral}
-import Compiler.LiteralType.{NONTERM}
+import Compiler.LiteralType.NONTERM
 
 object GelChecks:
   def isGelNt(gel: BnFGrammarIR, tokenValue: Option[String] = None): Boolean =

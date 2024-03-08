@@ -15,7 +15,7 @@ object MetaVarDictionary:
       Right(mv.path)
 
   def apply(mvName: String): Either[String, List[BnFGrammarIR]] =
-    if metaVarDict.contains(mvName) == false then
+    if !metaVarDict.contains(mvName) then
       Left(s"MetaVarDictionary: $mvName is not defined.")
     else
       Right(metaVarDict(mvName))
