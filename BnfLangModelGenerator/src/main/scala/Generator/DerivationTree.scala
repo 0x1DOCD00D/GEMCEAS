@@ -1,21 +1,26 @@
 package Generator
 
-import Compiler.{BnFGrammarIR, NonExistentElement}
+import Compiler.LiteralType.NONTERM
+import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, IrError, IrLiteral, MetaVariable, MetaVariableXformed, NonExistentElement, ProductionRule, PrologFact}
+import Generator.DerivationTree.{MainRewritingTree, TempPrologFactRewritingTree}
 import Utilz.CreateLogger
 
 import java.util.UUID
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.Map
 import scala.collection.mutable.ListBuffer
 
 object DerivationTree:
+  import GelChecks.*
   type MainRewritingTree = 0
   type TempPrologFactRewritingTree = 1
 
   private val logger = CreateLogger(classOf[DerivationTree.type])
   private [this] var theRoot: BnFGrammarIR = NonExistentElement
   private [this] val parentChildMap: Array[mutable.Map[UUID, List[UUID]]] = Array(mutable.Map(), mutable.Map())
-  private [this] val theTree: Array[ListBuffer[BnFGrammarIR]] = Array(ListBuffer(), ListBuffer())
+  private [this] val child2ParentMap: Array[mutable.Map[UUID, UUID]] = Array(mutable.Map(), mutable.Map())
+  private [this] val theTree: Array[mutable.Map[UUID, BnFGrammarIR]] = Array(mutable.Map(), mutable.Map())
 
   def resetPrologFact(): Unit =
     parentChildMap(1) = mutable.Map()
@@ -37,14 +42,24 @@ object DerivationTree:
       Right(theRoot)
 
   def addGrammarElements(gels: List[BnFGrammarIR], parent: BnFGrammarIR, tempPrologFactTree: MainRewritingTree | TempPrologFactRewritingTree): Either[String, List[BnFGrammarIR]] =
+    val fMetaVarConversion: BnFGrammarIR => BnFGrammarIR = gel => {
+      gel match
+        case metaVar: MetaVariable =>
+          findMvReference(metaVar, metaVar, tempPrologFactTree) match
+            case Left(errMsg) => gel
+            case Right(mv) =>
+              mv
+        case _ => gel
+    }
     if theRoot == NonExistentElement then
       Left("Root node does not exist")
     else if parentChildMap(tempPrologFactTree).contains(parent.uuid) then
       val children = parentChildMap(tempPrologFactTree)(parent.uuid)
       parentChildMap(tempPrologFactTree) += (parent.uuid -> (children ::: gels.map(_.uuid)))
-      theTree(tempPrologFactTree) ++= gels
-      gels.foreach { potentialParent =>
-        parentChildMap(tempPrologFactTree) += (potentialParent.uuid -> List())
+      theTree(tempPrologFactTree) ++= gels.map(gel => gel.uuid -> fMetaVarConversion(gel))
+      gels.foreach { gel =>
+        parentChildMap(tempPrologFactTree) += (gel.uuid -> List())
+        child2ParentMap(tempPrologFactTree) += (gel.uuid -> parent.uuid)
       }
       Right(gels)
     else
@@ -80,3 +95,92 @@ object DerivationTree:
       the number of gels ntx under nt1 then mv is resolved to the specific ntx. If N is greater than the number of gels ntx under nt1 then an error
       message is logged and the first gel ntx is chosen for resolution.
     * */
+
+  @annotation.tailrec
+  private def findTheLeafGel(leaf: String, parent: String, index: Option[Int], path: List[BnFGrammarIR], tempPrologFactTree: MainRewritingTree | TempPrologFactRewritingTree): Option[(BnFGrammarIR, BnFGrammarIR, List[BnFGrammarIR])] = {
+    path match
+      case leafGelParent :: tail =>
+        // the name of the parent node should match
+        if isGelNt(leafGelParent, Some(parent)) == false then
+          findTheLeafGel(leaf, parent, index, tail, tempPrologFactTree)
+        else
+        // find all chidlren nodes of the current leaf gel that match the leaf name
+          parentChildMap(tempPrologFactTree).get(leafGelParent.uuid) match
+            case Some(children) =>
+              val leafGels = children.filter(child => isGelNt(theTree(tempPrologFactTree)(child), Some(leaf)))
+              if leafGels.isEmpty then
+                findTheLeafGel(leaf, parent, index, tail, tempPrologFactTree)
+              else
+                if index.isDefined then
+                  if index.get < leafGels.length then
+                    Some((theTree(tempPrologFactTree)(leafGels(index.get)), leafGelParent, tail))
+                  else
+                    logger.error(s"Index $index is greater than the number of gels ${children.length}. Choosing the first gel.")
+                    Some((theTree(tempPrologFactTree)(leafGels.head), leafGelParent, tail))
+                else
+                  leafGels.headOption match
+                    case Some(gel) => Some((theTree(tempPrologFactTree)(gel), leafGelParent, tail))
+                    case None => findTheLeafGel(leaf, parent, index, tail, tempPrologFactTree)
+            case None => None
+      case Nil => None
+  }
+
+  private def matchTheRestOfThePath(foundMatch: (BnFGrammarIR, BnFGrammarIR, List[BnFGrammarIR]), specPath: List[String]): Either[String, List[BnFGrammarIR]] =
+    val (leafGel, parent, remainingPath) = foundMatch
+    if remainingPath.isEmpty then
+      Right(leafGel :: parent :: Nil)
+    else if remainingPath.length != specPath.length then
+      Left(s"Path length mismatch between the remaining path $remainingPath and the path spec $specPath")
+    else
+      if remainingPath.zip(specPath).forall { case (gel, name) => isGelNt(gel, Some(name)) } then
+        Right(leafGel :: parent :: remainingPath)
+      else
+        Left(s"Path mismatch between the remaining path $remainingPath and the path spec $specPath")
+
+  private def findMvReference(gelRef: BnFGrammarIR, mv: MetaVariable, tempPrologFactTree: MainRewritingTree | TempPrologFactRewritingTree): Either[String, MetaVariableXformed] = {
+    def getTreePath(gelRef: BnFGrammarIR, path:List[BnFGrammarIR]): Either[String, List[BnFGrammarIR]] = {
+      if gelRef == theRoot then Right((gelRef :: path).reverse)
+      else if child2ParentMap(tempPrologFactTree).contains(gelRef.uuid) == false then
+        Left(s"Parent not found for $gelRef")
+      else
+        val parent = child2ParentMap(tempPrologFactTree)(gelRef.uuid)
+        if theTree(tempPrologFactTree).contains(parent) == false then
+          Left(s"BnFElement doesn't exist for $gelRef")
+        else
+          val gep = theTree(tempPrologFactTree)(parent)
+          if isGelNt(gep) then getTreePath(gep, gep :: path)
+          else Left(s"Parent of $gelRef is not a non-terminal: $gep")
+    }
+
+    def slideUpTheTreePath(leaf: String, parent: String, path: List[BnFGrammarIR]): List[BnFGrammarIR] = {
+      findTheLeafGel(leaf, parent, mv.index, path, tempPrologFactTree) match
+        case Some(foundMatch) =>
+          matchTheRestOfThePath(foundMatch, mv.path.tail.tail) match
+            case Left(errMsg) =>
+              logger.info(errMsg)
+              slideUpTheTreePath(leaf, parent, path.tail)
+            case Right(theMatch) => theMatch
+        case None => slideUpTheTreePath(leaf, parent, path.tail)
+    }
+
+    val fullPath = getTreePath(gelRef, List()) match
+      case Left(errMsg) => logger.error(errMsg); Nil
+      case Right(value) => value
+
+    val childrenOfThePath: BnFGrammarIR => List[BnFGrammarIR] = gel => {
+      parentChildMap(tempPrologFactTree).get(gel.uuid) match
+        case Some(children) => children.flatMap(child => theTree(tempPrologFactTree).get(child))
+        case None => Nil
+    }
+
+    if fullPath.isEmpty then
+      Left(s"Full path not found for $gelRef")
+    else if mv.path.isEmpty then Left(s"Path not defined for $mv")
+    else if mv.path.length < 2 then Left(s"Path length is less than 2 for $mv")
+    else
+      val leaf = mv.path.head
+      val parent = mv.path.tail.head
+      slideUpTheTreePath(leaf, parent, fullPath) match
+        case Nil => Left(s"Path not found for $mv")
+        case theMatch => Right(MetaVariableXformed(mv.name, childrenOfThePath(theMatch.head)))
+  }

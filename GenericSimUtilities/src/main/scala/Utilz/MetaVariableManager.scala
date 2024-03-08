@@ -1,6 +1,8 @@
 package Utilz
 
 import Utilz.Constants.{Dot, DotSeparator, MetaVariable_Assignment_Designator}
+
+import scala.collection.mutable
 object MetaVariableManager:
   private val logger = CreateLogger(classOf[MetaVariableManager.type])
 
@@ -26,7 +28,7 @@ object MetaVariableManager:
         logger.error(s"MetaVariableManager:apply: Invalid MetaVariable Definition: $mVarDef")
         None
     else None
-
+  
   @main def runMain_MetaVarExtractor(): Unit =
     logger.info(MetaVariableManager("ClassIdentifier=:= NormalClassDeclaration.TypeIdentifier").toString)
     logger.info(MetaVariableManager("ClassIdentifier=:= NormalClassDeclaration.TypeIdentifier._3").toString)

@@ -123,6 +123,9 @@ trait IrLiteral extends BnFGrammarIR
 case object ParameterSkipped extends IrLiteral
 case object NonExistentElement extends BnFGrammarIR
 
+case class MetaVariableXformed(name: String, path: List[BnFGrammarIR], override val uuid: UUID = UUID.randomUUID()) extends IrLiteral:
+  override def toString: String = s"MetaVariable($name, ${path.mkString(", ")})"
+
 case class MetaVariable(name: String, path: List[String], index: Option[Int], override val uuid: UUID = UUID.randomUUID()) extends IrLiteral:
   override def toString: String = s"MetaVariable($name, $path, $index)"
 case class BnfLiteral(token: String, literalType: LiteralType, override val uuid: UUID = UUID.randomUUID()) extends IrLiteral:

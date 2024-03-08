@@ -76,7 +76,7 @@ run / javaOptions ++= Seq(
 )
 
 val jarName = "gemceas.jar"
-assembly / assemblyJarName := jarName
+assembly / assemblyJarName :=  jarName
 
 
 //Merging strategies
