@@ -1,20 +1,17 @@
 package Generator
 
-import Compiler.LiteralType.NONTERM
-import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, IrError, IrLiteral, MetaVariable, MetaVariableXformed, NonExistentElement, ProductionRule, PrologFact}
-import Generator.DerivationTree.{MainRewritingTree, TempPrologFactRewritingTree}
+import Compiler.{BnFGrammarIR, MetaVariable, MetaVariableXformed, NonExistentElement}
 import Utilz.CreateLogger
 
 import java.util.UUID
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.mutable.Map
-import scala.collection.mutable.ListBuffer
 
 object DerivationTree:
   import GelChecks.*
-  type MainRewritingTree = 0
-  type TempPrologFactRewritingTree = 1
+  private type MainRewritingTree = 0
+  private type TempPrologFactRewritingTree = 1
 
   private val logger = CreateLogger(classOf[DerivationTree.type])
   private [this] var theRoot: BnFGrammarIR = NonExistentElement
@@ -103,7 +100,7 @@ object DerivationTree:
         if !isGelNt(leafGelParent, Some(parent)) then
           findTheLeafGel(leaf, parent, index, tail, tempPrologFactTree)
         else
-        // find all chidlren nodes of the current leaf gel that match the leaf name
+        // find all children nodes of the current leaf gel that match the leaf name
           parentChildMap(tempPrologFactTree).get(leafGelParent.uuid) match
             case Some(children) =>
               val leafGels = children.filter(child => isGelNt(theTree(tempPrologFactTree)(child), Some(leaf)))
