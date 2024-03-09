@@ -125,7 +125,7 @@ class GeneratedProgramStateTest extends AnyFlatSpec with Matchers {
     val codeBnF = progstate.convertPrologFactsIntoBnFElements()
     val code = ProgramGenerator.forTesting(codeBnF)
     logger.info(s"Generated program: ${code.mkString(" ")}")
-    code.mkString(" ").toString.isBlank shouldBe false//("+ 84.00 * +93.97 + 50 * +421 + 0 * 24")
+    code.mkString(" ").isBlank shouldBe false//("+ 84.00 * +93.97 + 50 * +421 + 0 * 24")
   }
 
 }
