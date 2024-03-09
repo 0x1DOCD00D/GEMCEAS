@@ -8,7 +8,7 @@
 
 package Generator
 
-import Compiler.{BnFGrammarIR, BnfLiteral, GroupConstruct, OptionalConstruct, ProgramEntity, RepeatConstruct, SeqConstruct, UnionConstruct}
+import Compiler.{BnFGrammarIR, BnfLiteral, GroupConstruct, MetaVariable, OptionalConstruct, ProgramEntity, RepeatConstruct, SeqConstruct, UnionConstruct}
 import Utilz.CreateLogger
 import org.slf4j.Logger
 
@@ -21,6 +21,7 @@ trait DeriveConstructs:
       case ir @ GroupConstruct(bnfObjects, _) => GroupConstructProcessor(ir)
       case ir @ SeqConstruct(bnfObjects, _) => SeqConstructProcessor(ir)
       case ir @ UnionConstruct(bnfObjects, _) => UnionConstructProcessor(ir, limit)
+      case mv if mv.isInstanceOf[MetaVariable] => List(mv)
       case literal if literal.isInstanceOf[BnfLiteral] =>
         val res = LiteralProcessor(literal.asInstanceOf[BnfLiteral])
         if res.isEmpty then

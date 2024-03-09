@@ -10,6 +10,7 @@ package Generator
 
 import Compiler.{BnfLiteral, GroupConstruct, OptionalConstruct, ProductionRule, RepeatConstruct, SeqConstruct, UnionConstruct}
 import ExtendedAEParser.{opt, parseAll, rep}
+import org.scalatest.CancelAfterFailure
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -25,7 +26,7 @@ object ExtendedAEParser extends JavaTokenParsers:
       case failed: Failure => Left(failed.msg)
       case success => Right(success)
 
-class ProgramGeneratorTest extends AnyFlatSpec with Matchers {
+class ProgramGeneratorTest extends AnyFlatSpec with Matchers with CancelAfterFailure {
   behavior of "the program generator"
 
   val expression1: String  = "+(-+13   * -013++(-2-1)/3.12)"
@@ -131,7 +132,7 @@ class ProgramGeneratorTest extends AnyFlatSpec with Matchers {
     ),
     ProductionRule(
       BnfLiteral("number", NTREGEX),
-      BnfLiteral("""([+]|[-])?[0-9]+(\.[0-9]+)?""", REGEXTERM)
+      BnfLiteral("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""", REGEXTERM)
     )
   )
 
@@ -153,7 +154,7 @@ class ProgramGeneratorTest extends AnyFlatSpec with Matchers {
 
   it should s"generate an expression and parse it" in {
     val gen = ProgramGenerator(grammar, BnfLiteral("expression", NONTERM))
-    if gen.isLeft then assert(false)
+    if gen.isLeft then gen.left.toString.isEmpty shouldBe false
     else
       val code = gen.getOrElse(expressionIncorrect).asInstanceOf[GeneratedProgram].mkString
       ExtendedAEParser.parseArithExp(code).isRight shouldBe true

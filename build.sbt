@@ -68,8 +68,8 @@ scalacOptions ++= Seq(
 ThisBuild / scalacOptions ++= Seq("-unchecked", "-color:always")
 
 compileOrder := CompileOrder.JavaThenScala
-test / fork := true
 run / fork := true
+test / parallelExecution := false
 run / javaOptions ++= Seq(
   "-Xms1512M",
   "-Xmx20000M"
