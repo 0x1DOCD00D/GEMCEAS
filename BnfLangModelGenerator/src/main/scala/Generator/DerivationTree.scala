@@ -1,6 +1,6 @@
 package Generator
 
-import Compiler.{BnFGrammarIR, MetaVariable, MetaVariableXformed, NonExistentElement}
+import Compiler.{BnFGrammarIR, MetaVariable, MetaVariableXformed, NonExistentElement, PrologFact}
 import Utilz.CreateLogger
 
 import java.util.UUID
@@ -21,6 +21,7 @@ object DerivationTree:
 
   def resetPrologFact(): Unit =
     parentChildMap(1) = mutable.Map()
+    child2ParentMap(1) = mutable.Map()
     theTree(1).clear()
 
   def resetAll(): Unit =
@@ -38,13 +39,27 @@ object DerivationTree:
       parentChildMap(0) += (theRoot.uuid -> List())
       Right(theRoot)
 
+  //the prolog fact tree is spliced under its parent
+  def mergePFactTreeWithMainTree(): Either[String, BnFGrammarIR] =
+    if theRoot == NonExistentElement then
+      Left("Root node does not exist")
+    else
+      parentChildMap(0) ++= parentChildMap(1)
+      theTree(0) ++= theTree(1)
+      child2ParentMap(0) ++= child2ParentMap(1)
+      resetPrologFact()
+      Right(theRoot)
   def addGrammarElements(gels: List[BnFGrammarIR], parent: BnFGrammarIR, tempPrologFactTree: MainRewritingTree | TempPrologFactRewritingTree): Either[String, List[BnFGrammarIR]] =
     val fMetaVarConversion: BnFGrammarIR => BnFGrammarIR = {
       case gel@(metaVar: MetaVariable) =>
         findMvReference(metaVar, metaVar, tempPrologFactTree) match
           case Left(errMsg) => gel
           case Right(mv) =>
-            mv
+            MetaVarDictionary(mv) match
+              case Right(children) => mv
+              case Left(errMsg) =>
+                logger.error(errMsg)
+                gel
       case gel => gel
     }
     if theRoot == NonExistentElement then

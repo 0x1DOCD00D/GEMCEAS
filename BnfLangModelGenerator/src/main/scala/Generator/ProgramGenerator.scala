@@ -31,8 +31,13 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
     st match
       case ::(head, next) if head.isInstanceOf[PrologFact] =>
         DerivationTree.resetPrologFact()
+        val gels = head.asInstanceOf[PrologFact].formListOfBnFGrammarElements
+        DerivationTree.addGrammarElements(gels, head, 1)
         verifyGeneratedProgramFragment(head.asInstanceOf[PrologFact], level) match
           case Some(lst) =>
+            DerivationTree.mergePFactTreeWithMainTree() match
+              case Left(errMsg) => logger.error(s"Error merging derivation trees: $errMsg")
+              case Right(theroot) => logger.info(s"Rewriting tree root is set: $theroot")
             deriveProgram(accumulatorProg ::: lst, next, level)
           case None =>
             logger.warn(s"Attempt $attempt failed to obtained a verified derivation of the program fragment $head at level $level")

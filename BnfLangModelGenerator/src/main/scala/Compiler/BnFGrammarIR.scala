@@ -82,7 +82,6 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
             val repeatedFacts = head.asInstanceOf[RepeatPrologFact].bnfObjects
             rewriteGrammarElement(RepeatPrologFact(rewriteGrammarElement(List(), repeatedFacts)) :: acc, next)
         case ::(head, next) if head.isInstanceOf[ProgramEntity] =>
-          DerivationTree.addGrammarElements(List(), head, 1)
           rewriteGrammarElement(head :: acc, next)
         case ::(head, next) =>
           val gels = deriveElement(head, level > `Gemceas.Generator.grammarMaxDepthRewriting`)
