@@ -27,7 +27,6 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
 
   @tailrec
   private def deriveProgram(accumulatorProg: List[BnFGrammarIR], st: List[BnFGrammarIR], level: Int, attempt: Int = 1): List[BnFGrammarIR] =
-    import DerivationTree.MainRewritingTree
     st match
       case ::(head, next) if head.isInstanceOf[PrologFact] =>
         DerivationTree.resetPrologFact()
