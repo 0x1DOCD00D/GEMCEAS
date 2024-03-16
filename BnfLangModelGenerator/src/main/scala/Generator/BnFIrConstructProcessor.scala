@@ -16,7 +16,7 @@ object OptionalConstructProcessor extends ((OptionalConstruct, Boolean) => List[
   override def apply(v1: OptionalConstruct, v2: Boolean): List[BnFGrammarIR] =
     if v2 then List()
     else
-      if SupplierOfRandomness.`YesOrNo?`()() then v1.bnfObjects.map(e => e.replicaWithUniqueID)
+      if SupplierOfRandomness.`YesOrNo?`()() then v1.bnfObjects
       else List()
 
 object RepeatConstructProcessor extends ((RepeatConstruct, Boolean) => List[BnFGrammarIR]) with DeriveConstructs:
@@ -77,7 +77,7 @@ end GroupConstructProcessor
 
 
 object SeqConstructProcessor extends (SeqConstruct => List[BnFGrammarIR]) with DeriveConstructs:
-  override def apply(v1: SeqConstruct): List[BnFGrammarIR] = v1.bnfObjects//.map(e => e.copy(uuid = java.util.UUID.randomUUID()))
+  override def apply(v1: SeqConstruct): List[BnFGrammarIR] = v1.bnfObjects
 
 object UnionConstructProcessor extends ((UnionConstruct, Boolean) => List[BnFGrammarIR]) with DeriveConstructs:
   def findTermination(e: BnFGrammarIR): Boolean = {
@@ -115,7 +115,7 @@ object LiteralProcessor extends (BnfLiteral => List[BnFGrammarIR]) with DeriveCo
     v1 match
       case nt @ BnfLiteral(token, NONTERM,_) =>
         ProgramGenerator.expandNT(nt) match
-          case Some(r) => List(r.rhs)
+          case Some(r) => List(r.rhs.replicaWithUniqueID)
           case None => List()
       case BnfLiteral(token, NTREGEX,_) => List(ProgramEntity(token))
       case BnfLiteral(token, TERM,_) =>

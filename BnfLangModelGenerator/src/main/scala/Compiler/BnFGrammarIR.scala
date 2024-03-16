@@ -18,6 +18,21 @@ import scala.annotation.tailrec
 
 sealed trait BnFGrammarIR:
   val uuid: UUID = UUID.randomUUID()
+  def theName: String = this match
+    case pr: ProductionRule => "Rule"
+    case oc: OptionalConstruct => "Opt"
+    case rc: RepeatConstruct => "Rep"
+    case gc: GroupConstruct => "Group"
+    case sc: SeqConstruct => "Seq"
+    case uc: UnionConstruct => "Union"
+    case rp: RepeatPrologFact => "RepPF"
+    case pf: PrologFact => pf.functorName + "(...)"
+    case ml: MetaVariable => ml.name
+    case bl: BnfLiteral => bl.token
+    case pe: ProgramEntity => pe.code
+    case ir: IrError => ir.err
+    case unknownError => "/?\\"
+
   def replicaWithUniqueID: BnFGrammarIR = this match
     case pr: ProductionRule => pr.copy(uuid = UUID.randomUUID())
     case oc: OptionalConstruct => oc.copy(uuid = UUID.randomUUID())
@@ -73,15 +88,22 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
       e match
         case ::(head, next) if head.isInstanceOf[PrologFact]  =>
           val headFact = head.asInstanceOf[PrologFact]
+          val gels = headFact.formListOfBnFGrammarElements
+          DerivationTree.addGrammarElements(gels, headFact, 1)
           if headFact.isRewriteCompleted() then rewriteGrammarElement(head :: acc, next)
           else rewriteGrammarElement(head.asInstanceOf[PrologFact].rewriteGrammarElements(level + 1).getOrElse(ErrorInRewritingGrammarElements(level)) :: acc, next)
         case ::(head, next) if head.isInstanceOf[RepeatPrologFact]  =>
           val headFact = head.asInstanceOf[RepeatPrologFact]
-          if headFact.isRewriteCompleted() then rewriteGrammarElement(head :: acc, next)
+          if headFact.isRewriteCompleted() then
+            val gels = headFact.formListOfBnFGrammarElements
+            DerivationTree.addGrammarElements(gels, headFact, 1)
+            rewriteGrammarElement(head :: acc, next)
           else
-            val repeatedFacts = head.asInstanceOf[RepeatPrologFact].bnfObjects
+            val repeatedFacts = head.asInstanceOf[RepeatPrologFact].bnfObjects.map(_.replicaWithUniqueID)
+            DerivationTree.addGrammarElements(repeatedFacts, head, 1)
             rewriteGrammarElement(RepeatPrologFact(rewriteGrammarElement(List(), repeatedFacts)) :: acc, next)
         case ::(head, next) if head.isInstanceOf[ProgramEntity] =>
+          DerivationTree.addGrammarElements(List(), head, 1)
           rewriteGrammarElement(head :: acc, next)
         case ::(head, next) =>
           val gels = deriveElement(head, level > `Gemceas.Generator.grammarMaxDepthRewriting`)
@@ -135,7 +157,7 @@ case class PrologFactsBuilder(prt: PrologTemplate) extends IrLiteral {
   def build(bnfObjects: List[BnFGrammarIR]): Either[String, PrologFact] =
     if prt.params.length != bnfObjects.length then Left(s"Number of parameters in the Prolog template ${prt.params} does not match the number of BNF objects $bnfObjects")
     else if prt.params.exists(_.params.nonEmpty) then Left(s"Prolog template ${prt.params} contains parameters with parameters")
-    else Right(PrologFact(prt.functorName, prt.params.map(_.functorName).lazyZip(bnfObjects).toList.map(e => (e._1, List(e._2)))))
+    else Right(PrologFact(prt.functorName, prt.params.map(_.functorName).lazyZip(bnfObjects.map(_.replicaWithUniqueID)).toList.map(e => (e._1, List(e._2)))))
 }
 case class ProgramEntity(code: String, @transient override val uuid: UUID = UUID.randomUUID()) extends IrLiteral
 case class IrError(err: String) extends BnFGrammarIR

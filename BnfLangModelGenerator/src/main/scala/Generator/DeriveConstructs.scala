@@ -15,21 +15,22 @@ import org.slf4j.Logger
 trait DeriveConstructs:
   val logger: Logger = CreateLogger(classOf[DeriveConstructs])
   def deriveElement(e: BnFGrammarIR, limit: Boolean): List[BnFGrammarIR] =
-    e match
-      case ir @ OptionalConstruct(bnfObjects, _) => OptionalConstructProcessor(ir, limit)
-      case ir @ RepeatConstruct(bnfObjects, _) => RepeatConstructProcessor(ir, limit)
-      case ir @ GroupConstruct(bnfObjects, _) => GroupConstructProcessor(ir)
-      case ir @ SeqConstruct(bnfObjects, _) => SeqConstructProcessor(ir)
-      case ir @ UnionConstruct(bnfObjects, _) => UnionConstructProcessor(ir, limit)
-      case mv if mv.isInstanceOf[MetaVariable] => List(mv)
-      case literal if literal.isInstanceOf[BnfLiteral] =>
-        val res = LiteralProcessor(literal.asInstanceOf[BnfLiteral])
-        if res.isEmpty then
-          logger.error(s"Literal IR structure contains incorrect $literal.")
+    val replicatedGels = e match
+        case ir @ OptionalConstruct(bnfObjects, _) => OptionalConstructProcessor(ir, limit)
+        case ir @ RepeatConstruct(bnfObjects, _) => RepeatConstructProcessor(ir, limit)
+        case ir @ GroupConstruct(bnfObjects, _) => GroupConstructProcessor(ir)
+        case ir @ SeqConstruct(bnfObjects, _) => SeqConstructProcessor(ir)
+        case ir @ UnionConstruct(bnfObjects, _) => UnionConstructProcessor(ir, limit)
+        case mv if mv.isInstanceOf[MetaVariable] => List(mv)
+        case literal if literal.isInstanceOf[BnfLiteral] =>
+          val res = LiteralProcessor(literal.asInstanceOf[BnfLiteral])
+          if res.isEmpty then
+            logger.error(s"Literal IR structure contains incorrect $literal.")
+            List()
+          else res
+        case doneWithAlready if doneWithAlready.isInstanceOf[ProgramEntity] => List(doneWithAlready)
+        case err =>
+          logger.error(s"IR structure contains the wrong element $err.")
           List()
-        else res
-      case doneWithAlready if doneWithAlready.isInstanceOf[ProgramEntity] => List(doneWithAlready)
-      case err =>
-        logger.error(s"IR structure contains the wrong element $err.")
-        List()
+    replicatedGels.map(_.replicaWithUniqueID)
   end deriveElement

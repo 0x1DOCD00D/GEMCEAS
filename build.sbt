@@ -13,6 +13,8 @@ val scalaParCollVersion = "1.0.4"
 val scalaCheckVersion = "1.17.0"
 val regExGeneratorVersion = "1.1.0"
 val scalaToolkitVersion = "0.2.1"
+val graphVizVersion = "0.18.1"
+
 
 lazy val commonDependencies = Seq(
   "org.scala-lang.modules" %% "scala-parallel-collections" % scalaParCollVersion,
@@ -43,7 +45,8 @@ lazy val BnfLangModelGenerator = (project in file("BnfLangModelGenerator"))
       "commons-io" % "commons-io" % apacheCommonsVersion,
       "org.scala-lang.modules" %% "scala-parser-combinators" % parserCombinatorsVersion,
       "org.scalacheck" %% "scalacheck" % scalaCheckVersion,
-      "io.github.wolfendale" %% "scalacheck-gen-regexp" % regExGeneratorVersion
+      "io.github.wolfendale" %% "scalacheck-gen-regexp" % regExGeneratorVersion,
+      "guru.nidi" % "graphviz-java" % graphVizVersion
     )
   ).dependsOn(GenericSimUtilities)
 

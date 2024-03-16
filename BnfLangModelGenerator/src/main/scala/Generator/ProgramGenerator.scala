@@ -29,7 +29,7 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
   private def deriveProgram(accumulatorProg: List[BnFGrammarIR], st: List[BnFGrammarIR], level: Int, attempt: Int = 1): List[BnFGrammarIR] =
     st match
       case ::(head, next) if head.isInstanceOf[PrologFact] =>
-        DerivationTree.resetPrologFact()
+        DerivationTree.resetPrologFact(Some(head.asInstanceOf[PrologFact]))
         val gels = head.asInstanceOf[PrologFact].formListOfBnFGrammarElements
         DerivationTree.addGrammarElements(gels, head, 1)
         verifyGeneratedProgramFragment(head.asInstanceOf[PrologFact], level) match
@@ -151,7 +151,9 @@ object ProgramGenerator:
           val gen = new ProgramGenerator(initState)
           val programObject: GeneratedProgramState = gen.generateProgramInstance()
           val code: GeneratedProgram = gen.generateSourceCode(programObject)
-          Right(code)
+          new TreeVisualizer().toDotVizFormat("ArithmeticExpression", "ArithmeticExpression") match
+            case Left(errMsg) => Left(errMsg)
+            case Right(value) => Right(code)
 
   @main def runProgGenWithTemplates(): Unit = {
     /*
