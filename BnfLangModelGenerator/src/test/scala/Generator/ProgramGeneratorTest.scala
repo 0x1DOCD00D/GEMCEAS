@@ -8,8 +8,10 @@
 
 package Generator
 
-import Compiler.{BnfLiteral, GroupConstruct, OptionalConstruct, ProductionRule, RepeatConstruct, SeqConstruct, UnionConstruct}
+import Compiler.{BnfLiteral, GroupConstruct, OptionalConstruct, ProductionRule, PrologFactsBuilder, RepeatConstruct, SeqConstruct, UnionConstruct}
 import ExtendedAEParser.{opt, parseAll, rep}
+import Generator.ProgramGenerator.logger
+import Utilz.{ConfigDb, PrologTemplate}
 import org.scalatest.CancelAfterFailure
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -135,6 +137,135 @@ class ProgramGeneratorTest extends AnyFlatSpec with Matchers with CancelAfterFai
       BnfLiteral("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""", REGEXTERM)
     )
   )
+  
+    /*
+    expression ::=
+      sum_sub
+      "==>> expression(SumSub)";
+
+    sum_sub ::=
+      product_div {("+"|"-") product_div "==>> product_div_repetition(Sign, ProductDiv)"}
+      "==>> sum_sub(_, ProductDivRepetition)";
+
+    product_div ::=
+      ["+"|"-"] term {("*"|"/") term "==>> term_repetition(Sign, Term)"}
+      "==>> product_div(_, NumberOrExpression, TermRepetition)";
+
+    term ::=
+      number
+      "==>> term(Number)" |
+      "(" expression ")"
+      "==>> term(_, Expression, _)";
+
+    <number> ::=
+      "(\+|\-)?[0-9]+(\.[0-9]+)?";
+    */
+    import Compiler.LiteralType.*
+    val grammarWithPrologTemplates = List(
+      /*
+        expression ::=
+          sum_sub
+          "==>> expression(SumSub)";
+      * */
+      ProductionRule(BnfLiteral("expression", NONTERM), SeqConstruct(List(
+        GroupConstruct(List(
+          BnfLiteral("sum_sub", NONTERM),
+          PrologFactsBuilder(PrologTemplate("expression", List(PrologTemplate("SumSub", List())))))
+        )))
+      ),
+      /*
+        sum_sub ::=
+        product_div {("+"|"-") product_div "==>> product_div_repetition(Sign, ProductDiv)"}
+        "==>> sum_sub(_, ProductDivRepetition)";
+      * */
+      ProductionRule(BnfLiteral("sum_sub", NONTERM), SeqConstruct(List(
+        GroupConstruct(List(
+          BnfLiteral("product_div", NONTERM),
+          RepeatConstruct(List(
+            GroupConstruct(List(
+              GroupConstruct(List(
+                UnionConstruct(List(
+                  GroupConstruct(List(BnfLiteral("+", TERM))),
+                  GroupConstruct(List(BnfLiteral("-", TERM))))))
+              ),
+              BnfLiteral("product_div", NONTERM),
+              PrologFactsBuilder(PrologTemplate("product_div_repetition", List(
+                PrologTemplate("Sign", List()), PrologTemplate("ProductDiv", List())))
+              ))))
+          ),
+          PrologFactsBuilder(PrologTemplate("sum_sub", List(
+            PrologTemplate("_", List()),
+            PrologTemplate("ProductDivRepetition", List())))
+          )))))
+      ),
+      /*
+        product_div ::=
+          ["+"|"-"] term {("*"|"/") term "==>> term_repetition(Sign, Term)"}
+          "==>> product_div(_, NumberOrExpression, TermRepetition)";
+      * */
+      ProductionRule(BnfLiteral("product_div", NONTERM), SeqConstruct(List(
+        GroupConstruct(List(
+          OptionalConstruct(List(
+            UnionConstruct(List(
+              GroupConstruct(List(BnfLiteral("+", TERM))),
+              GroupConstruct(List(BnfLiteral("-", TERM))))
+            ))
+          ),
+          BnfLiteral("term", NONTERM),
+          RepeatConstruct(List(
+            GroupConstruct(List(
+              GroupConstruct(List(
+                UnionConstruct(List(
+                  GroupConstruct(List(BnfLiteral("*", TERM))),
+                  GroupConstruct(List(BnfLiteral("/", TERM))))
+                ))
+              ),
+              BnfLiteral("term", NONTERM),
+              PrologFactsBuilder(PrologTemplate("term_repetition", List(
+                PrologTemplate("Sign", List()),
+                PrologTemplate("Term", List())))
+              ))))
+          ),
+          PrologFactsBuilder(PrologTemplate("product_div", List(
+            PrologTemplate("_", List()),
+            PrologTemplate("NumberOrExpression", List()),
+            PrologTemplate("TermRepetition", List())))
+          )))))
+      ),
+      /*
+        term ::=
+          number
+          "==>> term(Number)" |
+          "(" expression ")"
+          "==>> term(_, Expression, _)";
+      * */
+      ProductionRule(BnfLiteral("term", NONTERM), SeqConstruct(List(
+        UnionConstruct(List(
+          GroupConstruct(List(
+            BnfLiteral("number", NONTERM),
+            PrologFactsBuilder(PrologTemplate("term", List(
+              PrologTemplate("Number", List())))
+            ))
+          ),
+          GroupConstruct(List(
+            BnfLiteral("(", TERM),
+            BnfLiteral("expression", NONTERM),
+            BnfLiteral(")", TERM),
+            PrologFactsBuilder(PrologTemplate("term", List(
+              PrologTemplate("_", List()),
+              PrologTemplate("Expression", List()),
+              PrologTemplate("_", List())))
+            )))))))
+      ),
+      /*
+        <number> ::=
+          "(\+|\-)?[0-9]+(\.[0-9]+)?";
+      * */
+      ProductionRule(
+        BnfLiteral("number", NTREGEX),
+        BnfLiteral("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""", REGEXTERM)
+      )
+    )
 
   it should s"parse a simple expression: $expression1" in {
     ExtendedAEParser.parseArithExp(expression1).isRight shouldBe true
@@ -154,6 +285,14 @@ class ProgramGeneratorTest extends AnyFlatSpec with Matchers with CancelAfterFai
 
   it should s"generate an expression and parse it" in {
     val gen = ProgramGenerator(grammar, BnfLiteral("expression", NONTERM))
+    if gen.isLeft then gen.left.toString.isEmpty shouldBe false
+    else
+      val code = gen.getOrElse(expressionIncorrect).asInstanceOf[GeneratedProgram].mkString
+      ExtendedAEParser.parseArithExp(code).isRight shouldBe true
+  }
+
+  it should s"generate an expression from a grammar with prolog templates and parse it" in {
+    val gen = ProgramGenerator(grammarWithPrologTemplates, BnfLiteral("expression", NONTERM))
     if gen.isLeft then gen.left.toString.isEmpty shouldBe false
     else
       val code = gen.getOrElse(expressionIncorrect).asInstanceOf[GeneratedProgram].mkString
