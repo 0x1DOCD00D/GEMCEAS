@@ -161,7 +161,7 @@ class ProgramGeneratorTest extends AnyFlatSpec with Matchers with CancelAfterFai
       "(\+|\-)?[0-9]+(\.[0-9]+)?";
     */
     import Compiler.LiteralType.*
-    val grammarWithPrologTemplates = List(
+    val grammarWithPrologTemplates: List[ProductionRule] = List(
       /*
         expression ::=
           sum_sub
