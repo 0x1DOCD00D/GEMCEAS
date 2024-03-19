@@ -81,21 +81,18 @@ case class RepeatPrologFact(override val bnfObjects: List[BnFGrammarIR], overrid
   end formListOfBnFGrammarElements
 
 case class PrologFact(functorName: String, mapParams2GrammarElements: List[(String, List[BnFGrammarIR])], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIR with DeriveConstructs with CheckUpRewrite with GeneratePrologFact {
-  override def toString: String = s"PrologFact($functorName, ${mapParams2GrammarElements.mkString(", ")})"
+  override def toString: String =
+    val rewritten: List[String] = mapParams2GrammarElements.foldLeft(List[String]()) {
+      (acc, e) => (e._1 + "->" + "[" + e._2.mkString(", ") + "]") :: acc
+    }
+    s"$functorName( ${rewritten.mkString("; ")})"
   final def rewriteGrammarElements(level: Int): Option[PrologFact] =
     def rewriteGrammarElement(acc: List[BnFGrammarIR], e: List[BnFGrammarIR]): List[BnFGrammarIR] =
       e match
         case ::(head, next) if head.isInstanceOf[PrologFact]  =>
           val headFact = head.asInstanceOf[PrologFact]
-          DerivationTree.addGrammarElements(List(headFact), this, 1) match
-            case Left(errMsg) => throw new DerivationTreeException(errMsg)
-            case Right(value) =>
-              logger.info(s"Inserted the node $headFact as the child of the prolog fact ${this.functorName} into the derivation tree")
-              headFact.add2DerivationTree() match
-                case Left(to) => throw new DerivationTreeException(to.getMessage)
-                case Right(_) =>
-                  if headFact.isRewriteCompleted() then rewriteGrammarElement(head :: acc, next)
-                  else rewriteGrammarElement(headFact.rewriteGrammarElements(level + 1).getOrElse(ErrorInRewritingGrammarElements(level)) :: acc, next)
+          if headFact.isRewriteCompleted() then rewriteGrammarElement(head :: acc, next)
+          else rewriteGrammarElement(headFact.rewriteGrammarElements(level + 1).getOrElse(ErrorInRewritingGrammarElements(level)) :: acc, next)
 
         case ::(head, next) if head.isInstanceOf[RepeatPrologFact]  =>
           val headFact = head.asInstanceOf[RepeatPrologFact]
@@ -109,9 +106,7 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
 
         case ::(head, next) =>
           val gels = deriveElement(head, level > `Gemceas.Generator.grammarMaxDepthRewriting`)
-          DerivationTree.addGrammarElements(gels, head, 1) match
-            case Left(errMsg) => throw new DerivationTreeException(errMsg)
-            case Right(_) => rewriteGrammarElement(gels ::: acc, next)
+          rewriteGrammarElement(gels ::: acc, next)
 
         case Nil => acc
     end rewriteGrammarElement
@@ -182,26 +177,4 @@ case class IrError(err: String) extends BnFGrammarIR
 class DerivationTreeException(msg: String) extends RuntimeException(msg)
 
 object LocalTest:
-  @main def runLocalTest(): Unit =
-    val pf = PrologFact("sum_sub", List(("ProductDivRepetition",
-      List(RepeatPrologFact(List(
-        PrologFact("product_div_repetition", List(("Sign", List(ProgramEntity("+"))),
-          ("ProductDiv", List(PrologFact("product_div", List(("_", List()),
-            ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("049.21"))))))),
-            ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
-              ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("-78.30"))))))))))))))))),
-        PrologFact("product_div_repetition", List(("Sign", List(ProgramEntity("+"))),
-          ("ProductDiv", List(PrologFact("product_div", List(("_", List()),
-            ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("8.28"))))))),
-            ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
-              ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("1.44"))))))))))))))))),
-        PrologFact("product_div_repetition", List(("Sign", List(ProgramEntity("+"))),
-          ("ProductDiv", List(PrologFact("product_div", List(("_", List()),
-            ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("+464.33"))))))),
-            ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
-              ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("+3"))))))))))))))))))))),
-      ("_", List(PrologFact("product_div", List(("_", List()),
-        ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("-33.56"))))))),
-        ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
-          ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("-44")))))))))))))))))
-    println(pf.isRewriteCompleted())
+  @main def runLocalTest(): Unit = println("Local temp test may go here")
