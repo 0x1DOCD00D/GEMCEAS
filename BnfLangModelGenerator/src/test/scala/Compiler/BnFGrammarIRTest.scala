@@ -31,6 +31,6 @@ class BnFGrammarIRTest extends AnyFlatSpec with Matchers {
         ("NumberOrExpression", List(PrologFact("term", List(("Number", List(ProgramEntity("-33.56"))))))),
         ("TermRepetition", List(PrologFact("term_repetition", List(("Sign", List(ProgramEntity("*"))),
           ("Term", List(PrologFact("term", List(("Number", List(ProgramEntity("-44")))))))))))))))))
-    pf.isRewriteCompleted() shouldBe(true)
+    pf.isRewriteCompleted() shouldBe true
   }
 }
