@@ -15,6 +15,7 @@ import Utilz.{ConfigDb, CreateLogger, PrologTemplate}
 import org.scalatest.CancelAfterFailure
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import org.slf4j.Logger
 
 import scala.util.parsing.combinator.JavaTokenParsers
 
@@ -29,7 +30,7 @@ object ExtendedAEParser extends JavaTokenParsers:
       case success => Right(success)
 
 class ProgramGeneratorTest extends AnyFlatSpec with Matchers with CancelAfterFailure {
-  val logger = CreateLogger(classOf[ProgramGeneratorTest])
+  val logger: Logger = CreateLogger(classOf[ProgramGeneratorTest])
   behavior of "the program generator"
 
   val expression1: String  = "+(-+13   * -013++(-2-1)/3.12)"
