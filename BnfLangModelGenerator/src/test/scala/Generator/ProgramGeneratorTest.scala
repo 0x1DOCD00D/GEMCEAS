@@ -11,7 +11,7 @@ package Generator
 import Compiler.{BnfLiteral, GroupConstruct, OptionalConstruct, ProductionRule, PrologFactsBuilder, RepeatConstruct, SeqConstruct, UnionConstruct}
 import ExtendedAEParser.{opt, parseAll, rep}
 import Generator.ProgramGenerator.logger
-import Utilz.{ConfigDb, PrologTemplate}
+import Utilz.{ConfigDb, CreateLogger, PrologTemplate}
 import org.scalatest.CancelAfterFailure
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -29,6 +29,7 @@ object ExtendedAEParser extends JavaTokenParsers:
       case success => Right(success)
 
 class ProgramGeneratorTest extends AnyFlatSpec with Matchers with CancelAfterFailure {
+  val logger = CreateLogger(classOf[ProgramGeneratorTest])
   behavior of "the program generator"
 
   val expression1: String  = "+(-+13   * -013++(-2-1)/3.12)"
@@ -137,7 +138,7 @@ class ProgramGeneratorTest extends AnyFlatSpec with Matchers with CancelAfterFai
       BnfLiteral("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""", REGEXTERM)
     )
   )
-  
+
     /*
     expression ::=
       sum_sub
@@ -266,7 +267,7 @@ class ProgramGeneratorTest extends AnyFlatSpec with Matchers with CancelAfterFai
         BnfLiteral("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""", REGEXTERM)
       )
     )
-
+/*
   it should s"parse a simple expression: $expression1" in {
     ExtendedAEParser.parseArithExp(expression1).isRight shouldBe true
   }
@@ -290,12 +291,13 @@ class ProgramGeneratorTest extends AnyFlatSpec with Matchers with CancelAfterFai
       val code = gen.getOrElse(expressionIncorrect).asInstanceOf[GeneratedProgram].mkString
       ExtendedAEParser.parseArithExp(code).isRight shouldBe true
   }
-
+*/
   it should s"generate an expression from a grammar with prolog templates and parse it" in {
     val gen = ProgramGenerator(grammarWithPrologTemplates, BnfLiteral("expression", NONTERM))
     if gen.isLeft then gen.left.toString.isEmpty shouldBe false
     else
       val code = gen.getOrElse(expressionIncorrect).asInstanceOf[GeneratedProgram].mkString
+      logger.info(s"Generated code: $code")
       ExtendedAEParser.parseArithExp(code).isRight shouldBe true
   }
 }

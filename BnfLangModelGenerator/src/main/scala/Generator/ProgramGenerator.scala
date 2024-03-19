@@ -27,24 +27,30 @@ class ProgramGenerator private (progGenState: GeneratedProgramState) extends Der
 
   @tailrec
   private def deriveProgram(accumulatorProg: List[BnFGrammarIR], st: List[BnFGrammarIR], level: Int, attempt: Int = 1): List[BnFGrammarIR] =
+    import Compiler.*
     st match
       case ::(head, next) if head.isInstanceOf[PrologFact] =>
-        DerivationTree.resetPrologFact(Some(head.asInstanceOf[PrologFact]))
-        val gels = head.asInstanceOf[PrologFact].formListOfBnFGrammarElements
-        DerivationTree.addGrammarElements(gels, head, 1)
-        verifyGeneratedProgramFragment(head.asInstanceOf[PrologFact], level) match
-          case Some(lst) =>
-            DerivationTree.mergePFactTreeWithMainTree() match
-              case Left(errMsg) => logger.error(s"Error merging derivation trees: $errMsg")
-              case Right(theroot) => logger.info(s"Rewriting tree root is set: $theroot")
-            deriveProgram(accumulatorProg ::: lst, next, level)
-          case None =>
-            logger.warn(s"Attempt $attempt failed to obtained a verified derivation of the program fragment $head at level $level")
-            deriveProgram(accumulatorProg, next, level, attempt+1)
+        val pf = head.asInstanceOf[PrologFact]
+        DerivationTree.resetPrologFact(Some(pf)) match
+          case Left(errMsg) => throw new DerivationTreeException(errMsg)
+          case Right(value) =>
+            logger.info(s"Inserted the node $head with the root $value into the derivation tree")
+            verifyGeneratedProgramFragment(pf, level) match
+              case Some(lst) =>
+                DerivationTree.mergePFactTreeWithMainTree() match
+                  case Left(errMsg) => logger.error(s"Error merging derivation trees: $errMsg")
+                  case Right(theroot) => logger.info(s"Rewriting tree root is set: $theroot")
+                deriveProgram(accumulatorProg ::: lst, next, level)
+              case None =>
+                logger.warn(s"Attempt $attempt failed to obtained a verified derivation of the program fragment $head at level $level")
+                deriveProgram(accumulatorProg, next, level, attempt+1)
       case ::(head, next) =>
         val gels = deriveElement(head, level > `Gemceas.Generator.grammarMaxDepthRewriting`)
-        DerivationTree.addGrammarElements(gels, head, 0)
-        deriveProgram(accumulatorProg ::: gels, next, level)
+        DerivationTree.addGrammarElements(gels, head, 0) match
+          case Left(errMsg) => throw new DerivationTreeException(errMsg)
+          case Right(value) =>
+            logger.info(s"Inserted the node $head with children ${value.mkString(", ")} into the derivation tree")
+            deriveProgram(accumulatorProg ::: gels, next, level)
       case Nil => accumulatorProg
   end deriveProgram
 
@@ -151,9 +157,11 @@ object ProgramGenerator:
           val gen = new ProgramGenerator(initState)
           val programObject: GeneratedProgramState = gen.generateProgramInstance()
           val code: GeneratedProgram = gen.generateSourceCode(programObject)
-          new TreeVisualizer().toDotVizFormat("ArithmeticExpression", "ArithmeticExpression") match
+          new TreeVisualizer().toAsciiStringFormat("ArithmeticExpression") match
             case Left(errMsg) => Left(errMsg)
-            case Right(value) => Right(code)
+            case Right(sz) => 
+              logger.info(s"Derivation tree is saved into the file with the size $sz")
+              Right(code)
 
   @main def runProgGenWithTemplates(): Unit = {
     ConfigDb().foreach((k, v) => logger.info(s"Config key $k => $v"))

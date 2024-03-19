@@ -29,13 +29,16 @@ object DerivationTree:
     theTree(1).clear()
     pfRoot match
       case Some(pf) =>
-        if parentChildMap(1).contains(pf.uuid) then
-          Left(s"Prolog fact root already exists: $pf")
-        else
+        if parentChildMap(0).contains(pf.uuid) then
+          parentChildMap(0) -= pf.uuid
           parentChildMap(1) += (pf.uuid -> List())
           theTree(1) += (pf.uuid -> pf)
-          Right(pf)
-      case None => Right(theRoot)
+        else
+          parentChildMap(1) += (pf.uuid -> List())
+        pf.add2DerivationTree() match
+          case Left(throwEx) => Left(throwEx.getMessage)
+          case Right(_) => Right(pf)
+      case None => Left("Prolog fact is not defined")
 
   def resetAll(): Unit =
     theRoot = NonExistentElement
@@ -60,7 +63,6 @@ object DerivationTree:
       parentChildMap(0) ++= parentChildMap(1)
       theTree(0) ++= theTree(1)
       child2ParentMap(0) ++= child2ParentMap(1)
-      resetPrologFact()
       Right(theRoot)
   def addGrammarElements(gels: List[BnFGrammarIR], parent: BnFGrammarIR, tempPrologFactTree: MainRewritingTree | TempPrologFactRewritingTree): Either[String, List[BnFGrammarIR]] =
     val fMetaVarConversion: BnFGrammarIR => BnFGrammarIR = {
@@ -75,20 +77,19 @@ object DerivationTree:
                 gel
       case gel => gel
     }
+
+    val isParentInTree: BnFGrammarIR => Boolean = gel => parentChildMap(0).contains(gel.uuid) || parentChildMap(1).contains(gel.uuid)
     if theRoot == NonExistentElement then
       Left("Root node does not exist")
-    else if parentChildMap(tempPrologFactTree).contains(parent.uuid) then
+    else if isParentInTree(parent) then
       val children = parentChildMap(tempPrologFactTree)(parent.uuid)
       parentChildMap(tempPrologFactTree) += (parent.uuid -> (children ::: gels.map(_.uuid)))
-      gels.forall(gel => theTree(tempPrologFactTree).contains(gel.uuid)) match
-        case true => Left(s"Grammar elements already exist: $gels")
-        case false =>
-            theTree(tempPrologFactTree) ++= gels.map(gel => gel.uuid -> fMetaVarConversion(gel))
-            gels.foreach { gel =>
-              parentChildMap(tempPrologFactTree) += (gel.uuid -> List())
-              child2ParentMap(tempPrologFactTree) += (gel.uuid -> parent.uuid)
-            }
-            Right(gels)
+      theTree(tempPrologFactTree) ++= gels.map(gel => gel.uuid -> fMetaVarConversion(gel))
+      gels.foreach { gel =>
+        parentChildMap(tempPrologFactTree) += (gel.uuid -> List())
+        child2ParentMap(tempPrologFactTree) += (gel.uuid -> parent.uuid)
+      }
+      Right(gels)
     else
       Left(s"Parent not found: $parent")
 

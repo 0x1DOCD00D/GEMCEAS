@@ -25,6 +25,22 @@ class TreeVisualizer extends DerivationTreeGenerator:
       ::: tnd.children.get.flatMap(computeTreeGraph(_, root = false))
   end computeTreeGraph
 
+  def toAsciiStringFormat(fileName: String): Either[String, Long] =
+    require(fileName.nonEmpty, "The file name cannot be empty")
+    val dt = builtTheTree()
+    val out = dt.asciiTreeRepresentation()
+    //output to file
+    Try {
+      val file = new File(s"${`Gemceas.outputDirectory`}$fileName.txt")
+      val bw = new java.io.BufferedWriter(new java.io.FileWriter(file))
+      bw.write(out)
+      bw.close()
+    } match
+      case Failure(exception) => Left(s"Failed to write the ascii tree to ${`Gemceas.outputDirectory`}$fileName.txt for reason ${exception.getMessage}")
+      case Success(_) =>
+        logger.info(s"Successfully wrote the ascii tree to ${`Gemceas.outputDirectory`}$fileName.txt")
+        Right(new File(s"${`Gemceas.outputDirectory`}$fileName.txt").length())
+
   def toDotVizFormat(name: String, fileName: String, outputImageFormat: Format = Format.DOT): Either[String, Boolean] =
     require(name.nonEmpty, "The graph name cannot be empty")
     require(fileName.nonEmpty, "The file name cannot be empty")

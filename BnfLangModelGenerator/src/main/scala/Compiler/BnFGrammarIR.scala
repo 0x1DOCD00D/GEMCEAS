@@ -10,11 +10,9 @@ package Compiler
 
 import Generator.{DeriveConstructs, DerivationTree}
 import Utilz.ConfigDb.*
-import Utilz.Constants.{CloseKet, CommaSeparator, OpenBra}
 import Utilz.{ConfigDb, PrologTemplate}
 
 import java.util.UUID
-import scala.annotation.tailrec
 
 sealed trait BnFGrammarIR:
   val uuid: UUID = UUID.randomUUID()
@@ -83,32 +81,38 @@ case class RepeatPrologFact(override val bnfObjects: List[BnFGrammarIR], overrid
   end formListOfBnFGrammarElements
 
 case class PrologFact(functorName: String, mapParams2GrammarElements: List[(String, List[BnFGrammarIR])], override val uuid: UUID = UUID.randomUUID()) extends BnFGrammarIR with DeriveConstructs with CheckUpRewrite with GeneratePrologFact {
+  override def toString: String = s"PrologFact($functorName, ${mapParams2GrammarElements.mkString(", ")})"
   final def rewriteGrammarElements(level: Int): Option[PrologFact] =
     def rewriteGrammarElement(acc: List[BnFGrammarIR], e: List[BnFGrammarIR]): List[BnFGrammarIR] =
       e match
         case ::(head, next) if head.isInstanceOf[PrologFact]  =>
           val headFact = head.asInstanceOf[PrologFact]
-          val gels = headFact.formListOfBnFGrammarElements
-          DerivationTree.addGrammarElements(gels, headFact, 1)
-          if headFact.isRewriteCompleted() then rewriteGrammarElement(head :: acc, next)
-          else rewriteGrammarElement(head.asInstanceOf[PrologFact].rewriteGrammarElements(level + 1).getOrElse(ErrorInRewritingGrammarElements(level)) :: acc, next)
+          DerivationTree.addGrammarElements(List(headFact), this, 1) match
+            case Left(errMsg) => throw new DerivationTreeException(errMsg)
+            case Right(value) =>
+              logger.info(s"Inserted the node $headFact as the child of the prolog fact ${this.functorName} into the derivation tree")
+              headFact.add2DerivationTree() match
+                case Left(to) => throw new DerivationTreeException(to.getMessage)
+                case Right(_) =>
+                  if headFact.isRewriteCompleted() then rewriteGrammarElement(head :: acc, next)
+                  else rewriteGrammarElement(headFact.rewriteGrammarElements(level + 1).getOrElse(ErrorInRewritingGrammarElements(level)) :: acc, next)
+
         case ::(head, next) if head.isInstanceOf[RepeatPrologFact]  =>
           val headFact = head.asInstanceOf[RepeatPrologFact]
-          if headFact.isRewriteCompleted() then
-            val gels = headFact.formListOfBnFGrammarElements
-            DerivationTree.addGrammarElements(gels, headFact, 1)
-            rewriteGrammarElement(head :: acc, next)
-          else
-            val repeatedFacts = head.asInstanceOf[RepeatPrologFact].bnfObjects.map(_.replicaWithUniqueID)
-            DerivationTree.addGrammarElements(repeatedFacts, head, 1)
-            rewriteGrammarElement(RepeatPrologFact(rewriteGrammarElement(List(), repeatedFacts)) :: acc, next)
-        case ::(head, next) if head.isInstanceOf[ProgramEntity] =>
-          DerivationTree.addGrammarElements(List(), head, 1)
-          rewriteGrammarElement(head :: acc, next)
+          DerivationTree.addGrammarElements(headFact.bnfObjects, headFact, 1) match
+            case Left(errMsg) => throw new DerivationTreeException(errMsg)
+            case Right(value) =>
+              if headFact.isRewriteCompleted() then rewriteGrammarElement(head :: acc, next)
+              else rewriteGrammarElement(RepeatPrologFact(rewriteGrammarElement(List(), headFact.bnfObjects)) :: acc, next)
+
+        case ::(head, next) if head.isInstanceOf[ProgramEntity] => rewriteGrammarElement(head :: acc, next)
+
         case ::(head, next) =>
           val gels = deriveElement(head, level > `Gemceas.Generator.grammarMaxDepthRewriting`)
-          DerivationTree.addGrammarElements(gels, head, 1)
-          rewriteGrammarElement(gels ::: acc, next)
+          DerivationTree.addGrammarElements(gels, head, 1) match
+            case Left(errMsg) => throw new DerivationTreeException(errMsg)
+            case Right(_) => rewriteGrammarElement(gels ::: acc, next)
+
         case Nil => acc
     end rewriteGrammarElement
 
@@ -118,6 +122,11 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
         (acc, e) => (e._1, rewriteGrammarElement(List(), e._2)) :: acc
       }.map(e => (e._1, e._2.reverse))
       val fact: PrologFact = PrologFact(functorName, rewritten)
+      DerivationTree.addGrammarElements(List(fact), this, 1) match
+        case Left(errMsg) => throw new DerivationTreeException(errMsg)
+        case Right(cldrn) => fact.add2DerivationTree() match
+          case Left(to) => throw new DerivationTreeException(to.getMessage)
+          case Right(_) => logger.info(s"Rewrote the Prolog fact $this at the level $level into new fact $fact")
 
       if `Gemceas.Generator.debugProgramGeneration` then logger.info(s"Rewriting the Prolog fact $this at the level $level into new fact $fact")
 
@@ -137,6 +146,14 @@ case class PrologFact(functorName: String, mapParams2GrammarElements: List[(Stri
         case _ => List(e)
       })
     }
+  end formListOfBnFGrammarElements
+
+  def add2DerivationTree(): Either[DerivationTreeException, PrologFact] =
+    val gelsOfThePrologFact: List[BnFGrammarIR] = mapParams2GrammarElements.foldLeft(List[BnFGrammarIR]())((acc, e) => e._2 ::: acc)
+    DerivationTree.addGrammarElements(gelsOfThePrologFact, this, 1) match
+      case Left(errMsg) => throw new DerivationTreeException(errMsg)
+      case Right(_) => Right(this)
+  end add2DerivationTree
 }
 
 trait IrLiteral extends BnFGrammarIR
@@ -159,8 +176,10 @@ case class PrologFactsBuilder(prt: PrologTemplate) extends IrLiteral {
     else if prt.params.exists(_.params.nonEmpty) then Left(s"Prolog template ${prt.params} contains parameters with parameters")
     else Right(PrologFact(prt.functorName, prt.params.map(_.functorName).lazyZip(bnfObjects.map(_.replicaWithUniqueID)).toList.map(e => (e._1, List(e._2)))))
 }
-case class ProgramEntity(code: String, @transient override val uuid: UUID = UUID.randomUUID()) extends IrLiteral
+case class ProgramEntity(code: String, @transient override val uuid: UUID = UUID.randomUUID()) extends IrLiteral:
+  override def toString: String = code
 case class IrError(err: String) extends BnFGrammarIR
+class DerivationTreeException(msg: String) extends RuntimeException(msg)
 
 object LocalTest:
   @main def runLocalTest(): Unit =

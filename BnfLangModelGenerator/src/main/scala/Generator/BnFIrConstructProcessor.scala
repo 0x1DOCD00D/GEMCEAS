@@ -56,10 +56,10 @@ object GroupConstructProcessor extends ((GroupConstruct, Int) => List[BnFGrammar
         val res = PrologTemplateProcessor(v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]), prologTemplate) match
             case Some(prologFact) => List(prologFact)
             case None => v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]) //failed to process a prolog template but continue the rewriting process
-        if repeat <= 1 then res
-        else List(RepeatPrologFact(List.fill(repeat)(res).flatten))
+        if repeat <= 1 then res.map(_.replicaWithUniqueID)
+        else List(RepeatPrologFact(List.fill(repeat)(res.map(_.replicaWithUniqueID)).flatten))
       case None =>
-        val res = v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]) //more than one prolog template is not allowed
+        val res = v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]).map(_.replicaWithUniqueID) //more than one prolog template is not allowed
         if repeat <= 1 then res
         else
           List.fill(repeat)(res).flatten
