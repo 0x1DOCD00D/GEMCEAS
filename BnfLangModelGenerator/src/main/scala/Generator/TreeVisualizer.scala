@@ -17,9 +17,11 @@ class TreeVisualizer extends DerivationTreeGenerator:
   //  sfdp -x -Goverlap=scale -Tpng tree.dot > tree.png
   //`Gemceas.outputDirectory`
   private val logger = CreateLogger(classOf[TreeVisualizer])
-  private def computeTreeGraph(tnd: DTNode, root: Boolean): List[Node] =
+  private def computeTreeGraph(tnd: DTAbstractNode, root: Boolean): List[Node] =
     val fNode: DTNode => Node = dt => if root then node(dt.id).`with`(Color.RED).`with`(Label.markdown(s"**${dt.id}**"), Color.rgb("1020d0").font()) else node(dt.id)
-    val parent: Node = fNode(tnd)
+    val parent: Node = tnd match
+      case DTEmptyNode => node("Empty")
+      case DTNode(id, children) => fNode(tnd.asInstanceOf[DTNode])
     if tnd.children.isEmpty then List[Node]() else
       tnd.children.get.map(n => node(n.id)).foldLeft(List[Node]()) { case (acc, child) => parent.link(to(child).`with`(weight(2))) :: acc }
       ::: tnd.children.get.flatMap(computeTreeGraph(_, root = false))

@@ -14,8 +14,16 @@ object MetaVarDictionary:
       metaVarDict += (mv.name -> mv.path)
       Right(mv.path)
 
-  def apply(mvName: String): Either[String, List[BnFGrammarIR]] =
+  def apply(mvName: String): Option[List[BnFGrammarIR]] =
     if !metaVarDict.contains(mvName) then
-      Left(s"MetaVarDictionary: $mvName is not defined.")
+      None
     else
-      Right(metaVarDict(mvName))
+      Some(metaVarDict(mvName))
+
+  def checkMvNames(mvNames: List[String]): List[String] =
+    mvNames.flatMap(mvName =>
+      if !metaVarDict.contains(mvName) then
+        List()
+      else
+        metaVarDict(mvName).map(_.theName)
+    )

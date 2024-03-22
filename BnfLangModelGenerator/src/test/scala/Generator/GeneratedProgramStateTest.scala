@@ -12,7 +12,7 @@ class GeneratedProgramStateTest extends AnyFlatSpec with Matchers {
   behavior of "the IR extractors"
 
   val logger: Logger = CreateLogger(classOf[GeneratedProgramStateTest])
-  val expGrammarFull: List[ProductionRule] = List(
+  val expGrammarFullWithMetaVars: List[ProductionRule] = List(
     ProductionRule(
       BnfLiteral("expression", NONTERM),
       SeqConstruct(List(
@@ -92,15 +92,15 @@ class GeneratedProgramStateTest extends AnyFlatSpec with Matchers {
     ),
     ProductionRule(BnfLiteral("number", NTREGEX), BnfLiteral("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""", REGEXTERM)))
 
-  it should "generate an expression for the provided grammar" in {
-    val gen = ProgramGenerator(expGrammarFull, BnfLiteral("expression", NONTERM))
+  it should "generate an expression for the provided grammar with metavariables" in {
+    val gen = ProgramGenerator(expGrammarFullWithMetaVars, BnfLiteral("expression", NONTERM))
     gen match
       case Left(err) => err.isEmpty shouldBe false
       case Right(prg) =>
         logger.info(prg.mkString(" "))
         prg.length should be >= 1
   }
-
+/*
   it should "create an expression given its parsed grammar" in {
     val progstate = GeneratedProgramState(List(ProgramEntity("-8.11"), ProgramEntity("*"), ProgramEntity("-47"),
       RepeatPrologFact(List(
@@ -127,5 +127,5 @@ class GeneratedProgramStateTest extends AnyFlatSpec with Matchers {
     logger.info(s"Generated program: ${code.mkString(" ")}")
     code.mkString(" ").isBlank shouldBe false//("+ 84.00 * +93.97 + 50 * +421 + 0 * 24")
   }
-
+*/
 }

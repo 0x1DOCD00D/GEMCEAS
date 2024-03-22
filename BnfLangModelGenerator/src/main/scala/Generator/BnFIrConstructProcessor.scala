@@ -8,7 +8,7 @@
 
 package Generator
 
-import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, RepeatPrologFact, SeqConstruct, UnionConstruct}
+import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, MetaVariable, MetaVariableException, MetaVariableXformed, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, RepeatPrologFact, SeqConstruct, UnionConstruct}
 import Randomizer.SupplierOfRandomness
 import Utilz.ConfigDb
 
@@ -51,15 +51,28 @@ object PrologTemplateProcessor extends ((List[BnFGrammarIR], PrologFactsBuilder)
 * */
 object GroupConstructProcessor extends ((GroupConstruct, Int) => List[BnFGrammarIR]) with DeriveConstructs:
   override def apply(v1: GroupConstruct, repeat: Int = 1): List[BnFGrammarIR] = {
+    v1.bnfObjects.filter(_.isInstanceOf[MetaVariable]).foreach {
+      mv =>
+        logger.info(s"Rewriting the meta variable $mv")
+        DerivationTree.convertMetaVariable(v1, mv.asInstanceOf[MetaVariable]) match
+          case Left(errMsg) =>
+            logger.error(errMsg)
+            MetaVarDictionary(MetaVariableXformed(mv.asInstanceOf[MetaVariable].name, List()))
+          case Right(gels) =>
+            MetaVarDictionary(MetaVariableXformed(mv.asInstanceOf[MetaVariable].name, gels))
+            logger.info(s"Processed ${mv.theName} and the result is ${gels.mkString(",")}")
+    }
+
+    val filterFunc = (e: BnFGrammarIR) => e.isInstanceOf[PrologFactsBuilder] || e.isInstanceOf[MetaVariable]
     check4PrologTemplate(v1) match
       case Some(prologTemplate) =>
-        val res = PrologTemplateProcessor(v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]), prologTemplate) match
+        val res = PrologTemplateProcessor(v1.bnfObjects.filterNot(filterFunc), prologTemplate) match
             case Some(prologFact) => List(prologFact)
-            case None => v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]) //failed to process a prolog template but continue the rewriting process
+            case None => v1.bnfObjects.filterNot(filterFunc) //failed to process a prolog template but continue the rewriting process
         if repeat <= 1 then res.map(_.replicaWithUniqueID)
         else List(RepeatPrologFact(List.fill(repeat)(res.map(_.replicaWithUniqueID)).flatten))
       case None =>
-        val res = v1.bnfObjects.filterNot(_.isInstanceOf[PrologFactsBuilder]).map(_.replicaWithUniqueID) //more than one prolog template is not allowed
+        val res = v1.bnfObjects.filterNot(filterFunc).map(_.replicaWithUniqueID) //more than one prolog template is not allowed
         if repeat <= 1 then res
         else
           List.fill(repeat)(res).flatten

@@ -8,7 +8,7 @@
 
 package Compiler
 
-import Generator.{DeriveConstructs, DerivationTree}
+import Generator.{DerivationTree, DeriveConstructs, MetaVarDictionary}
 import Utilz.ConfigDb.*
 import Utilz.{ConfigDb, PrologTemplate}
 
@@ -166,15 +166,31 @@ case class BnfLiteral(token: String, literalType: LiteralType, override val uuid
 case class PrologFactsBuilder(prt: PrologTemplate) extends IrLiteral {
 //  xform factbuilder into an instance of PrologTemplate(functorName: String, params: List[PrologTemplate])
   override def toString: String = s"PrologFactsBuilder($PrologTemplate)"
+  private def zipNames2BnfObjects(names: List[String], bnfObjects: List[BnFGrammarIR]): List[(String, List[BnFGrammarIR])] =
+    names match
+      case ::(head, next) => MetaVarDictionary(head) match
+        case Some(mv) => (head, mv) :: zipNames2BnfObjects(next, bnfObjects)
+        case None =>
+          if bnfObjects.isEmpty then List()
+          else (head, List(bnfObjects.head)) :: zipNames2BnfObjects(next, bnfObjects.tail)
+      case Nil => List()
   def build(bnfObjects: List[BnFGrammarIR]): Either[String, PrologFact] =
-    if prt.params.length != bnfObjects.length then Left(s"Number of parameters in the Prolog template ${prt.params} does not match the number of BNF objects $bnfObjects")
-    else if prt.params.exists(_.params.nonEmpty) then Left(s"Prolog template ${prt.params} contains parameters with parameters")
-    else Right(PrologFact(prt.functorName, prt.params.map(_.functorName).lazyZip(bnfObjects.map(_.replicaWithUniqueID)).toList.map(e => (e._1, List(e._2)))))
+    if prt.params.isEmpty then Left(s"Prolog template ${prt.params} does not contain any parameters")
+    else
+      val allNames = prt.params.map(_.functorName)
+      val allMvDictNames = MetaVarDictionary.checkMvNames(allNames)
+      if (allNames.length - allMvDictNames.length) != bnfObjects.length then
+        Left(s"Number of parameters in the Prolog template ${prt.params} with ${allMvDictNames.length} meta vars does not match the number of BNF objects $bnfObjects")
+      else if prt.params.exists(_.params.nonEmpty) then Left(s"Prolog template ${prt.params} contains parameters with parameters")
+      else
+        val zipped = zipNames2BnfObjects(allNames, bnfObjects.map(_.replicaWithUniqueID))
+        Right(PrologFact(prt.functorName, zipped))
 }
 case class ProgramEntity(code: String, @transient override val uuid: UUID = UUID.randomUUID()) extends IrLiteral:
   override def toString: String = code
 case class IrError(err: String) extends BnFGrammarIR
 class DerivationTreeException(msg: String) extends RuntimeException(msg)
+class MetaVariableException(msg: String) extends RuntimeException(msg)
 
 object LocalTest:
   @main def runLocalTest(): Unit = println("Local temp test may go here")

@@ -268,7 +268,7 @@ class ProgramGeneratorTest extends AnyFlatSpec with Matchers with CancelAfterFai
         BnfLiteral("""[\-\+]?[0-9]{1,3}(\.[0-9]{2})?""", REGEXTERM)
       )
     )
-/*
+
   it should s"parse a simple expression: $expression1" in {
     ExtendedAEParser.parseArithExp(expression1).isRight shouldBe true
   }
@@ -292,7 +292,7 @@ class ProgramGeneratorTest extends AnyFlatSpec with Matchers with CancelAfterFai
       val code = gen.getOrElse(expressionIncorrect).asInstanceOf[GeneratedProgram].mkString
       ExtendedAEParser.parseArithExp(code).isRight shouldBe true
   }
-*/
+
   it should s"generate an expression from a grammar with prolog templates and parse it" in {
     val gen = ProgramGenerator(grammarWithPrologTemplates, BnfLiteral("expression", NONTERM))
     if gen.isLeft then gen.left.toString.isEmpty shouldBe false

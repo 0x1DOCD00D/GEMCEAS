@@ -159,7 +159,7 @@ object ProgramGenerator:
           val code: GeneratedProgram = gen.generateSourceCode(programObject)
           new TreeVisualizer().toAsciiStringFormat("ArithmeticExpression") match
             case Left(errMsg) => Left(errMsg)
-            case Right(sz) => 
+            case Right(sz) =>
               logger.info(s"Derivation tree is saved into the file with the size $sz")
               Right(code)
 

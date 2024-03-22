@@ -20,14 +20,14 @@ object MetaVariableManager:
         else
           val indexPattern = """(_\d+)""".r
           mvPath.last match
-            case indexPattern(ind) => Option(mvName, mvPath.init, Some(ind.substring(1).toInt))
-            case _ => Option(mvName, mvPath, None)
+            case indexPattern(ind) => Option(mvName, mvPath.init.reverse, Some(ind.substring(1).toInt))
+            case _ => Option(mvName, mvPath.reverse, None)
 
       else
         logger.error(s"MetaVariableManager:apply: Invalid MetaVariable Definition: $mVarDef")
         None
     else None
-  
+
   @main def runMain_MetaVarExtractor(): Unit =
     logger.info(MetaVariableManager("ClassIdentifier=:= NormalClassDeclaration.TypeIdentifier").toString)
     logger.info(MetaVariableManager("ClassIdentifier=:= NormalClassDeclaration.TypeIdentifier._3").toString)

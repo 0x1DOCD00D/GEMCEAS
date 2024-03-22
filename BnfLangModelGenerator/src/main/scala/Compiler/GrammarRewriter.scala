@@ -95,6 +95,7 @@ class GrammarRewriter(ast: List[ProductionRule]):
       case container: GroupConstruct => container.bnfObjects
       case container: SeqConstruct => container.bnfObjects
       case container: UnionConstruct => if processUnion then container.bnfObjects else List(container)
+      case mv: MetaVariable => List(mv)
       case lit @ BnfLiteral(token, ltype, _) if ltype == LiteralType.TERM || ltype == LiteralType.REGEXTERM || ltype == LiteralType.NTREGEX => List()
       case lit @ BnfLiteral(token, ltype, _) if ltype == LiteralType.NONTERM =>
         ast.find(_.lhs.asInstanceOf[BnfLiteral].token == lit.token) match
