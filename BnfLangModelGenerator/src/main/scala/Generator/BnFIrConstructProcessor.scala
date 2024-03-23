@@ -9,6 +9,7 @@
 package Generator
 
 import Compiler.{BnFGrammarIR, BnFGrammarIRContainer, BnfLiteral, GroupConstruct, MetaVariable, MetaVariableException, MetaVariableXformed, OptionalConstruct, ProductionRule, ProgramEntity, PrologFact, PrologFactsBuilder, RepeatConstruct, RepeatPrologFact, SeqConstruct, UnionConstruct}
+import Generator.DerivationTree.convertMetaVariable
 import Randomizer.SupplierOfRandomness
 import Utilz.ConfigDb
 
@@ -53,18 +54,28 @@ object GroupConstructProcessor extends ((GroupConstruct, Int) => List[BnFGrammar
   override def apply(v1: GroupConstruct, repeat: Int = 1): List[BnFGrammarIR] = {
     v1.bnfObjects.filter(_.isInstanceOf[MetaVariable]).foreach {
       mv =>
-        logger.info(s"Rewriting the meta variable $mv")
-        DerivationTree.convertMetaVariable(v1, mv.asInstanceOf[MetaVariable]) match
-          case Left(errMsg) =>
-            logger.error(errMsg)
-            MetaVarDictionary(MetaVariableXformed(mv.asInstanceOf[MetaVariable].name, List()))
-          case Right(gels) =>
-            MetaVarDictionary(MetaVariableXformed(mv.asInstanceOf[MetaVariable].name, gels))
-            logger.info(s"Processed ${mv.theName} and the result is ${gels.mkString(",")}")
-    }
+        if MetaVarDictionary(mv.asInstanceOf[MetaVariable].name).isDefined then
+          logger.info(s"Meta variable ${mv.asInstanceOf[MetaVariable].name} is defined with the value ${MetaVarDictionary(mv.asInstanceOf[MetaVariable].name).get}")
+        else
+          logger.info(s"Rewriting the meta variable ${mv.asInstanceOf[MetaVariable].name}")
+          convertMetaVariable(v1, mv.asInstanceOf[MetaVariable]) match
+            case Left(errMsg) =>
+              logger.error(errMsg)
+              MetaVarDictionary(MetaVariableXformed(mv.asInstanceOf[MetaVariable].name, List()))
+            case Right(gels) =>
+              MetaVarDictionary(MetaVariableXformed(mv.asInstanceOf[MetaVariable].name, gels))
+              logger.info(s"Processed ${mv.theName} and the result is ${gels.mkString(",")}")
+      }
+
+    val rewrittenObjects = GroupConstruct(v1.bnfObjects.flatMap {
+      case mv: MetaVariable => MetaVarDictionary(mv.theName) match
+        case Some(mvx) => mvx
+        case None => List()
+      case e => List(e)
+    }, v1.uuid)
 
     val filterFunc = (e: BnFGrammarIR) => e.isInstanceOf[PrologFactsBuilder] || e.isInstanceOf[MetaVariable]
-    check4PrologTemplate(v1) match
+    check4PrologTemplate(rewrittenObjects) match
       case Some(prologTemplate) =>
         val res = PrologTemplateProcessor(v1.bnfObjects.filterNot(filterFunc), prologTemplate) match
             case Some(prologFact) => List(prologFact)
@@ -72,7 +83,7 @@ object GroupConstructProcessor extends ((GroupConstruct, Int) => List[BnFGrammar
         if repeat <= 1 then res.map(_.replicaWithUniqueID)
         else List(RepeatPrologFact(List.fill(repeat)(res.map(_.replicaWithUniqueID)).flatten))
       case None =>
-        val res = v1.bnfObjects.filterNot(filterFunc).map(_.replicaWithUniqueID) //more than one prolog template is not allowed
+        val res = rewrittenObjects.bnfObjects.filterNot(filterFunc).map(_.replicaWithUniqueID) //more than one prolog template is not allowed
         if repeat <= 1 then res
         else
           List.fill(repeat)(res).flatten
